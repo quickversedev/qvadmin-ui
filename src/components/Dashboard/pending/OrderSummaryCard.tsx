@@ -2,10 +2,17 @@ import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, Linking} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Order} from '../../../store/orders/useOrdersStore';
+import {useNavigation} from '@react-navigation/native';
+import {OrderStackParamList} from '../../../navigation/DashboardNavigation';
+import {StackNavigationProp} from '@react-navigation/stack';
 
 type OrderSummaryCardProps = Order & {
   key?: string; // accept key as optional
 };
+type WebViewScreenNavigationProp = StackNavigationProp<
+  OrderStackParamList,
+  'WebViewScreen'
+>;
 
 const OrderSummaryCard = ({
   orderId,
@@ -22,10 +29,13 @@ const OrderSummaryCard = ({
     const diffMins = Math.floor((now - createdTime) / (1000 * 60));
     return diffMins;
   };
-
+  const navigation = useNavigation<WebViewScreenNavigationProp>();
   const handleCallCustomer = () => {
     const phoneNumber = `tel:${customerMobile}`;
     Linking.openURL(phoneNumber);
+  };
+  const handleViewDetails = () => {
+    navigation.navigate('WebViewScreen', {url: orderLink});
   };
 
   // Determine status styles
@@ -80,7 +90,6 @@ const OrderSummaryCard = ({
         </View>
         <Text style={styles.pendingTime}>{getPendingTime()} mins</Text>
       </View>
-
       <View style={styles.customerRow}>
         <View style={{flex: 1}}>
           <View style={styles.customerInfo}>
@@ -114,19 +123,18 @@ const OrderSummaryCard = ({
           <Icon name="phone" size={16} color="#fff" style={{marginRight: 4}} />
           <Text style={styles.callButtonText}>Call Customer</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={{marginTop: 8}}
-          onPress={() => Linking.openURL(orderLink)}>
+        <TouchableOpacity style={{marginTop: 8}} onPress={handleViewDetails}>
           <Text style={styles.viewOrder}>View Order ➔</Text>
         </TouchableOpacity>
       </View>
-      {state === 'READY_TO_SHIP' && (
+      {/* uncomment when delivery app is ready */}
+      {/* {state === 'READY_TO_SHIP' && (
         <TouchableOpacity
           style={styles.assignButton}
           onPress={() => console.log('Assign order pressed')}>
           <Text style={styles.assignButtonText}>Assign Order</Text>
         </TouchableOpacity>
-      )}
+      )} */}
     </View>
   );
 };
