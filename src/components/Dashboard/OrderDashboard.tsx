@@ -139,7 +139,7 @@ const OrderListScreen = () => {
               value={getReadyToShipOrderCount()}
               color="#D7DCF8"
               onPress={() =>
-                navigation.navigate('VendorOrders', {tab: 'ReadyToShip'})
+                navigation.navigate('VendorOrders', {tab: 'Completed'})
               }
             />
             <DashboardTile
