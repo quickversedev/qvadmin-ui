@@ -1,5 +1,5 @@
 import {RouteProp, useNavigation, useRoute} from '@react-navigation/native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Image,
@@ -32,31 +32,70 @@ const OTPScreen: React.FC = () => {
   const [value, setValue] = useState<string>('');
   const [loading, setLoading] = useState(false);
 
+  // Resend OTP Timer
+  const [resendTimeout, setResendTimeout] = useState(60);
+  const [canResend, setCanResend] = useState(false);
+  const [currentVerificationId, setCurrentVerificationId] =
+    useState(verificationId);
+
   const ref = useBlurOnFulfill({value, cellCount: CELL_COUNT});
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value,
     setValue,
   });
   const auth = useAuth();
+
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+
+    if (!canResend && resendTimeout > 0) {
+      interval = setInterval(() => {
+        setResendTimeout(prev => prev - 1);
+      }, 1000);
+    } else if (resendTimeout === 0) {
+      setCanResend(true);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [canResend, resendTimeout]);
+
   const verifyOTP = async () => {
     if (value.length !== CELL_COUNT) {
       Alert.alert('Invalid OTP', 'Please enter a valid 4-digit OTP');
       return;
     }
 
-    console.log('Login button pressed');
     setLoading(true);
     try {
-      await auth.verifyOtp(phoneNumber, value, verificationId);
-      console.log('success');
+      await auth.verifyOtp(phoneNumber, value, currentVerificationId);
+      Alert.alert('Success', 'OTP verified successfully');
     } catch (err) {
       console.log('Error:', err);
       Alert.alert('Error', 'Login failed');
     } finally {
-      console.log('finally');
       setLoading(false);
     }
-    Alert.alert('Success', 'OTP verified successfully');
+  };
+
+  const handleResendOtp = async () => {
+    if (!canResend) return;
+    console.log('Resending OTP...');
+    try {
+      setLoading(true);
+      const newVerificationId = await auth.sendOtp(phoneNumber);
+      setCurrentVerificationId(newVerificationId);
+      setResendTimeout(60);
+      setCanResend(false);
+    } catch (error) {
+      Alert.alert('Error', 'Failed to resend OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChangeNumber = () => {
@@ -65,8 +104,6 @@ const OTPScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Top 50% background image */}
-
       <ImageBackground
         source={require('../../assets/images/bg_1.png')}
         style={styles.topBackground}
@@ -80,12 +117,10 @@ const OTPScreen: React.FC = () => {
         />
       </View>
 
-      {/* Floating login card */}
       <View style={styles.card}>
         <Text style={styles.title}>Enter Your OTP</Text>
         <Text style={styles.subtitle}>{`OTP sent to ${phoneNumber}`}</Text>
 
-        {/* OTP Input */}
         <CodeField
           ref={ref}
           {...props}
@@ -107,11 +142,18 @@ const OTPScreen: React.FC = () => {
           )}
         />
 
-        <TouchableOpacity>
-          <Text style={styles.subTitle_2}>
-            Didn’t receive the OTP? <Text style={styles.link}>Resend Code</Text>
-          </Text>
-        </TouchableOpacity>
+        <Text style={styles.subTitle_2}>
+          Didn’t receive the OTP?{' '}
+          {canResend ? (
+            <Text style={styles.link} onPress={handleResendOtp}>
+              Resend Code
+            </Text>
+          ) : (
+            <Text style={styles.disabledLink}>
+              Resend Code in {resendTimeout}s
+            </Text>
+          )}
+        </Text>
 
         <TouchableOpacity
           style={{marginTop: 'auto', marginBottom: 15}}
@@ -160,7 +202,7 @@ const styles = StyleSheet.create({
 
   card: {
     width: '90%',
-    height: '68%',
+    height: '58%',
     marginTop: 100,
     backgroundColor: '#1F2937',
     borderRadius: 16,
@@ -168,8 +210,6 @@ const styles = StyleSheet.create({
 
     borderWidth: 1,
     borderColor: 'yellow',
-
-    // shadow
     shadowColor: '#FAE588',
     shadowOffset: {width: 0, height: 5},
     shadowOpacity: 0.1,
@@ -267,5 +307,8 @@ const styles = StyleSheet.create({
   },
   focusCell: {
     borderColor: '#005EB8',
+  },
+  disabledLink: {
+    color: '#6B7280',
   },
 });

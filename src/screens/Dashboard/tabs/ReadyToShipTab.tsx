@@ -50,7 +50,7 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({vendors}) => {
             key={`readytoship_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
             vendorLogoUrl="https://example.com/logo.png"
-            status="ready to ship"
+            status="readytoship"
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
               key={`readyToShip_orders_${vendor.vendorId}`}
