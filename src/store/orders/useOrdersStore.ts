@@ -83,7 +83,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       //       },
       //     },
       //   );
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      await new Promise(resolve => setTimeout(resolve, 1000));
       const parsedOrders = mockOrders.orders.order.map(order => {
         let customerAddress = order.customerAddress;
         // if (typeof customerAddress === 'string') {

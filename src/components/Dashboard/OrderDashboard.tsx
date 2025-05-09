@@ -8,16 +8,13 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
-  Alert,
 } from 'react-native';
 import {useOrderStore} from '../../store/orders/useOrdersStore';
 import DashboardTile from './dashboardTile/DashboardTile';
-import VendorWiseOrders from '../../screens/Dashboard/screens/VendorWiseOrders';
 import {useNavigation} from '@react-navigation/native';
 import {OrderStackParamList} from '../../navigation/DashboardNavigation';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {useCampuses} from '../../hooks/campuses/useCampuses';
-import {useAuth} from '../../contexts/Login/AuthProvider';
 
 type OrderListScreenNavigationProp = StackNavigationProp<
   OrderStackParamList,
@@ -41,29 +38,19 @@ const OrderListScreen = () => {
     fetchOrders();
   }, [fetchOrders]);
 
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      fetchOrders();
+    }, 180000); // 3 minutes in milliseconds
+
+    return () => clearInterval(intervalId);
+  }, [fetchOrders]);
+
   const onRefresh = () => {
     fetchOrders();
   };
   const {selectedCampus} = useCampuses();
-  const auth = useAuth();
-  const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => auth.signOut(),
-        },
-      ],
-      {cancelable: false},
-    );
-  };
+
   if (loading) {
     return (
       <View style={[styles.centered, {flex: 1}]}>
@@ -117,62 +104,61 @@ const OrderListScreen = () => {
         refreshControl={
           <RefreshControl refreshing={loading} onRefresh={onRefresh} />
         }>
-        <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
-          <DashboardTile
-            size="m"
-            label="Pending Orders"
-            value={getPendingOrderCount()}
-            color="#f8d7da"
-            onPress={() =>
-              navigation.navigate('VendorOrders', {tab: 'Pending'})
-            }
-          />
-          <DashboardTile
-            size="m"
-            label="Accepted Orders"
-            value={getAcceptedOrderCount()}
-            color="#d4edda"
-            onPress={() =>
-              navigation.navigate('VendorOrders', {tab: 'Accepted'})
-            }
-          />
-          <DashboardTile
-            size="l"
-            label="Ready To Ship"
-            value={getReadyToShipOrderCount()}
-            color="#ffeeba"
-            onPress={() =>
-              navigation.navigate('VendorOrders', {tab: 'ReadyToShip'})
-            }
-          />
-          <DashboardTile
-            size="m"
-            label="Completed"
-            value={getReadyToShipOrderCount()}
-            color="#D7DCF8"
-            onPress={() =>
-              navigation.navigate('VendorOrders', {tab: 'ReadyToShip'})
-            }
-          />
-          <DashboardTile
-            size="m"
-            label="Cancelled/Rejected"
-            value={getReadyToShipOrderCount()}
-            color="#D4E2EA"
-            onPress={() =>
-              navigation.navigate('VendorOrders', {tab: 'Cancelled'})
-            }
-          />
-          <DashboardTile
-            size="l"
-            label="Total Orders"
-            value={getOrderCount()}
-            color="#A3D8F0"
-          />
+        <View style={{display: 'flex', justifyContent: 'space-between'}}>
+          <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
+            <DashboardTile
+              size="m"
+              label="Pending Orders"
+              value={getPendingOrderCount()}
+              color="#f8d7da"
+              onPress={() =>
+                navigation.navigate('VendorOrders', {tab: 'Pending'})
+              }
+            />
+            <DashboardTile
+              size="m"
+              label="Accepted Orders"
+              value={getAcceptedOrderCount()}
+              color="#d4edda"
+              onPress={() =>
+                navigation.navigate('VendorOrders', {tab: 'Accepted'})
+              }
+            />
+            <DashboardTile
+              size="l"
+              label="Ready To Ship"
+              value={getReadyToShipOrderCount()}
+              color="#ffeeba"
+              onPress={() =>
+                navigation.navigate('VendorOrders', {tab: 'ReadyToShip'})
+              }
+            />
+            <DashboardTile
+              size="m"
+              label="Completed"
+              value={getReadyToShipOrderCount()}
+              color="#D7DCF8"
+              onPress={() =>
+                navigation.navigate('VendorOrders', {tab: 'ReadyToShip'})
+              }
+            />
+            <DashboardTile
+              size="m"
+              label="Cancelled/Rejected"
+              value={getReadyToShipOrderCount()}
+              color="#D4E2EA"
+              onPress={() =>
+                navigation.navigate('VendorOrders', {tab: 'Cancelled'})
+              }
+            />
+            <DashboardTile
+              size="l"
+              label="Total Orders"
+              value={getOrderCount()}
+              color="#A3D8F0"
+            />
+          </View>
         </View>
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutButtonText}>Sign Out</Text>
-        </TouchableOpacity>
       </ScrollView>
     </>
   );
@@ -227,19 +213,6 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginBottom: 20,
-  },
-  signOutButton: {
-    backgroundColor: '#ff4444',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginVertical: 20,
-    marginHorizontal: 10,
-  },
-  signOutButtonText: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
 });
 
