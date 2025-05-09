@@ -80,7 +80,6 @@ const OrderSummaryCard = ({
         </View>
         <Text style={styles.pendingTime}>{getPendingTime()} mins</Text>
       </View>
-
       <View style={styles.customerRow}>
         <View style={{flex: 1}}>
           <View style={styles.customerInfo}>
@@ -120,13 +119,14 @@ const OrderSummaryCard = ({
           <Text style={styles.viewOrder}>View Order ➔</Text>
         </TouchableOpacity>
       </View>
-      {state === 'READY_TO_SHIP' && (
+      {/* uncomment when delivery app is ready */}
+      {/* {state === 'READY_TO_SHIP' && (
         <TouchableOpacity
           style={styles.assignButton}
           onPress={() => console.log('Assign order pressed')}>
           <Text style={styles.assignButtonText}>Assign Order</Text>
         </TouchableOpacity>
-      )}
+      )} */}
     </View>
   );
 };

@@ -6,6 +6,7 @@ import {
   StyleSheet,
   Image,
   ActivityIndicator,
+  ScrollView,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import PendingTab from '../tabs/PendingTab';
@@ -49,18 +50,6 @@ const VendorWiseOrders: React.FC = () => {
     }
   }, [vendors]);
 
-  // if (loading) {
-  //   return <Text>Loading vendors...</Text>;
-  // }
-
-  // if (error) {
-  //   return <Text>Error: {error}</Text>;
-  // }
-
-  // if (vendors.length === 0) {
-  //   return <Text>No vendors available</Text>;
-  // }
-
   const renderTabContent = () => {
     switch (activeTab) {
       case 'Pending':
@@ -82,23 +71,29 @@ const VendorWiseOrders: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* Tabs */}
       <View style={styles.tabWrapper}>
-        <View style={styles.tabContainer}>
-          {TABS.map(tabItem => (
-            <TouchableOpacity
-              key={tabItem}
-              onPress={() => setActiveTab(tabItem)}
-              style={styles.tabButton}>
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tabItem && styles.activeTabText,
-                ]}>
-                {tabItem}
-              </Text>
-              {/* Active underline */}
-              {activeTab === tabItem && <View style={styles.activeUnderline} />}
-            </TouchableOpacity>
-          ))}
+        <View style={styles.tabWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.tabContainer}>
+            {TABS.map(tabItem => (
+              <TouchableOpacity
+                key={tabItem}
+                onPress={() => setActiveTab(tabItem)}
+                style={styles.tabButton}>
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === tabItem && styles.activeTabText,
+                  ]}>
+                  {tabItem}
+                </Text>
+                {activeTab === tabItem && (
+                  <View style={styles.activeUnderline} />
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
         </View>
       </View>
 
@@ -167,6 +162,7 @@ const styles = StyleSheet.create({
   tabButton: {
     alignItems: 'center',
     paddingTop: 12,
+    paddingHorizontal: 16,
   },
   tabText: {
     fontSize: 16,
