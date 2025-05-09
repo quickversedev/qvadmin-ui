@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, StyleSheet} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-
+import {SafeAreaView} from 'react-native-safe-area-context'; // Add this import
 import OrderStackNavigator from '../../navigation/DashboardNavigation';
 import CampusSelector from '../../components/common/addressHeader';
 
@@ -11,44 +11,52 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.gradientWrapper}>
-        <LinearGradient
-          colors={['#A49EF4', '#A49EF4', 'transparent']}
-          start={{x: 0.5, y: 0}}
-          end={{x: 0.5, y: 1}}
-          style={styles.backgroundGradient}
-        />
-        <LinearGradient
-          colors={['transparent', '#A49EF4', 'transparent']}
-          start={{x: 0, y: 0.5}}
-          end={{x: 1, y: 0.5}}
-          style={styles.sideFadeLeft}
-        />
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={['top', 'left', 'right']} // Adjust edges for Android/iOS
+    >
+      <View style={styles.container}>
+        <View style={styles.gradientWrapper}>
+          <LinearGradient
+            colors={['#A49EF4', '#A49EF4', 'transparent']}
+            start={{x: 0.5, y: 0}}
+            end={{x: 0.5, y: 1}}
+            style={styles.backgroundGradient}
+          />
+          <LinearGradient
+            colors={['transparent', '#A49EF4', 'transparent']}
+            start={{x: 0, y: 0.5}}
+            end={{x: 1, y: 0.5}}
+            style={styles.sideFadeLeft}
+          />
 
-        <LinearGradient
-          colors={['#A49EF4', 'transparent', 'transparent']}
-          start={{x: 0, y: 0.5}}
-          end={{x: 1, y: 0.5}}
-          style={styles.sideFadeRight}
-        />
+          <LinearGradient
+            colors={['#A49EF4', 'transparent', 'transparent']}
+            start={{x: 0, y: 0.5}}
+            end={{x: 1, y: 0.5}}
+            style={styles.sideFadeRight}
+          />
 
-        <View style={styles.addressHeader}>
-          <CampusSelector onSelect={handleCampusSelect} />
+          <View style={styles.addressHeader}>
+            <CampusSelector onSelect={handleCampusSelect} />
+          </View>
+        </View>
+
+        <View style={styles.content}>
+          <OrderStackNavigator />
         </View>
       </View>
-
-      <View style={styles.content}>
-        <OrderStackNavigator />
-      </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#f5f5f5', // Match container background
+  },
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
   },
   gradientWrapper: {
     position: 'relative',
@@ -56,7 +64,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     overflow: 'hidden',
-    height: 100, // adjust height as needed
+    height: 80, // adjust height as needed
   },
   sideFadeLeft: {
     position: 'absolute',
@@ -75,8 +83,7 @@ const styles = StyleSheet.create({
   },
   backgroundGradient: {
     ...StyleSheet.absoluteFillObject,
-    // borderBottomLeftRadius: 200,
-    // borderBottomRightRadius: 200,
+
     opacity: 0.7,
   },
   addressHeader: {
@@ -85,7 +92,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: 16,
   },
 });
 

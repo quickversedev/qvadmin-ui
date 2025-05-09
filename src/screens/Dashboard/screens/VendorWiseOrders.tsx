@@ -68,8 +68,7 @@ const VendorWiseOrders: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Tabs */}
+    <View style={styles.container}>
       <View style={styles.tabWrapper}>
         <View style={styles.tabWrapper}>
           <ScrollView
@@ -138,7 +137,7 @@ const VendorWiseOrders: React.FC = () => {
           renderTabContent()
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -161,7 +160,7 @@ const styles = StyleSheet.create({
   },
   tabButton: {
     alignItems: 'center',
-    paddingTop: 12,
+
     paddingHorizontal: 16,
   },
   tabText: {
