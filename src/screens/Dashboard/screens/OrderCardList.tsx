@@ -1,7 +1,7 @@
 import React from 'react';
 import {View, StyleSheet} from 'react-native';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
-import OrderSummaryCard from '../../../components/Dashboard/pending/OrderSummaryCard';
+import OrderSummaryCard from '../../../components/Dashboard/OrderSummaryCard';
 
 interface OrderCardListProps {
   vendorId: string;

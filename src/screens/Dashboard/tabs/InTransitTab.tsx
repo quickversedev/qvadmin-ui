@@ -1,61 +1,64 @@
 import React, {useEffect, useState} from 'react';
-import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
-import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
+import {ScrollView, View, Text, Image, StyleSheet} from 'react-native';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
 import {Vendor} from '../../../store/vendors/useVendorStore';
+import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
 import OrderCardList from '../screens/OrderCardList';
 import {ORDER_STATUS} from '../../../assets/constants/constant';
 
-interface ReadyToShipTabProps {
+interface InTransitTabProps {
   vendors: Vendor[];
 }
-const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({vendors}) => {
+const InTransitTab: React.FC<InTransitTabProps> = ({vendors}) => {
   const {getVendorOrdersByStatus} = useOrderStore();
-  const [vendorsWithreadyToShipOrders, setVendorsWithReadyToShipOrders] =
-    useState<Vendor[]>([]);
+  const [vendorsWithInTransitOrders, setVendorsWithInTransitOrders] = useState<
+    Vendor[]
+  >([]);
 
   useEffect(() => {
-    const fetchReadyToShipVendors = () => {
-      const readyToShipVendors: Vendor[] = vendors.filter(vendor => {
-        const readyToShipOrders = getVendorOrdersByStatus(
+    const fetchInTransitVendors = () => {
+      const inTransitVendors: Vendor[] = vendors.filter(vendor => {
+        // ⚡ vendor.vendorId is string, shopId is number — need to convert
+        const inTransitOrders = getVendorOrdersByStatus(
           Number(vendor.vendorId),
-          ORDER_STATUS.PACKED,
+          ORDER_STATUS.SHIPPED,
         );
-        return readyToShipOrders?.length > 0;
+        return inTransitOrders?.length > 0;
       });
 
-      setVendorsWithReadyToShipOrders(readyToShipVendors);
+      setVendorsWithInTransitOrders(inTransitVendors);
     };
 
     if (vendors?.length > 0) {
-      fetchReadyToShipVendors();
+      fetchInTransitVendors();
     }
-  }, [vendors, getVendorOrdersByStatus]);
+  }, [getVendorOrdersByStatus, vendors]);
+
   return (
     <ScrollView style={{marginHorizontal: 16}}>
-      {vendorsWithreadyToShipOrders?.length === 0 ? (
+      {vendorsWithInTransitOrders?.length === 0 ? (
         <View style={[styles.stateContainer, styles.emptyContainer]}>
           <Image
             source={require('../../../assets/images/empty-state.png')} // Add your empty state icon
             style={styles.stateIcon}
           />
-          <Text style={styles.stateTitle}>0 Ready To Ship Orders</Text>
+          <Text style={styles.stateTitle}>0 InTransit Orders</Text>
           <Text style={styles.stateSubtitle}>
-            There are currently no Ready-To-Ship orders at this campus
+            There are currently no InTransit orders at this campus
           </Text>
         </View>
       ) : (
-        vendorsWithreadyToShipOrders.map(vendor => (
+        vendorsWithInTransitOrders.map(vendor => (
           <CollapsableVendor
-            key={`readytoship_${vendor.vendorId}`}
+            key={`inTransit_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
             vendorLogoUrl="https://example.com/logo.png"
-            status={ORDER_STATUS.PACKED}
+            status={ORDER_STATUS.SHIPPED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
-              key={`readyToShip_orders_${vendor.vendorId}`}
+              key={`InTransit_orders_${vendor.vendorId}`}
               vendorId={vendor.vendorId}
-              status={ORDER_STATUS.PACKED}
+              status={ORDER_STATUS.SHIPPED}
             />
           </CollapsableVendor>
         ))
@@ -64,7 +67,7 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({vendors}) => {
   );
 };
 
-export default ReadyToShipTab;
+export default InTransitTab;
 
 const styles = StyleSheet.create({
   stateContainer: {

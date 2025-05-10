@@ -39,16 +39,12 @@ const LoginScreen: React.FC = () => {
   };
   const auth = useAuth();
   const handleLogin = async () => {
-    console.log('Login button pressed');
     setLoading(true);
     try {
       await auth.sendOtp(phoneNumber);
-      console.log('success');
     } catch (err) {
-      console.log('Error:', err);
       Alert.alert('Error', 'Login failed');
     } finally {
-      console.log('finally');
       setLoading(false);
     }
 
@@ -56,7 +52,6 @@ const LoginScreen: React.FC = () => {
       name: 'OTPScreen',
       params: {phoneNumber, verificationId: 'abc'},
     });
-    // Add login logic here
   };
 
   return (

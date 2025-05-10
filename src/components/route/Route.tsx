@@ -7,7 +7,7 @@ import {AuthStack} from './AuthStack';
 
 export const Router = () => {
   const {authData, loading} = useAuth();
-  console.log('Auth Data:', authData);
+
   if (loading) {
     return <Text>Loading</Text>;
   }

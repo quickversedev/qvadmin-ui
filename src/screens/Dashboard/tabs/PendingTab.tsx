@@ -3,8 +3,9 @@ import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
 
 import {Vendor} from '../../../store/vendors/useVendorStore';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
-import CollapsableVendor from '../../../components/Dashboard/pending/CollapsableVendor';
+import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
 import OrderCardList from '../screens/OrderCardList';
+import {ORDER_STATUS} from '../../../assets/constants/constant';
 
 interface PendingTabProps {
   vendors: Vendor[];
@@ -15,14 +16,14 @@ const PendingTab: React.FC<PendingTabProps> = ({vendors}) => {
   const [vendorsWithPendingOrders, setVendorsWithPendingOrders] = useState<
     Vendor[]
   >([]);
-  console.log('PendingTab vendors:', vendors);
+
   useEffect(() => {
     const fetchPendingVendors = () => {
       const pendingVendors: Vendor[] = vendors.filter(vendor => {
         // ⚡ vendor.vendorId is string, shopId is number — need to convert
         const pendingOrders = getVendorOrdersByStatus(
           Number(vendor.vendorId),
-          'PENDING',
+          ORDER_STATUS.PENDING,
         );
         return pendingOrders?.length > 0;
       });
@@ -54,12 +55,12 @@ const PendingTab: React.FC<PendingTabProps> = ({vendors}) => {
             key={`pending_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
             vendorLogoUrl="https://example.com/logo.png"
-            status="pending"
+            status={ORDER_STATUS.PENDING}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
               key={`pending_orders_${vendor.vendorId}`}
               vendorId={vendor.vendorId}
-              status="PENDING"
+              status={ORDER_STATUS.PENDING}
             />
           </CollapsableVendor>
         ))

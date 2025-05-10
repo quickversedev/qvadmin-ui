@@ -10,11 +10,12 @@ import {
   Image,
 } from 'react-native';
 import {useOrderStore} from '../../store/orders/useOrdersStore';
-import DashboardTile from './dashboardTile/DashboardTile';
+import DashboardTile from './DashboardTile';
 import {useNavigation} from '@react-navigation/native';
 import {OrderStackParamList} from '../../navigation/DashboardNavigation';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {useCampuses} from '../../hooks/campuses/useCampuses';
+import {ORDER_STATUS} from '../../assets/constants/constant';
 
 type OrderListScreenNavigationProp = StackNavigationProp<
   OrderStackParamList,
@@ -28,10 +29,8 @@ const OrderListScreen = () => {
     loading,
     error,
     fetchOrders,
-    getPendingOrderCount,
-    getAcceptedOrderCount,
-    getReadyToShipOrderCount,
     getOrderCount,
+    getOrdersCountByStatus,
   } = useOrderStore();
 
   useEffect(() => {
@@ -109,46 +108,64 @@ const OrderListScreen = () => {
             <DashboardTile
               size="m"
               label="Pending Orders"
-              value={getPendingOrderCount()}
+              value={getOrdersCountByStatus(ORDER_STATUS.PENDING)}
               color="#f8d7da"
               onPress={() =>
-                navigation.navigate('VendorOrders', {tab: 'Pending'})
+                navigation.navigate('VendorOrders', {tab: ORDER_STATUS.PENDING})
               }
             />
             <DashboardTile
               size="m"
               label="Accepted Orders"
-              value={getAcceptedOrderCount()}
+              value={getOrdersCountByStatus(ORDER_STATUS.ACCEPTED)}
               color="#d4edda"
               onPress={() =>
-                navigation.navigate('VendorOrders', {tab: 'Accepted'})
+                navigation.navigate('VendorOrders', {
+                  tab: ORDER_STATUS.ACCEPTED,
+                })
               }
             />
             <DashboardTile
-              size="l"
+              size="m"
               label="Ready To Ship"
-              value={getReadyToShipOrderCount()}
+              value={getOrdersCountByStatus(ORDER_STATUS.PACKED)}
               color="#ffeeba"
               onPress={() =>
-                navigation.navigate('VendorOrders', {tab: 'ReadyToShip'})
+                navigation.navigate('VendorOrders', {tab: ORDER_STATUS.PACKED})
+              }
+            />
+            <DashboardTile
+              size="m"
+              label="In Transit"
+              value={getOrdersCountByStatus(ORDER_STATUS.SHIPPED)}
+              color="#ffeeba"
+              onPress={() =>
+                navigation.navigate('VendorOrders', {tab: ORDER_STATUS.SHIPPED})
               }
             />
             <DashboardTile
               size="m"
               label="Completed"
-              value={getReadyToShipOrderCount()}
+              value={getOrdersCountByStatus(ORDER_STATUS.COMPLETED)}
               color="#D7DCF8"
               onPress={() =>
-                navigation.navigate('VendorOrders', {tab: 'Completed'})
+                navigation.navigate('VendorOrders', {
+                  tab: ORDER_STATUS.COMPLETED,
+                })
               }
             />
             <DashboardTile
               size="m"
               label="Cancelled/Rejected"
-              value={getReadyToShipOrderCount()}
+              value={
+                getOrdersCountByStatus(ORDER_STATUS.CANCELLED) +
+                getOrdersCountByStatus(ORDER_STATUS.REJECTED)
+              }
               color="#D4E2EA"
               onPress={() =>
-                navigation.navigate('VendorOrders', {tab: 'Cancelled'})
+                navigation.navigate('VendorOrders', {
+                  tab: ORDER_STATUS.CANCELLED,
+                })
               }
             />
             <DashboardTile

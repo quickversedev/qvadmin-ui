@@ -1,16 +1,19 @@
 import React from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, Linking} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {Order} from '../../../store/orders/useOrdersStore';
+import {Order} from '../../store/orders/useOrdersStore';
 import {useNavigation} from '@react-navigation/native';
-import {OrderStackParamList} from '../../../navigation/DashboardNavigation';
+
 import {StackNavigationProp} from '@react-navigation/stack';
+import {HomeScreenStackParamList} from '../../navigation/HomeScreenNavigation';
+
+import {getStatusStyles} from './DashBoardUtil';
 
 type OrderSummaryCardProps = Order & {
   key?: string; // accept key as optional
 };
 type WebViewScreenNavigationProp = StackNavigationProp<
-  OrderStackParamList,
+  HomeScreenStackParamList,
   'WebViewScreen'
 >;
 
@@ -39,54 +42,30 @@ const OrderSummaryCard = ({
   };
 
   // Determine status styles
-  const getStatusStyles = () => {
-    switch (state) {
-      case 'CANCELLED':
-        return {
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          icon: 'cancel',
-        };
-      case 'REJECTED':
-        return {
-          backgroundColor: '#fff3cd',
-          color: '#856404',
-          icon: 'close-circle-outline',
-        };
-      default:
-        return {
-          backgroundColor: '#e6f0fa',
-          color: '#0f3057',
-          icon: 'clock-outline',
-        };
-    }
-  };
 
-  const statusStyles = getStatusStyles();
+  const statusStyles = getStatusStyles(state);
 
   return (
     <View style={styles.card}>
       <View style={styles.headerRow}>
         <View style={{flexDirection: 'row', alignItems: 'center'}}>
           <Text style={styles.orderId}>#{orderId}</Text>
-          {/* Status Badge */}
-          {(state === 'CANCELLED' || state === 'REJECTED') && (
-            <View
-              style={[
-                styles.statusBadge,
-                {backgroundColor: statusStyles.backgroundColor},
-              ]}>
-              <Icon
-                name={statusStyles.icon}
-                size={14}
-                color={statusStyles.color}
-                style={{marginRight: 4}}
-              />
-              <Text style={[styles.statusText, {color: statusStyles.color}]}>
-                {state}
-              </Text>
-            </View>
-          )}
+
+          <View
+            style={[
+              styles.statusBadge,
+              {backgroundColor: statusStyles.backgroundColor},
+            ]}>
+            <Icon
+              name={statusStyles.icon}
+              size={14}
+              color={statusStyles.color}
+              style={{marginRight: 4}}
+            />
+            <Text style={[styles.statusText, {color: statusStyles.color}]}>
+              {state}
+            </Text>
+          </View>
         </View>
         <Text style={styles.pendingTime}>{getPendingTime()} mins</Text>
       </View>
