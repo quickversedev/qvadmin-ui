@@ -2,18 +2,11 @@ import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
 import VendorWiseOrders from '../screens/Dashboard/screens/VendorWiseOrders';
 import OrderListScreen from '../components/Dashboard/OrderDashboard';
+import WebViewScreen from '../screens/webview/WebView';
+import HomeScreen from '../screens/Home/HomeScreen';
 
-export type OrderStackParamList = {
-  OrderList: undefined;
-  VendorOrders: {
-    tab:
-      | 'PENDING'
-      | 'ACCEPTED'
-      | 'PACKED'
-      | 'CANCELLED'
-      | 'COMPLETED'
-      | 'SHIPPED';
-  };
+export type HomeScreenStackParamList = {
+  HomeScreen: undefined;
   WebViewScreen: {
     url: string;
   };
@@ -21,23 +14,24 @@ export type OrderStackParamList = {
 
 const Stack = createStackNavigator();
 
-const OrderStackNavigator = () => {
+const HomeScreenNavigation = () => {
   return (
     <Stack.Navigator
-      initialRouteName="OrderList"
+      initialRouteName="HomeScreen"
       screenOptions={{headerShown: false}}>
       <Stack.Screen
-        name="OrderList"
-        component={OrderListScreen}
+        name="HomeScreen"
+        component={HomeScreen}
         options={{title: 'Orders'}}
       />
+
       <Stack.Screen
-        name="VendorOrders"
-        component={VendorWiseOrders}
+        name="WebViewScreen"
+        component={WebViewScreen}
         options={{title: 'Vendor Orders'}}
       />
     </Stack.Navigator>
   );
 };
 
-export default OrderStackNavigator;
+export default HomeScreenNavigation;

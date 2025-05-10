@@ -74,7 +74,6 @@ const CampusSelector = ({onSelect}: {onSelect: (campus: Campus) => void}) => {
       <TouchableOpacity
         style={styles.selectorButton}
         onPress={() => {
-          console.log('clicked');
           setIsOpen(true);
         }}>
         <View style={styles.buttonContent}>

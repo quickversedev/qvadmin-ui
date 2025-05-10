@@ -73,9 +73,7 @@ const OTPScreen: React.FC = () => {
     setLoading(true);
     try {
       await auth.verifyOtp(phoneNumber, value, currentVerificationId);
-      Alert.alert('Success', 'OTP verified successfully');
     } catch (err) {
-      console.log('Error:', err);
       Alert.alert('Error', 'Login failed');
     } finally {
       setLoading(false);
@@ -83,8 +81,10 @@ const OTPScreen: React.FC = () => {
   };
 
   const handleResendOtp = async () => {
-    if (!canResend) return;
-    console.log('Resending OTP...');
+    if (!canResend) {
+      return;
+    }
+
     try {
       setLoading(true);
       const newVerificationId = await auth.sendOtp(phoneNumber);

@@ -7,18 +7,15 @@ import {
   Image,
   Linking,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import {OrderStatus} from '../../types/Order';
+
+import {getStatusStyles} from './DashBoardUtil';
 
 type OrderCardProps = {
   vendorName: string;
   vendorLogoUrl: string;
-  status:
-    | 'pending'
-    | 'cancelled'
-    | 'readytoship'
-    | 'completed'
-    | 'cancelled'
-    | 'accepted';
+  status: OrderStatus;
   children?: React.ReactNode;
   vendorPhone: string;
 };
@@ -39,6 +36,7 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
     const phoneNumber = `tel:${vendorPhone}`;
     Linking.openURL(phoneNumber);
   };
+  const statusStyles = getStatusStyles(status);
   return (
     <View style={styles.card}>
       <TouchableOpacity style={styles.header} onPress={handleToggleExpand}>
@@ -51,11 +49,15 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
 
           <Text style={styles.vendorName}>{vendorName}</Text>
 
-          <View
-            style={[
-              styles.statusDot,
-              {backgroundColor: getStatusColor(status)},
-            ]}
+          <Icon
+            name={statusStyles.icon}
+            size={20}
+            color={statusStyles.color}
+            style={{
+              marginRight: 4,
+              backgroundColor: statusStyles.backgroundColor,
+              borderRadius: 6,
+            }}
           />
         </View>
 
@@ -73,34 +75,16 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
           </TouchableOpacity>
 
           <Icon
-            name={expanded ? 'keyboard-arrow-up' : 'keyboard-arrow-down'}
+            name={expanded ? 'chevron-up' : 'chevron-down'}
             size={24}
             color="#333"
           />
         </View>
       </TouchableOpacity>
 
-      {/* Expanded Content passed as children */}
       {expanded && <View style={styles.details}>{children}</View>}
     </View>
   );
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'pending':
-      return 'red';
-    case 'accepted':
-      return 'orange';
-    case 'readytoship':
-      return 'orange';
-    case 'cancelled':
-      return 'red';
-    case 'completed':
-      return 'green';
-    default:
-      return 'gray';
-  }
 };
 
 const styles = StyleSheet.create({
@@ -133,11 +117,11 @@ const styles = StyleSheet.create({
     color: '#111',
     marginRight: 6,
   },
-  statusDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-  },
+  // statusStyle: {
+  //   width: 12,
+  //   height: 12,
+  //   borderRadius: 6,
+  // },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',

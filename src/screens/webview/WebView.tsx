@@ -1,7 +1,8 @@
 import React, {useRef} from 'react';
 import {WebView} from 'react-native-webview';
 import {RouteProp} from '@react-navigation/native';
-import {View, Text, StyleSheet, SafeAreaView} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 interface WebViewScreenProps {
   url?: string;
@@ -11,7 +12,7 @@ interface WebViewScreenProps {
 const WebViewScreen: React.FC<WebViewScreenProps> = ({route, url}) => {
   const webViewRef = useRef<WebView>(null);
   const Url = url || route?.params?.url;
-  console.log('URL:', Url);
+
   if (!Url) {
     return (
       <View style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>

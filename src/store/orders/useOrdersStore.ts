@@ -55,10 +55,8 @@ interface OrderStore {
   getTotalPendingOrders: () => Order[];
   getTotalAcceptedOrders: () => Order[];
   getTotalReadyToShipOrders: () => Order[];
-  getPendingOrderCount: () => number;
-  getAcceptedOrderCount: () => number;
-  getReadyToShipOrderCount: () => number;
   getVendorOrdersByStatus: (vendorId: number, status: string) => Order[];
+  getOrdersCountByStatus: (status: string) => number;
 }
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
@@ -126,9 +124,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     }
   },
 
-  // Basic order actions
   getOrderCount: () => {
-    console.log('getOrderCount called:', get().orders.length);
     return get().orders.length;
   },
 
@@ -136,60 +132,24 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     return get().orders.find(order => order.orderId === orderId);
   },
 
-  // Filtered order getters
   getTotalPendingOrders: () => {
-    console.log(
-      'Pending orders:',
-      get().orders.filter(order => order.state === 'PENDING'),
-    );
     return get().orders.filter(order => order.state === 'PENDING');
   },
 
   getTotalAcceptedOrders: () => {
-    console.log(
-      'ACCEPTED orders:',
-      get().orders.filter(order => order.state === 'ACCEPTED'),
-    );
     return get().orders.filter(order => order.state === 'ACCEPTED');
   },
 
   getTotalReadyToShipOrders: () => {
-    console.log(
-      'READY_TO_SHIP orders:',
-      get().orders.filter(order => order.state === 'READY_TO_SHIP'),
-    );
     return get().orders.filter(order => order.state === 'READY_TO_SHIP');
-  },
-
-  // Count getters
-  getPendingOrderCount: () => {
-    console.log(
-      'Pending order count:',
-      get().orders.filter(order => order.state === 'PENDING').length,
-    );
-
-    return get().orders.filter(order => order.state === 'PENDING').length;
-  },
-
-  getAcceptedOrderCount: () => {
-    console.log(
-      'ACCEPTED order count:',
-      get().orders.filter(order => order.state === 'ACCEPTED').length,
-    );
-    return get().orders.filter(order => order.state === 'ACCEPTED').length;
-  },
-
-  getReadyToShipOrderCount: () => {
-    console.log(
-      'READY_TO_SHIP order count:',
-      get().orders.filter(order => order.state === 'READY_TO_SHIP').length,
-    );
-    return get().orders.filter(order => order.state === 'READY_TO_SHIP').length;
   },
 
   getVendorOrdersByStatus: (vendorId: number, status: string) => {
     return get().orders.filter(
       order => order.shopId === vendorId && order.state === status,
     );
+  },
+  getOrdersCountByStatus: (status: string) => {
+    return get().orders.filter(order => order.state === status).length;
   },
 }));

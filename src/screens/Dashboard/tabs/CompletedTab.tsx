@@ -2,8 +2,9 @@ import React, {useEffect, useState} from 'react';
 import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
 import {Vendor} from '../../../store/vendors/useVendorStore';
-import CollapsableVendor from '../../../components/Dashboard/pending/CollapsableVendor';
+import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
 import OrderCardList from '../screens/OrderCardList';
+import {ORDER_STATUS} from '../../../assets/constants/constant';
 
 interface completedTabProps {
   vendors: Vendor[];
@@ -13,18 +14,18 @@ const CompletedTab: React.FC<completedTabProps> = ({vendors}) => {
   const [vendorsWithCompletedOrders, setVendorsWithCompletedOrders] = useState<
     Vendor[]
   >([]);
-  console.log('CompletedTab vendors:', vendors);
+
   useEffect(() => {
     const fetchCompletedVendors = () => {
       const completedVendors: Vendor[] = vendors.filter(vendor => {
         // ⚡ vendor.vendorId is string, shopId is number — need to convert
         const completedOrders = getVendorOrdersByStatus(
           Number(vendor.vendorId),
-          'COMPLETED',
+          ORDER_STATUS.COMPLETED,
         );
         return completedOrders?.length > 0;
       });
-      console.log('Completed vendors:', completedVendors);
+
       setVendorsWithCompletedOrders(completedVendors);
     };
 
@@ -51,12 +52,12 @@ const CompletedTab: React.FC<completedTabProps> = ({vendors}) => {
             key={`Completed_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
             vendorLogoUrl="https://example.com/logo.png"
-            status="completed"
+            status={ORDER_STATUS.COMPLETED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
               key={`Completed_orders_${vendor.vendorId}`}
               vendorId={vendor.vendorId}
-              status="COMPLETED"
+              status={ORDER_STATUS.COMPLETED}
             />
           </CollapsableVendor>
         ))

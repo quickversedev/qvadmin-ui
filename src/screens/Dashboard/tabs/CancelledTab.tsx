@@ -2,8 +2,9 @@ import React, {useEffect, useState} from 'react';
 import {ScrollView, View, Text, StyleSheet, Image} from 'react-native';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
 import {Vendor} from '../../../store/vendors/useVendorStore';
-import CollapsableVendor from '../../../components/Dashboard/pending/CollapsableVendor';
+import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
 import OrderCardList from '../screens/OrderCardList';
+import {ORDER_STATUS} from '../../../assets/constants/constant';
 
 interface cancelledTabProps {
   vendors: Vendor[];
@@ -20,11 +21,11 @@ const CancelledTab: React.FC<cancelledTabProps> = ({vendors}) => {
         // ⚡ vendor.vendorId is string, shopId is number — need to convert
         const rejectedOrders = getVendorOrdersByStatus(
           Number(vendor.vendorId),
-          'REJECTED',
+          ORDER_STATUS.REJECTED,
         );
         const cancelledOrders = getVendorOrdersByStatus(
           Number(vendor.vendorId),
-          'CANCELLED',
+          ORDER_STATUS.CANCELLED,
         );
 
         return cancelledOrders?.length > 0 || rejectedOrders?.length > 0;
@@ -56,12 +57,12 @@ const CancelledTab: React.FC<cancelledTabProps> = ({vendors}) => {
             key={`cancelled_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
             vendorLogoUrl="https://example.com/logo.png"
-            status="cancelled"
+            status={ORDER_STATUS.CANCELLED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
               key={`cancelled_orders_${vendor.vendorId}`}
               vendorId={vendor.vendorId}
-              status="CANCELLED"
+              status={ORDER_STATUS.CANCELLED}
             />
           </CollapsableVendor>
         ))

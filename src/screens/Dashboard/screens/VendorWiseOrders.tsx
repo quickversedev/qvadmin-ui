@@ -237,7 +237,6 @@ import {
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
 import PendingTab from '../tabs/PendingTab';
 import AcceptedTab from '../tabs/AcceptedTab';
 import ReadyToShipTab from '../tabs/ReadyToShipTab';
@@ -247,15 +246,18 @@ import {OrderStackParamList} from '../../../navigation/DashboardNavigation';
 import {RouteProp, useRoute} from '@react-navigation/native';
 import CancelledTab from '../tabs/CancelledTab';
 import CompletedTab from '../tabs/CompletedTab';
+import InTransitTab from '../tabs/InTransitTab';
+import {ORDER_STATUS} from '../../../assets/constants/constant';
 
 type VendorWiseOrdersRouteProp = RouteProp<OrderStackParamList, 'VendorOrders'>;
 
 const TABS = [
-  'Pending',
-  'Accepted',
-  'ReadyToShip',
-  'Cancelled',
-  'Completed',
+  ORDER_STATUS.PENDING,
+  ORDER_STATUS.ACCEPTED,
+  ORDER_STATUS.PACKED,
+  ORDER_STATUS.SHIPPED,
+  ORDER_STATUS.CANCELLED,
+  ORDER_STATUS.COMPLETED,
 ] as const;
 type TabType = (typeof TABS)[number];
 
@@ -268,11 +270,12 @@ const VendorWiseOrders: React.FC = () => {
   const selectedCampus = useCampusesStore(state => state.selectedCampus);
   const scrollViewRef = useRef<ScrollView>(null);
   const tabItemRefs = useRef<{[key in TabType]: View | null}>({
-    Pending: null,
-    Accepted: null,
-    ReadyToShip: null,
-    Cancelled: null,
-    Completed: null,
+    PENDING: null,
+    ACCEPTED: null,
+    PACKED: null,
+    SHIPPED: null,
+    CANCELLED: null,
+    COMPLETED: null,
   });
 
   useEffect(() => {
@@ -287,10 +290,10 @@ const VendorWiseOrders: React.FC = () => {
     }
   }, [vendors]);
 
-  const scrollToTab = (tab: TabType) => {
-    const index = TABS.indexOf(tab);
+  const scrollToTab = (taba: TabType) => {
+    const index = TABS.indexOf(taba);
     scrollViewRef.current?.scrollTo({
-      x: index * 120, // Adjust this value based on your tab width
+      x: index * 80, // Adjust this value based on your tab width
       animated: true,
     });
   };
@@ -307,22 +310,24 @@ const VendorWiseOrders: React.FC = () => {
     }
   }, [tab]);
 
-  const setTabRef = (tab: TabType) => (ref: View | null) => {
-    tabItemRefs.current[tab] = ref;
+  const setTabRef = (taba: TabType) => (ref: View | null) => {
+    tabItemRefs.current[taba] = ref;
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'Pending':
+      case ORDER_STATUS.PENDING:
         return <PendingTab vendors={allVendors} />;
-      case 'Accepted':
+      case ORDER_STATUS.ACCEPTED:
         return <AcceptedTab vendors={allVendors} />;
-      case 'ReadyToShip':
+      case ORDER_STATUS.PACKED:
         return <ReadyToShipTab vendors={allVendors} />;
-      case 'Cancelled':
+      case ORDER_STATUS.CANCELLED:
         return <CancelledTab vendors={allVendors} />;
-      case 'Completed':
+      case ORDER_STATUS.COMPLETED:
         return <CompletedTab vendors={allVendors} />;
+      case ORDER_STATUS.SHIPPED:
+        return <InTransitTab vendors={allVendors} />;
       default:
         return null;
     }

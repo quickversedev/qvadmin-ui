@@ -64,14 +64,13 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     otp: string,
     verificationId: string,
   ): Promise<void> => {
-    console.log('response: Inside verify');
     const response = await authService.verifyOtp(
       phoneNumber,
       otp,
       verificationId,
     );
     const token = response?.session?.token;
-    console.log('response:', response);
+
     if (token) {
       setAuthData(token);
       storage.set('@AuthData', token);
