@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   RefreshControl,
   Image,
 } from 'react-native';
-import {useOrderStore} from '../../store/orders/useOrdersStore';
+import {TimeFilter, useOrderStore} from '../../store/orders/useOrdersStore';
 import DashboardTile from './DashboardTile';
 import {useNavigation} from '@react-navigation/native';
 import {OrderStackParamList} from '../../navigation/DashboardNavigation';
@@ -32,24 +32,36 @@ const OrderListScreen = () => {
     getOrderCount,
     getOrdersCountByStatus,
   } = useOrderStore();
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('1d');
+  const fetchFilteredOrders = useCallback(() => {
+    console.log('Fetching orders with filter:', timeFilter);
+    fetchOrders(timeFilter);
+  }, [fetchOrders, timeFilter]);
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    fetchFilteredOrders();
+  }, [timeFilter, fetchFilteredOrders]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
-      fetchOrders();
-    }, 180000); // 3 minutes in milliseconds
+      fetchFilteredOrders();
+    }, 10000);
 
     return () => clearInterval(intervalId);
-  }, [fetchOrders]);
+  }, [timeFilter, fetchFilteredOrders]);
 
   const onRefresh = () => {
-    fetchOrders();
+    fetchFilteredOrders();
   };
   const {selectedCampus} = useCampuses();
 
+  const filterButtons: {id: TimeFilter; label: string}[] = [
+    {id: 'all', label: 'All'},
+    {id: '1h', label: 'Last Hour'},
+    {id: '3h', label: 'Lats 3 Hours'},
+    {id: '1d', label: '1 day'},
+    {id: '30d', label: 'This Month'},
+  ];
   if (loading) {
     return (
       <View style={[styles.centered, {flex: 1}]}>
@@ -62,14 +74,15 @@ const OrderListScreen = () => {
     return (
       <View style={[styles.centered, {flex: 1}]}>
         <Text style={styles.errorText}>Error: {error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchOrders}>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={fetchFilteredOrders}>
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  // Empty state when no campus is selected
   if (!selectedCampus) {
     return (
       <View style={styles.emptyStateContainer}>
@@ -89,7 +102,9 @@ const OrderListScreen = () => {
     return (
       <View style={[styles.centered, {flex: 1}]}>
         <Text>No orders found</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={fetchOrders}>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={fetchFilteredOrders}>
           <Text style={styles.retryButtonText}>Refresh</Text>
         </TouchableOpacity>
       </View>
@@ -97,87 +112,105 @@ const OrderListScreen = () => {
   }
 
   return (
-    <>
-      <ScrollView
-        style={styles.container}
-        refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={onRefresh} />
-        }>
-        <View style={{display: 'flex', justifyContent: 'space-between'}}>
-          <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
-            <DashboardTile
-              size="m"
-              label="Pending Orders"
-              value={getOrdersCountByStatus(ORDER_STATUS.PENDING)}
-              color="#f8d7da"
-              onPress={() =>
-                navigation.navigate('VendorOrders', {tab: ORDER_STATUS.PENDING})
-              }
-            />
-            <DashboardTile
-              size="m"
-              label="Accepted Orders"
-              value={getOrdersCountByStatus(ORDER_STATUS.ACCEPTED)}
-              color="#d4edda"
-              onPress={() =>
-                navigation.navigate('VendorOrders', {
-                  tab: ORDER_STATUS.ACCEPTED,
-                })
-              }
-            />
-            <DashboardTile
-              size="m"
-              label="Ready To Ship"
-              value={getOrdersCountByStatus(ORDER_STATUS.PACKED)}
-              color="#ffeeba"
-              onPress={() =>
-                navigation.navigate('VendorOrders', {tab: ORDER_STATUS.PACKED})
-              }
-            />
-            <DashboardTile
-              size="m"
-              label="In Transit"
-              value={getOrdersCountByStatus(ORDER_STATUS.SHIPPED)}
-              color="#ffeeba"
-              onPress={() =>
-                navigation.navigate('VendorOrders', {tab: ORDER_STATUS.SHIPPED})
-              }
-            />
-            <DashboardTile
-              size="m"
-              label="Completed"
-              value={getOrdersCountByStatus(ORDER_STATUS.COMPLETED)}
-              color="#D7DCF8"
-              onPress={() =>
-                navigation.navigate('VendorOrders', {
-                  tab: ORDER_STATUS.COMPLETED,
-                })
-              }
-            />
-            <DashboardTile
-              size="m"
-              label="Cancelled/Rejected"
-              value={
-                getOrdersCountByStatus(ORDER_STATUS.CANCELLED) +
-                getOrdersCountByStatus(ORDER_STATUS.REJECTED)
-              }
-              color="#D4E2EA"
-              onPress={() =>
-                navigation.navigate('VendorOrders', {
-                  tab: ORDER_STATUS.CANCELLED,
-                })
-              }
-            />
-            <DashboardTile
-              size="l"
-              label="Total Orders"
-              value={getOrderCount()}
-              color="#A3D8F0"
-            />
-          </View>
+    <ScrollView
+      style={styles.container}
+      refreshControl={
+        <RefreshControl refreshing={loading} onRefresh={onRefresh} />
+      }>
+      {/* Time filter buttons */}
+      <View style={styles.filterContainer}>
+        {filterButtons.map(filter => (
+          <TouchableOpacity
+            key={filter.id}
+            style={[
+              styles.filterButton,
+              timeFilter === filter.id && styles.activeFilterButton,
+            ]}
+            onPress={() => setTimeFilter(filter.id)}>
+            <Text
+              style={[
+                styles.filterButtonText,
+                timeFilter === filter.id && styles.activeFilterButtonText,
+              ]}>
+              {filter.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <View style={{display: 'flex', justifyContent: 'space-between'}}>
+        <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
+          <DashboardTile
+            size="m"
+            label="Pending Orders"
+            value={getOrdersCountByStatus(ORDER_STATUS.PENDING)}
+            color="#f8d7da"
+            onPress={() =>
+              navigation.navigate('VendorOrders', {tab: ORDER_STATUS.PENDING})
+            }
+          />
+          <DashboardTile
+            size="m"
+            label="Accepted Orders"
+            value={getOrdersCountByStatus(ORDER_STATUS.ACCEPTED)}
+            color="#d4edda"
+            onPress={() =>
+              navigation.navigate('VendorOrders', {
+                tab: ORDER_STATUS.ACCEPTED,
+              })
+            }
+          />
+          <DashboardTile
+            size="m"
+            label="Ready To Ship"
+            value={getOrdersCountByStatus(ORDER_STATUS.PACKED)}
+            color="#ffeeba"
+            onPress={() =>
+              navigation.navigate('VendorOrders', {tab: ORDER_STATUS.PACKED})
+            }
+          />
+          <DashboardTile
+            size="m"
+            label="In Transit"
+            value={getOrdersCountByStatus(ORDER_STATUS.SHIPPED)}
+            color="#ffeeba"
+            onPress={() =>
+              navigation.navigate('VendorOrders', {tab: ORDER_STATUS.SHIPPED})
+            }
+          />
+          <DashboardTile
+            size="m"
+            label="Completed"
+            value={getOrdersCountByStatus(ORDER_STATUS.COMPLETED)}
+            color="#D7DCF8"
+            onPress={() =>
+              navigation.navigate('VendorOrders', {
+                tab: ORDER_STATUS.COMPLETED,
+              })
+            }
+          />
+          <DashboardTile
+            size="m"
+            label="Cancelled/Rejected"
+            value={
+              getOrdersCountByStatus(ORDER_STATUS.CANCELLED) +
+              getOrdersCountByStatus(ORDER_STATUS.REJECTED)
+            }
+            color="#D4E2EA"
+            onPress={() =>
+              navigation.navigate('VendorOrders', {
+                tab: ORDER_STATUS.CANCELLED,
+              })
+            }
+          />
+          <DashboardTile
+            size="l"
+            label="Total Orders"
+            value={getOrderCount()}
+            color="#A3D8F0"
+          />
         </View>
-      </ScrollView>
-    </>
+      </View>
+    </ScrollView>
   );
 };
 
@@ -230,6 +263,29 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginBottom: 20,
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginVertical: 10,
+    justifyContent: 'center',
+  },
+  filterButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    margin: 4,
+    borderRadius: 10,
+    backgroundColor: '#e0e0e0',
+  },
+  activeFilterButton: {
+    backgroundColor: '#4169E1',
+  },
+  filterButtonText: {
+    color: '#333',
+    fontSize: 14,
+  },
+  activeFilterButtonText: {
+    color: 'white',
   },
 });
 

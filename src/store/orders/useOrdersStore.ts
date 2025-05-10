@@ -49,7 +49,7 @@ interface OrderStore {
   orders: Order[];
   loading: boolean;
   error: string | null;
-  fetchOrders: () => Promise<void>;
+  fetchOrders: (timeFilter?: TimeFilter) => Promise<void>;
   getOrderCount: () => number;
   getOrderById: (orderId: string) => Order | undefined;
   getTotalPendingOrders: () => Order[];
@@ -58,30 +58,72 @@ interface OrderStore {
   getVendorOrdersByStatus: (vendorId: number, status: string) => Order[];
   getOrdersCountByStatus: (status: string) => number;
 }
+export type TimeFilter = '1h' | '3h' | '1d' | '7d' | '30d' | 'all';
+const getStartDate = (filter: TimeFilter): string | undefined => {
+  const now = new Date();
+  switch (filter) {
+    case '1h':
+      return new Date(now.getTime() - 60 * 60 * 1000).toLocaleString();
+    case '3h':
+      return new Date(now.getTime() - 3 * 60 * 60 * 1000).toJSON();
+    case '1d':
+      return new Date(now.getTime() - 24 * 60 * 60 * 1000).toString();
+    case '7d':
+      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    case '30d':
+      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toDateString();
+
+    default:
+      return undefined;
+  }
+};
+// const getStartDate = (filter: TimeFilter): number | undefined => {
+//   const now = Date.now(); // Current timestamp in milliseconds
+//   switch (filter) {
+//     case '1h':
+//       return now - 60 * 60 * 1000; // 1 hour ago
+//     case '3h':
+//       return now - 3 * 60 * 60 * 1000; // 3 hours ago
+//     case '1d':
+//       return now - 24 * 60 * 60 * 1000; // 1 day ago
+//     case '7d':
+//       return now - 7 * 24 * 60 * 60 * 1000; // 7 days ago
+//     case '30d':
+//       return now - 30 * 24 * 60 * 60 * 1000; // 30 days ago
+//     case 'all':
+//     default:
+//       return undefined;
+//   }
+// };
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
   orders: [],
   loading: false,
   error: null,
 
-  fetchOrders: async () => {
+  fetchOrders: async (timeFilter: TimeFilter = '1d') => {
     set({loading: true, error: null});
     try {
-      //   const response = await axios.post<OrderResponse>(
-      //     'http://localhost:8080/quickVerse/v2/OrderStatus?status=PENDING&startDate=2024/09/29',
-      //     {
-      //       pending: true,
-      //       accepted: true,
+      const startDate = getStartDate(timeFilter);
+      console.log('Fetching orders with filter:', startDate);
+      const params = new URLSearchParams();
+      if (startDate) {
+        params.append('startDate', startDate);
+      }
+
+      // const response = await axios.get<OrderResponse>(
+      //   'http://localhost:8080/quickVerse/v2/OrderStatus',
+      //   {
+      //     params,
+      //     headers: {
+      //       SessionKey:
+      //         'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2JpbGUiOiI5MTk3ODI2NjI3NzgiLCJpYXQiOjE3MzIxOTg2NzMsImV4cCI6MTc2MzczNDY3M30.vPMvPZQa3Mv49ccbG_pgOxLeYTS1JQUOD63p4g8p9m8',
       //     },
-      //     {
-      //       headers: {
-      //         SessionKey:
-      //           'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2JpbGUiOiI5MTk3ODI2NjI3NzgiLCJpYXQiOjE3MzIxOTg2NzMsImV4cCI6MTc2MzczNDY3M30.vPMvPZQa3Mv49ccbG_pgOxLeYTS1JQUOD63p4g8p9m8',
-      //         'Content-Type': 'application/json',
-      //       },
-      //     },
-      //   );
+      //   },
+      // );
+
       await new Promise(resolve => setTimeout(resolve, 1000));
+
       const parsedOrders = mockOrders.orders.order.map(order => {
         let customerAddress = order.customerAddress;
         // if (typeof customerAddress === 'string') {
