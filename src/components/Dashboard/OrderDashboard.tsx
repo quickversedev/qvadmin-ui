@@ -45,7 +45,7 @@ const OrderListScreen = () => {
   useEffect(() => {
     const intervalId = setInterval(() => {
       fetchFilteredOrders();
-    }, 10000);
+    }, 180000);
 
     return () => clearInterval(intervalId);
   }, [timeFilter, fetchFilteredOrders]);
