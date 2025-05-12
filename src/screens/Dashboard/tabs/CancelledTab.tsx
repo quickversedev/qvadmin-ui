@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {ScrollView, View, Text, StyleSheet, Image} from 'react-native';
+import {
+  ScrollView,
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  RefreshControl,
+} from 'react-native';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
 import {Vendor} from '../../../store/vendors/useVendorStore';
 import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
@@ -8,8 +15,14 @@ import {ORDER_STATUS} from '../../../assets/constants/constant';
 
 interface cancelledTabProps {
   vendors: Vendor[];
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
-const CancelledTab: React.FC<cancelledTabProps> = ({vendors}) => {
+const CancelledTab: React.FC<cancelledTabProps> = ({
+  vendors,
+  refreshing = false,
+  onRefresh,
+}) => {
   const {getVendorOrdersByStatus} = useOrderStore();
   const [vendorsWithCancelledOrders, setVendorsWithCancelledOrders] = useState<
     Vendor[]
@@ -39,7 +52,16 @@ const CancelledTab: React.FC<cancelledTabProps> = ({vendors}) => {
     }
   }, [getVendorOrdersByStatus, vendors]);
   return (
-    <ScrollView style={{marginHorizontal: 16}}>
+    <ScrollView
+      style={{marginHorizontal: 16}}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#f04d7d']}
+          tintColor="#f04d7d"
+        />
+      }>
       {vendorsWithCancelledOrders?.length === 0 ? (
         <View style={[styles.stateContainer, styles.emptyContainer]}>
           <Image

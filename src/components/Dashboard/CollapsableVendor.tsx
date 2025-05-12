@@ -37,7 +37,6 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
     Linking.openURL(phoneNumber);
   };
   const statusStyles = getStatusStyles(status);
-  console.log('statusStyles', vendorLogoUrl);
   return (
     <View style={styles.card}>
       <TouchableOpacity style={styles.header} onPress={handleToggleExpand}>

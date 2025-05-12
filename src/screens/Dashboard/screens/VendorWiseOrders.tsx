@@ -236,6 +236,7 @@ import {
   Image,
   ActivityIndicator,
   ScrollView,
+  RefreshControl,
 } from 'react-native';
 import PendingTab from '../tabs/PendingTab';
 import AcceptedTab from '../tabs/AcceptedTab';
@@ -248,6 +249,7 @@ import CancelledTab from '../tabs/CancelledTab';
 import CompletedTab from '../tabs/CompletedTab';
 import InTransitTab from '../tabs/InTransitTab';
 import {ORDER_STATUS} from '../../../assets/constants/constant';
+import {useOrderStore} from '../../../store/orders/useOrdersStore';
 
 type VendorWiseOrdersRouteProp = RouteProp<OrderStackParamList, 'VendorOrders'>;
 
@@ -268,6 +270,7 @@ const VendorWiseOrders: React.FC = () => {
   const {vendors, loading, error, fetchVendors} = useVendorStore();
   const [allVendors, setAllVEndors] = useState<Vendor[]>([]);
   const selectedCampus = useCampusesStore(state => state.selectedCampus);
+  const [refreshing, setRefreshing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const tabItemRefs = useRef<{[key in TabType]: View | null}>({
     PENDING: null,
@@ -277,7 +280,8 @@ const VendorWiseOrders: React.FC = () => {
     CANCELLED: null,
     COMPLETED: null,
   });
-
+  const {fetchOrders} = useOrderStore();
+  const lastFilter = useOrderStore(state => state.lastTimeFilter);
   useEffect(() => {
     if (selectedCampus) {
       fetchVendors(selectedCampus.campusId);
@@ -313,21 +317,67 @@ const VendorWiseOrders: React.FC = () => {
   const setTabRef = (taba: TabType) => (ref: View | null) => {
     tabItemRefs.current[taba] = ref;
   };
+  const onRefresh = async () => {
+    setRefreshing(true);
 
+    try {
+      await fetchOrders(lastFilter);
+    } catch (err) {
+      console.error('Error refreshing orders:', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
   const renderTabContent = () => {
     switch (activeTab) {
       case ORDER_STATUS.PENDING:
-        return <PendingTab vendors={allVendors} />;
+        return (
+          <PendingTab
+            vendors={allVendors}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        );
       case ORDER_STATUS.ACCEPTED:
-        return <AcceptedTab vendors={allVendors} />;
+        return (
+          <AcceptedTab
+            vendors={allVendors}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        );
       case ORDER_STATUS.PACKED:
-        return <ReadyToShipTab vendors={allVendors} />;
+        return (
+          <ReadyToShipTab
+            vendors={allVendors}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        );
       case ORDER_STATUS.CANCELLED:
-        return <CancelledTab vendors={allVendors} />;
+        return (
+          <CancelledTab
+            vendors={allVendors}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        );
       case ORDER_STATUS.COMPLETED:
-        return <CompletedTab vendors={allVendors} />;
+        return (
+          <CompletedTab
+            vendors={allVendors}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        );
       case ORDER_STATUS.SHIPPED:
-        return <InTransitTab vendors={allVendors} />;
+        return (
+          <InTransitTab
+            vendors={allVendors}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+          />
+        );
       default:
         return null;
     }
@@ -397,7 +447,17 @@ const VendorWiseOrders: React.FC = () => {
             </Text>
           </View>
         ) : (
-          renderTabContent()
+          <ScrollView
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={['#f04d7d']} // Android
+                tintColor="#f04d7d" // iOS
+              />
+            }>
+            {renderTabContent()}
+          </ScrollView>
         )}
       </View>
     </View>

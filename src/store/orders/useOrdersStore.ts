@@ -50,6 +50,7 @@ interface OrderStore {
   orders: Order[];
   loading: boolean;
   error: string | null;
+  lastTimeFilter: TimeFilter;
   fetchOrders: (timeFilter?: TimeFilter) => Promise<void>;
   getOrderCount: () => number;
   getOrderById: (orderId: string) => Order | undefined;
@@ -74,9 +75,6 @@ const getStartDate = (filter: TimeFilter): string | undefined => {
     case '1d':
       date = new Date(now.getTime() - 24 * 60 * 60 * 1000);
       break;
-    case '7d':
-      date = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-      break;
     case '30d':
       date = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
       break;
@@ -99,17 +97,14 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   orders: [],
   loading: false,
   error: null,
+  lastTimeFilter: '1d',
 
   fetchOrders: async (timeFilter: TimeFilter = '1d') => {
-    set({loading: true, error: null});
+    set({loading: true, error: null, lastTimeFilter: timeFilter});
     try {
       const startDate = getStartDate(timeFilter);
-      console.log('Fetching orders with filter:', startDate);
-      const params = new URLSearchParams();
-      if (startDate) {
-        params.append('startDate', startDate);
-      }
-      console.log('Params:', params.toString());
+      console.log('Fetching orders with filter:', timeFilter);
+
       const response = await axios.get<OrderResponse>(
         `${globalConfig.apiBaseUrl}/v2/OrderStatus?startDate=${startDate}`,
         {
@@ -119,7 +114,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
           },
         },
       );
-      console.log('Orders response:', response);
+
       // await new Promise(resolve => setTimeout(resolve, 1000));
 
       const parsedOrders = response.data.orders.order.map(order => {

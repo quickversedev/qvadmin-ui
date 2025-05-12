@@ -34,7 +34,6 @@ const OrderListScreen = () => {
   } = useOrderStore();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('1d');
   const fetchFilteredOrders = useCallback(() => {
-    console.log('Fetching orders with filter:', timeFilter);
     fetchOrders(timeFilter);
   }, [fetchOrders, timeFilter]);
 
@@ -56,38 +55,40 @@ const OrderListScreen = () => {
   const {selectedCampus} = useCampuses();
 
   const filterButtons: {id: TimeFilter; label: string}[] = [
-    {id: 'all', label: 'All'},
     {id: '1h', label: 'Last Hour'},
-    {id: '3h', label: 'Lats 3 Hours'},
+    {id: '3h', label: 'Last 3 Hours'},
     {id: '1d', label: '1 day'},
     {id: '30d', label: 'This Month'},
   ];
-  if (loading) {
-    return (
-      <View style={[styles.centered, {flex: 1}]}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
 
-  if (error) {
-    return (
-      <View style={[styles.centered, {flex: 1}]}>
-        <Text style={styles.errorText}>Error: {error}</Text>
+  const renderFilterButtons = () => (
+    <View style={styles.filterContainer}>
+      {filterButtons.map(filter => (
         <TouchableOpacity
-          style={styles.retryButton}
-          onPress={fetchFilteredOrders}>
-          <Text style={styles.retryButtonText}>Retry</Text>
+          key={filter.id}
+          style={[
+            styles.filterButton,
+            timeFilter === filter.id && styles.activeFilterButton,
+          ]}
+          onPress={() => setTimeFilter(filter.id)}>
+          <Text
+            style={[
+              styles.filterButtonText,
+              timeFilter === filter.id && styles.activeFilterButtonText,
+            ]}>
+            {filter.label}
+          </Text>
         </TouchableOpacity>
-      </View>
-    );
-  }
+      ))}
+    </View>
+  );
 
   if (!selectedCampus) {
     return (
       <View style={styles.emptyStateContainer}>
+        {renderFilterButtons()}
         <Image
-          source={require('../../assets/images/task-list.png')} // Add an appropriate image
+          source={require('../../assets/images/task-list.png')}
           style={styles.emptyStateImage}
         />
         <Text style={styles.emptyStateTitle}>No Campus Selected</Text>
@@ -98,9 +99,33 @@ const OrderListScreen = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <View style={[styles.centered, {flex: 1}]}>
+        {renderFilterButtons()}
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={[styles.centered, {flex: 1}]}>
+        {renderFilterButtons()}
+        <Text style={styles.errorText}>Error: {error}</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={fetchFilteredOrders}>
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (orders.length === 0 && !loading) {
     return (
       <View style={[styles.centered, {flex: 1}]}>
+        {renderFilterButtons()}
         <Text>No orders found</Text>
         <TouchableOpacity
           style={styles.retryButton}
@@ -117,26 +142,7 @@ const OrderListScreen = () => {
       refreshControl={
         <RefreshControl refreshing={loading} onRefresh={onRefresh} />
       }>
-      {/* Time filter buttons */}
-      <View style={styles.filterContainer}>
-        {filterButtons.map(filter => (
-          <TouchableOpacity
-            key={filter.id}
-            style={[
-              styles.filterButton,
-              timeFilter === filter.id && styles.activeFilterButton,
-            ]}
-            onPress={() => setTimeFilter(filter.id)}>
-            <Text
-              style={[
-                styles.filterButtonText,
-                timeFilter === filter.id && styles.activeFilterButtonText,
-              ]}>
-              {filter.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+      {renderFilterButtons()}
       <View style={{display: 'flex', justifyContent: 'space-between'}}>
         <View style={{flexDirection: 'row', flexWrap: 'wrap'}}>
           <DashboardTile
