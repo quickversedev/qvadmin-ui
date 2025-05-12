@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {
+  Image,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 
 import {Vendor} from '../../../store/vendors/useVendorStore';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
@@ -9,9 +16,15 @@ import {ORDER_STATUS} from '../../../assets/constants/constant';
 
 interface PendingTabProps {
   vendors: Vendor[];
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
 
-const PendingTab: React.FC<PendingTabProps> = ({vendors}) => {
+const PendingTab: React.FC<PendingTabProps> = ({
+  vendors,
+  refreshing = false,
+  onRefresh,
+}) => {
   const {getVendorOrdersByStatus} = useOrderStore();
   const [vendorsWithPendingOrders, setVendorsWithPendingOrders] = useState<
     Vendor[]
@@ -37,7 +50,16 @@ const PendingTab: React.FC<PendingTabProps> = ({vendors}) => {
   }, [vendors, getVendorOrdersByStatus]);
 
   return (
-    <ScrollView style={{marginHorizontal: 16}}>
+    <ScrollView
+      style={{marginHorizontal: 16}}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#f04d7d']}
+          tintColor="#f04d7d"
+        />
+      }>
       {vendorsWithPendingOrders?.length === 0 ? (
         <View style={[styles.stateContainer, styles.emptyContainer]}>
           <Image
@@ -54,7 +76,7 @@ const PendingTab: React.FC<PendingTabProps> = ({vendors}) => {
           <CollapsableVendor
             key={`pending_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
-            vendorLogoUrl="https://example.com/logo.png"
+            vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.PENDING}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList

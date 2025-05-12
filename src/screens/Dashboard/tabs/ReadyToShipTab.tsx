@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {
+  Image,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
 import {Vendor} from '../../../store/vendors/useVendorStore';
@@ -8,8 +15,14 @@ import {ORDER_STATUS} from '../../../assets/constants/constant';
 
 interface ReadyToShipTabProps {
   vendors: Vendor[];
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
-const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({vendors}) => {
+const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({
+  vendors,
+  refreshing = false,
+  onRefresh,
+}) => {
   const {getVendorOrdersByStatus} = useOrderStore();
   const [vendorsWithreadyToShipOrders, setVendorsWithReadyToShipOrders] =
     useState<Vendor[]>([]);
@@ -32,7 +45,16 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({vendors}) => {
     }
   }, [vendors, getVendorOrdersByStatus]);
   return (
-    <ScrollView style={{marginHorizontal: 16}}>
+    <ScrollView
+      style={{marginHorizontal: 16}}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#f04d7d']}
+          tintColor="#f04d7d"
+        />
+      }>
       {vendorsWithreadyToShipOrders?.length === 0 ? (
         <View style={[styles.stateContainer, styles.emptyContainer]}>
           <Image
@@ -49,7 +71,7 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({vendors}) => {
           <CollapsableVendor
             key={`readytoship_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
-            vendorLogoUrl="https://example.com/logo.png"
+            vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.PACKED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList

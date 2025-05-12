@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {ScrollView, View, Text, Image, StyleSheet} from 'react-native';
+import {
+  ScrollView,
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  RefreshControl,
+} from 'react-native';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
 import {Vendor} from '../../../store/vendors/useVendorStore';
 import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
@@ -8,8 +15,14 @@ import {ORDER_STATUS} from '../../../assets/constants/constant';
 
 interface AcceptedTabProps {
   vendors: Vendor[];
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
-const AcceptedTab: React.FC<AcceptedTabProps> = ({vendors}) => {
+const AcceptedTab: React.FC<AcceptedTabProps> = ({
+  vendors,
+  refreshing = false,
+  onRefresh,
+}) => {
   const {getVendorOrdersByStatus} = useOrderStore();
   const [vendorsWithAcceptedOrders, setVendorsWithAcceptedOrders] = useState<
     Vendor[]
@@ -35,7 +48,16 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({vendors}) => {
   }, [getVendorOrdersByStatus, vendors]);
 
   return (
-    <ScrollView style={{marginHorizontal: 16}}>
+    <ScrollView
+      style={{marginHorizontal: 16}}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#f04d7d']}
+          tintColor="#f04d7d"
+        />
+      }>
       {vendorsWithAcceptedOrders?.length === 0 ? (
         <View style={[styles.stateContainer, styles.emptyContainer]}>
           <Image
@@ -52,7 +74,7 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({vendors}) => {
           <CollapsableVendor
             key={`accepted_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
-            vendorLogoUrl="https://example.com/logo.png"
+            vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.ACCEPTED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList

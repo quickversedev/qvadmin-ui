@@ -42,7 +42,11 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
       <TouchableOpacity style={styles.header} onPress={handleToggleExpand}>
         <View style={styles.vendorInfo}>
           <Image
-            source={{uri: vendorLogoUrl}}
+            source={
+              vendorLogoUrl
+                ? {uri: vendorLogoUrl}
+                : require('../../assets/images/default_logo.png')
+            }
             style={styles.vendorLogo}
             resizeMode="contain"
           />
@@ -110,6 +114,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     marginRight: 10,
+    borderRadius: 20,
   },
   vendorName: {
     fontSize: 16,

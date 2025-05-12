@@ -2,6 +2,7 @@
 import {create} from 'zustand';
 import axios from 'axios';
 import {mockOrders} from '../../assets/mockData/orders';
+import globalConfig from '../../utils/global/globalConfig';
 
 interface CustomerAddress {
   name: string;
@@ -49,7 +50,8 @@ interface OrderStore {
   orders: Order[];
   loading: boolean;
   error: string | null;
-  fetchOrders: () => Promise<void>;
+  lastTimeFilter: TimeFilter;
+  fetchOrders: (timeFilter?: TimeFilter) => Promise<void>;
   getOrderCount: () => number;
   getOrderById: (orderId: string) => Order | undefined;
   getTotalPendingOrders: () => Order[];
@@ -58,31 +60,64 @@ interface OrderStore {
   getVendorOrdersByStatus: (vendorId: number, status: string) => Order[];
   getOrdersCountByStatus: (status: string) => number;
 }
+export type TimeFilter = '1h' | '3h' | '1d' | '7d' | '30d' | 'all';
+const getStartDate = (filter: TimeFilter): string | undefined => {
+  const now = new Date();
+  let date: Date;
+
+  switch (filter) {
+    case '1h':
+      date = new Date(now.getTime() - 60 * 60 * 1000);
+      break;
+    case '3h':
+      date = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+      break;
+    case '1d':
+      date = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      break;
+    case '30d':
+      date = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
+    default:
+      return undefined;
+  }
+
+  // Format the date as yyyy/mm/dd hh:mm:ss
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+};
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
   orders: [],
   loading: false,
   error: null,
+  lastTimeFilter: '1d',
 
-  fetchOrders: async () => {
-    set({loading: true, error: null});
+  fetchOrders: async (timeFilter: TimeFilter = '1d') => {
+    set({loading: true, error: null, lastTimeFilter: timeFilter});
     try {
-      //   const response = await axios.post<OrderResponse>(
-      //     'http://localhost:8080/quickVerse/v2/OrderStatus?status=PENDING&startDate=2024/09/29',
-      //     {
-      //       pending: true,
-      //       accepted: true,
-      //     },
-      //     {
-      //       headers: {
-      //         SessionKey:
-      //           'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2JpbGUiOiI5MTk3ODI2NjI3NzgiLCJpYXQiOjE3MzIxOTg2NzMsImV4cCI6MTc2MzczNDY3M30.vPMvPZQa3Mv49ccbG_pgOxLeYTS1JQUOD63p4g8p9m8',
-      //         'Content-Type': 'application/json',
-      //       },
-      //     },
-      //   );
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const parsedOrders = mockOrders.orders.order.map(order => {
+      const startDate = getStartDate(timeFilter);
+      console.log('Fetching orders with filter:', timeFilter);
+
+      const response = await axios.get<OrderResponse>(
+        `${globalConfig.apiBaseUrl}/v2/OrderStatus?startDate=${startDate}`,
+        {
+          headers: {
+            SessionKey:
+              'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic3VwZXItdXNlciIsImNhbXB1cyI6IklJTVUtMzEzMDAxIiwibW9iaWxlIjoiOTE4OTUwNjE5NjkzIiwiaWF0IjoxNzQ2ODgxMDQ0LCJleHAiOjE3Nzg0MTcwNDR9.n6VOOpXWTMFF3c9lUDTJkLHA7EfnMCdt4ds17c1rsEE',
+          },
+        },
+      );
+
+      // await new Promise(resolve => setTimeout(resolve, 1000));
+
+      const parsedOrders = response.data.orders.order.map(order => {
         let customerAddress = order.customerAddress;
         // if (typeof customerAddress === 'string') {
         //   try {

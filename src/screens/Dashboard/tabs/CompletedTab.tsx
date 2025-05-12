@@ -1,5 +1,12 @@
 import React, {useEffect, useState} from 'react';
-import {Image, ScrollView, StyleSheet, Text, View} from 'react-native';
+import {
+  Image,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
 import {Vendor} from '../../../store/vendors/useVendorStore';
 import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
@@ -8,8 +15,14 @@ import {ORDER_STATUS} from '../../../assets/constants/constant';
 
 interface completedTabProps {
   vendors: Vendor[];
+  refreshing?: boolean;
+  onRefresh?: () => void;
 }
-const CompletedTab: React.FC<completedTabProps> = ({vendors}) => {
+const CompletedTab: React.FC<completedTabProps> = ({
+  vendors,
+  refreshing = false,
+  onRefresh,
+}) => {
   const {getVendorOrdersByStatus} = useOrderStore();
   const [vendorsWithCompletedOrders, setVendorsWithCompletedOrders] = useState<
     Vendor[]
@@ -34,7 +47,16 @@ const CompletedTab: React.FC<completedTabProps> = ({vendors}) => {
     }
   }, [getVendorOrdersByStatus, vendors]);
   return (
-    <ScrollView style={{marginHorizontal: 16}}>
+    <ScrollView
+      style={{marginHorizontal: 16}}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          colors={['#f04d7d']}
+          tintColor="#f04d7d"
+        />
+      }>
       {vendorsWithCompletedOrders?.length === 0 ? (
         <View style={[styles.stateContainer, styles.emptyContainer]}>
           <Image
@@ -51,7 +73,7 @@ const CompletedTab: React.FC<completedTabProps> = ({vendors}) => {
           <CollapsableVendor
             key={`Completed_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
-            vendorLogoUrl="https://example.com/logo.png"
+            vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.COMPLETED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
