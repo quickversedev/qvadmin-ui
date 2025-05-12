@@ -51,7 +51,7 @@ const CompletedTab: React.FC<completedTabProps> = ({vendors}) => {
           <CollapsableVendor
             key={`Completed_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
-            vendorLogoUrl="https://example.com/logo.png"
+            vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.COMPLETED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList

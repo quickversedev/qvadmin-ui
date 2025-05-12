@@ -52,7 +52,7 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({vendors}) => {
           <CollapsableVendor
             key={`accepted_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
-            vendorLogoUrl="https://example.com/logo.png"
+            vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.ACCEPTED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList

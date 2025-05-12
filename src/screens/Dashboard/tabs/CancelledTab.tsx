@@ -56,7 +56,7 @@ const CancelledTab: React.FC<cancelledTabProps> = ({vendors}) => {
           <CollapsableVendor
             key={`cancelled_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
-            vendorLogoUrl="https://example.com/logo.png"
+            vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.CANCELLED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList

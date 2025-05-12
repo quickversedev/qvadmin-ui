@@ -11,6 +11,7 @@ export interface Vendor {
   vendorBanner: string;
   vendorOwner: string;
   vendorPhone: string;
+  vendorLogo: string;
   distance: string;
   storeOpeningTime: string;
   storeClosingTime: string;

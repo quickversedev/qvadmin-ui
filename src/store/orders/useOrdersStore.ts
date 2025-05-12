@@ -2,6 +2,7 @@
 import {create} from 'zustand';
 import axios from 'axios';
 import {mockOrders} from '../../assets/mockData/orders';
+import globalConfig from '../../utils/global/globalConfig';
 
 interface CustomerAddress {
   name: string;
@@ -61,40 +62,38 @@ interface OrderStore {
 export type TimeFilter = '1h' | '3h' | '1d' | '7d' | '30d' | 'all';
 const getStartDate = (filter: TimeFilter): string | undefined => {
   const now = new Date();
+  let date: Date;
+
   switch (filter) {
     case '1h':
-      return new Date(now.getTime() - 60 * 60 * 1000).toLocaleString();
+      date = new Date(now.getTime() - 60 * 60 * 1000);
+      break;
     case '3h':
-      return new Date(now.getTime() - 3 * 60 * 60 * 1000).toJSON();
+      date = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+      break;
     case '1d':
-      return new Date(now.getTime() - 24 * 60 * 60 * 1000).toString();
+      date = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      break;
     case '7d':
-      return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      date = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      break;
     case '30d':
-      return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toDateString();
-
+      date = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      break;
     default:
       return undefined;
   }
+
+  // Format the date as yyyy/mm/dd hh:mm:ss
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 };
-// const getStartDate = (filter: TimeFilter): number | undefined => {
-//   const now = Date.now(); // Current timestamp in milliseconds
-//   switch (filter) {
-//     case '1h':
-//       return now - 60 * 60 * 1000; // 1 hour ago
-//     case '3h':
-//       return now - 3 * 60 * 60 * 1000; // 3 hours ago
-//     case '1d':
-//       return now - 24 * 60 * 60 * 1000; // 1 day ago
-//     case '7d':
-//       return now - 7 * 24 * 60 * 60 * 1000; // 7 days ago
-//     case '30d':
-//       return now - 30 * 24 * 60 * 60 * 1000; // 30 days ago
-//     case 'all':
-//     default:
-//       return undefined;
-//   }
-// };
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
   orders: [],
@@ -110,21 +109,20 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
       if (startDate) {
         params.append('startDate', startDate);
       }
+      console.log('Params:', params.toString());
+      const response = await axios.get<OrderResponse>(
+        `${globalConfig.apiBaseUrl}/v2/OrderStatus?startDate=${startDate}`,
+        {
+          headers: {
+            SessionKey:
+              'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic3VwZXItdXNlciIsImNhbXB1cyI6IklJTVUtMzEzMDAxIiwibW9iaWxlIjoiOTE4OTUwNjE5NjkzIiwiaWF0IjoxNzQ2ODgxMDQ0LCJleHAiOjE3Nzg0MTcwNDR9.n6VOOpXWTMFF3c9lUDTJkLHA7EfnMCdt4ds17c1rsEE',
+          },
+        },
+      );
+      console.log('Orders response:', response);
+      // await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // const response = await axios.get<OrderResponse>(
-      //   'http://localhost:8080/quickVerse/v2/OrderStatus',
-      //   {
-      //     params,
-      //     headers: {
-      //       SessionKey:
-      //         'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2JpbGUiOiI5MTk3ODI2NjI3NzgiLCJpYXQiOjE3MzIxOTg2NzMsImV4cCI6MTc2MzczNDY3M30.vPMvPZQa3Mv49ccbG_pgOxLeYTS1JQUOD63p4g8p9m8',
-      //     },
-      //   },
-      // );
-
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const parsedOrders = mockOrders.orders.order.map(order => {
+      const parsedOrders = response.data.orders.order.map(order => {
         let customerAddress = order.customerAddress;
         // if (typeof customerAddress === 'string') {
         //   try {

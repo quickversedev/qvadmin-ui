@@ -49,7 +49,7 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({vendors}) => {
           <CollapsableVendor
             key={`readytoship_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
-            vendorLogoUrl="https://example.com/logo.png"
+            vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.PACKED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList

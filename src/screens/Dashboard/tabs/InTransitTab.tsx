@@ -52,7 +52,7 @@ const InTransitTab: React.FC<InTransitTabProps> = ({vendors}) => {
           <CollapsableVendor
             key={`inTransit_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
-            vendorLogoUrl="https://example.com/logo.png"
+            vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.SHIPPED}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList

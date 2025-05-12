@@ -54,7 +54,7 @@ const PendingTab: React.FC<PendingTabProps> = ({vendors}) => {
           <CollapsableVendor
             key={`pending_${vendor.vendorId}`}
             vendorName={vendor.vendorName}
-            vendorLogoUrl="https://example.com/logo.png"
+            vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.PENDING}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
