@@ -33,9 +33,11 @@ const OrderListScreen = () => {
     getOrdersCountByStatus,
   } = useOrderStore();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('1d');
+  const {selectedCampus} = useCampuses();
+
   const fetchFilteredOrders = useCallback(() => {
-    fetchOrders(timeFilter);
-  }, [fetchOrders, timeFilter]);
+    fetchOrders(selectedCampus?.campusId, timeFilter);
+  }, [fetchOrders, selectedCampus?.campusId, timeFilter]);
 
   useEffect(() => {
     fetchFilteredOrders();
@@ -52,7 +54,6 @@ const OrderListScreen = () => {
   const onRefresh = () => {
     fetchFilteredOrders();
   };
-  const {selectedCampus} = useCampuses();
 
   const filterButtons: {id: TimeFilter; label: string}[] = [
     {id: '1h', label: 'Last Hour'},
@@ -126,7 +127,7 @@ const OrderListScreen = () => {
     return (
       <View style={[styles.centered, {flex: 1}]}>
         {renderFilterButtons()}
-        <Text>No orders found</Text>
+        <Text>There are no orders at the moment...!!!</Text>
         <TouchableOpacity
           style={styles.retryButton}
           onPress={fetchFilteredOrders}>
