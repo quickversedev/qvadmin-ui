@@ -51,7 +51,10 @@ interface OrderStore {
   loading: boolean;
   error: string | null;
   lastTimeFilter: TimeFilter;
-  fetchOrders: (timeFilter?: TimeFilter) => Promise<void>;
+  fetchOrders: (
+    campusId: string | undefined,
+    timeFilter?: TimeFilter,
+  ) => Promise<void>;
   getOrderCount: () => number;
   getOrderById: (orderId: string) => Order | undefined;
   getTotalPendingOrders: () => Order[];
@@ -99,18 +102,17 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   error: null,
   lastTimeFilter: '1d',
 
-  fetchOrders: async (timeFilter: TimeFilter = '1d') => {
+  fetchOrders: async (campusId?: string, timeFilter: TimeFilter = '1d') => {
     set({loading: true, error: null, lastTimeFilter: timeFilter});
     try {
       const startDate = getStartDate(timeFilter);
-      console.log('Fetching orders with filter:', timeFilter);
 
       const response = await axios.get<OrderResponse>(
-        `${globalConfig.apiBaseUrl}/v2/OrderStatus?startDate=${startDate}`,
+        `${globalConfig.apiBaseUrl}/v2/OrderStatus?campusId=${campusId}&startDate=${startDate}`,
         {
           headers: {
             SessionKey:
-              'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoic3VwZXItdXNlciIsImNhbXB1cyI6IklJTVUtMzEzMDAxIiwibW9iaWxlIjoiOTE4OTUwNjE5NjkzIiwiaWF0IjoxNzQ2ODgxMDQ0LCJleHAiOjE3Nzg0MTcwNDR9.n6VOOpXWTMFF3c9lUDTJkLHA7EfnMCdt4ds17c1rsEE',
+              'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2JpbGUiOiI5MTk3NjUwMDgxMTAiLCJpYXQiOjE3NDc2NDgzNDAsImV4cCI6MTc3OTE4NDM0MH0._cj5P6tzOZFbBPrVcNRUgaXv7qQrfyha43cBN1qCBHo',
           },
         },
       );
@@ -119,30 +121,6 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
       const parsedOrders = response.data.orders.order.map(order => {
         let customerAddress = order.customerAddress;
-        // if (typeof customerAddress === 'string') {
-        //   try {
-        //     const addressStr = customerAddress.replace(/^{|}$/g, '');
-        //     const addressParts = addressStr.split(', ').reduce((acc, part) => {
-        //       const [key, value] = part.split('=');
-        //       acc[key] = value;
-        //       return acc;
-        //     }, {} as Record<string, string>);
-
-        //     customerAddress = {
-        //       name: addressParts.name,
-        //       addressLine1: addressParts.addressLine1,
-        //       addressLine2: addressParts.addressLine2,
-        //       addressLine3: addressParts.addressLine3,
-        //       city: addressParts.city,
-        //       state: addressParts.state,
-        //       pincode: addressParts.pincode,
-        //       latitude: parseFloat(addressParts.latitude),
-        //       longitude: parseFloat(addressParts.longitude),
-        //     };
-        //   } catch (e) {
-        //     console.error('Error parsing address', e);
-        //   }
-        // }
 
         return {
           ...order,

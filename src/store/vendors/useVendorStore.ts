@@ -46,7 +46,7 @@ export const useVendorStore = create<VendorState>((set, get) => ({
           },
         },
       );
-      console.log('Vendors response:', response.data);
+
       const vendors = response.data.vendors.vendor;
       set({vendors, loading: false});
     } catch (error: any) {
