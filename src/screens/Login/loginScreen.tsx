@@ -41,17 +41,16 @@ const LoginScreen: React.FC = () => {
   const handleLogin = async () => {
     setLoading(true);
     try {
-      await auth.sendOtp(phoneNumber);
+      const verificationId = await auth.sendOtp(phoneNumber);
+      navigation.navigate({
+        name: 'OTPScreen',
+        params: {phoneNumber, verificationId: verificationId},
+      });
     } catch (err) {
       Alert.alert('Error', 'Login failed');
     } finally {
       setLoading(false);
     }
-
-    navigation.navigate({
-      name: 'OTPScreen',
-      params: {phoneNumber, verificationId: 'abc'},
-    });
   };
 
   return (
