@@ -51,7 +51,7 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
             resizeMode="contain"
           />
 
-          <Text style={styles.vendorName}>{vendorName}</Text>
+          <Text numberOfLines={2} style={styles.vendorName}>{vendorName}</Text>
 
           <Icon
             name={statusStyles.icon}
@@ -93,6 +93,7 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
+    flex:1,
     backgroundColor: '#fff',
     borderRadius: 10,
     padding: 12,
@@ -121,6 +122,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#111',
     marginRight: 6,
+    width:'50%',
   },
   // statusStyle: {
   //   width: 12,
