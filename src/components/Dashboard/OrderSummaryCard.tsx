@@ -26,12 +26,22 @@ const OrderSummaryCard = ({
   orderLink,
   state, // Add status prop to the type
 }: OrderSummaryCardProps) => {
+  // const getPendingTime = () => {
+  //   const createdTime = new Date(creationTime).getTime();
+  //   const now = new Date().getTime();
+  //   const diffMins = Math.floor((now - createdTime) / (1000 * 60));
+  //   return diffMins;
+  // };
   const getPendingTime = () => {
-    const createdTime = new Date(creationTime).getTime();
-    const now = new Date().getTime();
-    const diffMins = Math.floor((now - createdTime) / (1000 * 60));
-    return diffMins;
-  };
+  const createdTime = new Date(creationTime).getTime();
+  const now = new Date().getTime();
+  const diffMins = Math.floor((now - createdTime) / (1000 * 60));
+
+  const hours = Math.floor(diffMins / 60);
+  const minutes = diffMins % 60;
+
+  return `${hours}h:${minutes}m`;
+};
   const navigation = useNavigation<WebViewScreenNavigationProp>();
   const handleCallCustomer = () => {
     const phoneNumber = `tel:${customerMobile}`;
@@ -58,7 +68,7 @@ const OrderSummaryCard = ({
             ]}>
             <Icon
               name={statusStyles.icon}
-              size={14}
+              size={12}
               color={statusStyles.color}
               style={{marginRight: 4}}
             />
@@ -67,7 +77,7 @@ const OrderSummaryCard = ({
             </Text>
           </View>
         </View>
-        <Text style={styles.pendingTime}>{getPendingTime()} mins</Text>
+        <Text style={styles.pendingTime}>{getPendingTime()}</Text>
       </View>
       <View style={styles.customerRow}>
         <View style={{flex: 1}}>
@@ -123,7 +133,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 10,
     padding: 12,
-    margin: 5,
+    margin: 1,
     elevation: 3,
     borderWidth: 0.5,
     borderColor: '#ccc',
@@ -152,7 +162,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   statusText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: 'bold',
     textTransform: 'capitalize',
   },
