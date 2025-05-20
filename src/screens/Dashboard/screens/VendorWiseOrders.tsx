@@ -51,7 +51,7 @@ const VendorWiseOrders: React.FC = () => {
     CANCELLED: null,
     COMPLETED: null,
   });
-  const {fetchOrders} = useOrderStore();
+  const {fetchOrders, getOrdersCountByStatus} = useOrderStore();
   const lastFilter = useOrderStore(state => state.lastTimeFilter);
   useEffect(() => {
     if (selectedCampus) {
@@ -97,6 +97,28 @@ const VendorWiseOrders: React.FC = () => {
       console.error('Error refreshing orders:', err);
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const getCountForTab = (tabStatus: TabType) => {
+    switch (tabStatus) {
+      case ORDER_STATUS.PENDING:
+        return getOrdersCountByStatus(ORDER_STATUS.PENDING);
+      case ORDER_STATUS.ACCEPTED:
+        return getOrdersCountByStatus(ORDER_STATUS.ACCEPTED);
+      case ORDER_STATUS.PACKED:
+        return getOrdersCountByStatus(ORDER_STATUS.PACKED);
+      case ORDER_STATUS.SHIPPED:
+        return getOrdersCountByStatus(ORDER_STATUS.SHIPPED);
+      case ORDER_STATUS.CANCELLED:
+        return (
+          getOrdersCountByStatus(ORDER_STATUS.CANCELLED) +
+          getOrdersCountByStatus(ORDER_STATUS.REJECTED)
+        ); // Combined cancelled/rejected
+      case ORDER_STATUS.COMPLETED:
+        return getOrdersCountByStatus(ORDER_STATUS.COMPLETED);
+      default:
+        return 0;
     }
   };
   const renderTabContent = () => {
@@ -168,13 +190,22 @@ const VendorWiseOrders: React.FC = () => {
               ref={setTabRef(tabItem)}
               onPress={() => setActiveTab(tabItem)}
               style={styles.tabButton}>
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === tabItem && styles.activeTabText,
-                ]}>
-                {tabItem}
-              </Text>
+              <View style={styles.tabContent}>
+                <Text
+                  style={[
+                    styles.tabText,
+                    activeTab === tabItem && styles.activeTabText,
+                  ]}>
+                  {tabItem}
+                </Text>
+                {getCountForTab(tabItem) > 0 && (
+                  <View style={styles.countBadge}>
+                    <Text style={styles.countText}>
+                      {getCountForTab(tabItem)}
+                    </Text>
+                  </View>
+                )}
+              </View>
               {activeTab === tabItem && <View style={styles.activeUnderline} />}
             </TouchableOpacity>
           ))}
@@ -317,6 +348,25 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
     fontSize: 16,
+  },
+  tabContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  countBadge: {
+    backgroundColor: '#f04d7d',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 4,
+    minWidth: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 
