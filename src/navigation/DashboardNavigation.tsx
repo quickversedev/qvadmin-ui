@@ -24,8 +24,10 @@ const Stack = createStackNavigator();
 const OrderStackNavigator = () => {
   return (
     <Stack.Navigator
-      initialRouteName="OrderList"
-      screenOptions={{headerShown: false}}>
+      {...({
+        initialRouteName: 'OrderList',
+        screenOptions: {headerShown: false},
+      } as any)}>
       <Stack.Screen
         name="OrderList"
         component={OrderListScreen}

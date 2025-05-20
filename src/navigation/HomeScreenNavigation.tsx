@@ -1,7 +1,5 @@
 import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
-import VendorWiseOrders from '../screens/Dashboard/screens/VendorWiseOrders';
-import OrderListScreen from '../components/Dashboard/OrderDashboard';
 import WebViewScreen from '../screens/webview/WebView';
 import HomeScreen from '../screens/Home/HomeScreen';
 
@@ -17,8 +15,10 @@ const Stack = createStackNavigator();
 const HomeScreenNavigation = () => {
   return (
     <Stack.Navigator
-      initialRouteName="HomeScreen"
-      screenOptions={{headerShown: false}}>
+      {...({
+        initialRouteName: 'HomeScreen',
+        screenOptions: {headerShown: false},
+      } as any)}>
       <Stack.Screen
         name="HomeScreen"
         component={HomeScreen}
