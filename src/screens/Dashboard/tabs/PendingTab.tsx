@@ -78,6 +78,7 @@ const PendingTab: React.FC<PendingTabProps> = ({
             vendorName={vendor.vendorName}
             vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.PENDING}
+            vendorId={vendor.vendorId}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
               key={`pending_orders_${vendor.vendorId}`}

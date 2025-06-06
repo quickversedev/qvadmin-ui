@@ -75,6 +75,7 @@ const CompletedTab: React.FC<completedTabProps> = ({
             vendorName={vendor.vendorName}
             vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.COMPLETED}
+            vendorId={vendor.vendorId}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
               key={`Completed_orders_${vendor.vendorId}`}
