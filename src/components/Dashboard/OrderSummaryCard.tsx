@@ -26,22 +26,16 @@ const OrderSummaryCard = ({
   orderLink,
   state, // Add status prop to the type
 }: OrderSummaryCardProps) => {
-  // const getPendingTime = () => {
-  //   const createdTime = new Date(creationTime).getTime();
-  //   const now = new Date().getTime();
-  //   const diffMins = Math.floor((now - createdTime) / (1000 * 60));
-  //   return diffMins;
-  // };
   const getPendingTime = () => {
-  const createdTime = new Date(creationTime).getTime();
-  const now = new Date().getTime();
-  const diffMins = Math.floor((now - createdTime) / (1000 * 60));
+    const createdTime = new Date(creationTime).getTime();
+    const now = new Date().getTime();
+    const diffMins = Math.floor((now - createdTime) / (1000 * 60));
 
-  const hours = Math.floor(diffMins / 60);
-  const minutes = diffMins % 60;
+    const hours = Math.floor(diffMins / 60);
+    const minutes = diffMins % 60;
 
-  return `${hours}h:${minutes}m`;
-};
+    return `${hours}h:${minutes}m`;
+  };
   const navigation = useNavigation<WebViewScreenNavigationProp>();
   const handleCallCustomer = () => {
     const phoneNumber = `tel:${customerMobile}`;
@@ -51,7 +45,11 @@ const OrderSummaryCard = ({
     navigation.navigate('WebViewScreen', {url: orderLink});
   };
 
-  // Determine status styles
+  const shouldShowPendingTime = ![
+    'CANCELLED',
+    'REJECTED',
+    'COMPLETED',
+  ].includes(state);
 
   const statusStyles = getStatusStyles(state);
 
@@ -77,7 +75,9 @@ const OrderSummaryCard = ({
             </Text>
           </View>
         </View>
-        <Text style={styles.pendingTime}>{getPendingTime()}</Text>
+        {shouldShowPendingTime && (
+          <Text style={styles.pendingTime}>{getPendingTime()}</Text>
+        )}
       </View>
       <View style={styles.customerRow}>
         <View style={{flex: 1}}>

@@ -11,6 +11,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {OrderStatus} from '../../types/Order';
 
 import {getStatusStyles} from './DashBoardUtil';
+import {useOrderStore} from '../../store/orders/useOrdersStore';
 
 type OrderCardProps = {
   vendorName: string;
@@ -18,6 +19,7 @@ type OrderCardProps = {
   status: OrderStatus;
   children?: React.ReactNode;
   vendorPhone: string;
+  vendorId: string; // Optional, if needed for further functionality
 };
 
 const CollapsableVendor: React.FC<OrderCardProps> = ({
@@ -26,9 +28,10 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
   status,
   vendorPhone,
   children,
+  vendorId,
 }) => {
   const [expanded, setExpanded] = useState(false);
-
+  const {getVendorOrdersCountByStatus} = useOrderStore();
   const handleToggleExpand = () => {
     setExpanded(prev => !prev);
   };
@@ -37,21 +40,34 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
     Linking.openURL(phoneNumber);
   };
   const statusStyles = getStatusStyles(status);
+  const orderCount = getVendorOrdersCountByStatus(Number(vendorId), status);
+  console.log(
+    `CollapsableVendor: vendorId=${vendorId}, status=${status}, orderCount=${orderCount}`,
+  );
   return (
     <View style={styles.card}>
       <TouchableOpacity style={styles.header} onPress={handleToggleExpand}>
         <View style={styles.vendorInfo}>
-          <Image
-            source={
-              vendorLogoUrl
-                ? {uri: vendorLogoUrl}
-                : require('../../assets/images/default_logo.png')
-            }
-            style={styles.vendorLogo}
-            resizeMode="contain"
-          />
+          <View style={styles.logoContainer}>
+            <Image
+              source={
+                vendorLogoUrl
+                  ? {uri: vendorLogoUrl}
+                  : require('../../assets/images/default_logo.png')
+              }
+              style={styles.vendorLogo}
+              resizeMode="contain"
+            />
+            {orderCount > 0 && (
+              <View style={styles.countBadge}>
+                <Text style={styles.countText}>{orderCount}</Text>
+              </View>
+            )}
+          </View>
 
-          <Text numberOfLines={2} style={styles.vendorName}>{vendorName}</Text>
+          <Text numberOfLines={2} style={styles.vendorName}>
+            {vendorName}
+          </Text>
 
           <Icon
             name={statusStyles.icon}
@@ -75,7 +91,6 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
               color="#fff"
               style={{marginRight: 4}}
             />
-            <Text style={styles.callButtonText}>Call </Text>
           </TouchableOpacity>
 
           <Icon
@@ -93,7 +108,7 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    flex:1,
+    flex: 1,
     backgroundColor: '#fff',
     borderRadius: 10,
     padding: 12,
@@ -111,18 +126,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  vendorLogo: {
-    width: 40,
-    height: 40,
-    marginRight: 10,
-    borderRadius: 20,
-  },
+  // vendorLogo: {
+  //   width: 40,
+  //   height: 40,
+  //   marginRight: 10,
+  //   borderRadius: 20,
+  // },
   vendorName: {
     fontSize: 16,
     fontWeight: '600',
     color: '#111',
     marginRight: 6,
-    width:'50%',
+    width: '50%',
   },
   // statusStyle: {
   //   width: 12,
@@ -153,6 +168,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f8f8',
     borderRadius: 8,
     padding: 12,
+  },
+  logoContainer: {
+    position: 'relative',
+    marginRight: 10,
+  },
+  vendorLogo: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+  },
+  countBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#f04d7d',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+    borderWidth: 1.5,
+    borderColor: 'white',
+  },
+  countText: {
+    color: 'white',
+    fontSize: 10,
+    fontWeight: 'bold',
   },
 });
 

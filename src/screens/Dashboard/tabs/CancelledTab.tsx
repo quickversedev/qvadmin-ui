@@ -80,6 +80,7 @@ const CancelledTab: React.FC<cancelledTabProps> = ({
             vendorName={vendor.vendorName}
             vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.CANCELLED}
+            vendorId={vendor.vendorId}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
               key={`cancelled_orders_${vendor.vendorId}`}

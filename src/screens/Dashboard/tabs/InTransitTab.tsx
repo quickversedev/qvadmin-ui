@@ -76,6 +76,7 @@ const InTransitTab: React.FC<InTransitTabProps> = ({
             vendorName={vendor.vendorName}
             vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.SHIPPED}
+            vendorId={vendor.vendorId}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
               key={`InTransit_orders_${vendor.vendorId}`}

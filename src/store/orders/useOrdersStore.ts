@@ -62,6 +62,7 @@ interface OrderStore {
   getTotalReadyToShipOrders: () => Order[];
   getVendorOrdersByStatus: (vendorId: number, status: string) => Order[];
   getOrdersCountByStatus: (status: string) => number;
+  getVendorOrdersCountByStatus: (vendorId: number, status: string) => number;
 }
 export type TimeFilter = '1h' | '3h' | '1d' | '7d' | '30d' | 'all';
 const getStartDate = (filter: TimeFilter): string | undefined => {
@@ -85,13 +86,28 @@ const getStartDate = (filter: TimeFilter): string | undefined => {
       return undefined;
   }
 
-  // Format the date as yyyy/mm/dd hh:mm:ss
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const estParts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+
+  const parts: Record<string, string> = {};
+  estParts.forEach(({type, value}) => {
+    if (type !== 'literal') parts[type] = value;
+  });
+
+  const year = parts.year;
+  const month = parts.month;
+  const day = parts.day;
+  const hours = parts.hour;
+  const minutes = parts.minute;
+  const seconds = parts.second;
 
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 };
@@ -116,7 +132,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
           },
         },
       );
-
+      console.log('Fetched orders:', response);
       // await new Promise(resolve => setTimeout(resolve, 1000));
 
       const parsedOrders = response.data.orders.order.map(order => {
@@ -161,6 +177,11 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     return get().orders.filter(
       order => order.shopId === vendorId && order.state === status,
     );
+  },
+  getVendorOrdersCountByStatus: (vendorId: number, status: string) => {
+    return get().orders.filter(
+      order => order.shopId === vendorId && order.state === status,
+    ).length;
   },
   getOrdersCountByStatus: (status: string) => {
     return get().orders.filter(order => order.state === status).length;

@@ -76,6 +76,7 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
             vendorName={vendor.vendorName}
             vendorLogoUrl={vendor.vendorLogo}
             status={ORDER_STATUS.ACCEPTED}
+            vendorId={vendor.vendorId}
             vendorPhone={vendor.vendorPhone}>
             <OrderCardList
               key={`accepted_orders_${vendor.vendorId}`}
