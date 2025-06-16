@@ -86,28 +86,12 @@ const getStartDate = (filter: TimeFilter): string | undefined => {
       return undefined;
   }
 
-  const estParts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/New_York',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  }).formatToParts(date);
-
-  const parts: Record<string, string> = {};
-  estParts.forEach(({type, value}) => {
-    if (type !== 'literal') parts[type] = value;
-  });
-
-  const year = parts.year;
-  const month = parts.month;
-  const day = parts.day;
-  const hours = parts.hour;
-  const minutes = parts.minute;
-  const seconds = parts.second;
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 };

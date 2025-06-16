@@ -27,15 +27,21 @@ const OrderSummaryCard = ({
   state, // Add status prop to the type
 }: OrderSummaryCardProps) => {
   const getPendingTime = () => {
-    const createdTime = new Date(creationTime).getTime();
-    const now = new Date().getTime();
-    const diffMins = Math.floor((now - createdTime) / (1000 * 60));
+    const createdTimeUTC = new Date(creationTime).getTime(); // UTC time
+    const nowIST = new Date(); // local time (assumed IST if user's device is in IST)
+
+    // Convert local IST to UTC offset manually if you're running this on a server not in IST:
+    // const nowIST = new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000));
+
+    const now = nowIST.getTime();
+    const diffMins = Math.floor((now - createdTimeUTC) / (1000 * 60));
 
     const hours = Math.floor(diffMins / 60);
     const minutes = diffMins % 60;
 
     return `${hours}h:${minutes}m`;
   };
+
   const navigation = useNavigation<WebViewScreenNavigationProp>();
   const handleCallCustomer = () => {
     const phoneNumber = `tel:${customerMobile}`;
