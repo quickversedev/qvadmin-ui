@@ -32,7 +32,7 @@ const TABS = [
   ORDER_STATUS.CANCELLED,
   ORDER_STATUS.COMPLETED,
 ] as const;
-type TabType = (typeof TABS)[number];
+export type TabType = (typeof TABS)[number];
 
 const VendorWiseOrders: React.FC = () => {
   const route = useRoute<VendorWiseOrdersRouteProp>();

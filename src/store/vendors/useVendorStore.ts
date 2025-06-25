@@ -8,9 +8,11 @@ export interface Vendor {
   campusId: string;
   vendorName: string;
   vendorEndPoint: string;
+  vendorAddress: string;
   vendorBanner: string;
   vendorOwner: string;
   vendorPhone: string;
+  vendorLogoUrl: string;
   vendorLogo: string;
   distance: string;
   storeOpeningTime: string;

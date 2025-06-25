@@ -11,6 +11,21 @@ export const mockOrders = {
         customerAddress:
           '{name=Raj, addressLine1=Sobha Dream Acres, addressLine2=Balagere, Varthur Main Road, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560038, latitude=12.97394, longitude=77.6439}',
         state: 'PENDING',
+        acceptedDate: null,
+        completedDate: null,
+        rejectedDate: null,
+        orderItem: [
+          {
+            id: 1,
+            name: 'Chicken Pavbhaji',
+            itemCount: 2,
+          },
+          {
+            id: 2,
+            name: 'Paneer Pavbhaji',
+            itemCount: 1,
+          },
+        ],
         totalAmount: 1100.0,
         totalItemCount: 1,
         productCount: 0,
@@ -36,6 +51,21 @@ export const mockOrders = {
         customerAddress:
           '{name=Priya, addressLine1=Greenwood Apartments, addressLine2=Whitefield, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560066, latitude=12.9716, longitude=77.7486}',
         state: 'PENDING',
+        acceptedDate: null,
+        completedDate: null,
+        rejectedDate: null,
+        orderItem: [
+          {
+            id: 1,
+            name: 'Chicken Pavbhaji',
+            itemCount: 2,
+          },
+          {
+            id: 2,
+            name: 'Paneer Pavbhaji',
+            itemCount: 1,
+          },
+        ],
         totalAmount: 2500.0,
         totalItemCount: 2,
         productCount: 0,
@@ -62,6 +92,21 @@ export const mockOrders = {
         customerAddress:
           '{name=Rahul, addressLine1=Sunshine Towers, addressLine2=Marathahalli, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560037, latitude=12.9589, longitude=77.7014}',
         state: 'PACKED',
+        acceptedDate: '2025-06-25T11:24:52.265+00:00',
+        completedDate: null,
+        rejectedDate: null,
+        orderItem: [
+          {
+            id: 1,
+            name: 'Chicken Pavbhaji',
+            itemCount: 2,
+          },
+          {
+            id: 2,
+            name: 'Paneer Pavbhaji',
+            itemCount: 1,
+          },
+        ],
         totalAmount: 1800.0,
         totalItemCount: 3,
         productCount: 0,
@@ -88,6 +133,21 @@ export const mockOrders = {
           '{name=Ananya, addressLine1=Royal Gardens, addressLine2=Koramangala, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560034, latitude=12.9352, longitude=77.6245}',
         state: 'ACCEPTED',
         totalAmount: 3200.0,
+        acceptedDate: '2025-06-25T11:24:52.265+00:00',
+        completedDate: null,
+        rejectedDate: null,
+        orderItem: [
+          {
+            id: 1,
+            name: 'Chicken Pavbhaji',
+            itemCount: 2,
+          },
+          {
+            id: 2,
+            name: 'Paneer Pavbhaji',
+            itemCount: 1,
+          },
+        ],
         totalItemCount: 1,
         productCount: 0,
         invoiceAmount: 3200.0,
@@ -112,6 +172,21 @@ export const mockOrders = {
         customerAddress:
           '{name=Raj, addressLine1=Sobha Dream Acres, addressLine2=Balagere, Varthur Main Road, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560038, latitude=12.97394, longitude=77.6439}',
         state: 'COMPLETED',
+        acceptedDate: '2025-06-25T11:24:52.265+00:00',
+        completedDate: '2025-06-25T11:30:52.265+00:00',
+        rejectedDate: null,
+        orderItem: [
+          {
+            id: 1,
+            name: 'Chicken Pavbhaji',
+            itemCount: 2,
+          },
+          {
+            id: 2,
+            name: 'Paneer Pavbhaji',
+            itemCount: 1,
+          },
+        ],
         totalAmount: 1100.0,
         totalItemCount: 1,
         productCount: 0,
@@ -138,6 +213,21 @@ export const mockOrders = {
           '{name=Priya, addressLine1=Greenwood Apartments, addressLine2=Whitefield, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560066, latitude=12.9716, longitude=77.7486}',
         state: 'CANCELLED',
         totalAmount: 2500.0,
+        acceptedDate: '2025-06-23T11:24:52.265+00:00',
+        completedDate: null,
+        rejectedDate: '2025-06-24T11:24:52.265+00:00',
+        orderItem: [
+          {
+            id: 1,
+            name: 'Chicken Pavbhaji',
+            itemCount: 2,
+          },
+          {
+            id: 2,
+            name: 'Paneer Pavbhaji',
+            itemCount: 1,
+          },
+        ],
         totalItemCount: 2,
         productCount: 0,
         invoiceAmount: 2500.0,
@@ -164,6 +254,21 @@ export const mockOrders = {
           '{name=Rahul, addressLine1=Sunshine Towers, addressLine2=Marathahalli, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560037, latitude=12.9589, longitude=77.7014}',
         state: 'CANCELLED',
         totalAmount: 1800.0,
+        acceptedDate: '2025-06-25T11:24:52.265+00:00',
+        completedDate: null,
+        rejectedDate: '2025-06-25T12:24:52.265+00:00',
+        orderItem: [
+          {
+            id: 1,
+            name: 'Chicken Pavbhaji',
+            itemCount: 2,
+          },
+          {
+            id: 2,
+            name: 'Paneer Pavbhaji',
+            itemCount: 1,
+          },
+        ],
         totalItemCount: 3,
         productCount: 0,
         invoiceAmount: 1800.0,
@@ -188,6 +293,9 @@ export const mockOrders = {
         customerAddress:
           '{name=Ananya, addressLine1=Royal Gardens, addressLine2=Koramangala, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560034, latitude=12.9352, longitude=77.6245}',
         state: 'REJECTED',
+        acceptedDate: '2025-06-25T11:24:52.265+00:00',
+        completedDate: null,
+        rejectedDate: '2025-06-25T13:24:52.265+00:00',
         totalAmount: 3200.0,
         totalItemCount: 1,
         productCount: 0,
@@ -213,6 +321,9 @@ export const mockOrders = {
         customerAddress:
           '{name=Ananya, addressLine1=Royal Gardens, addressLine2=Koramangala, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560034, latitude=12.9352, longitude=77.6245}',
         state: 'PACKED',
+        acceptedDate: '2025-06-25T11:24:52.265+00:00',
+        completedDate: null,
+        rejectedDate: null,
         totalAmount: 3200.0,
         totalItemCount: 1,
         productCount: 0,
@@ -238,6 +349,21 @@ export const mockOrders = {
         customerAddress:
           '{name=Ananya, addressLine1=Royal Gardens, addressLine2=Koramangala, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560034, latitude=12.9352, longitude=77.6245}',
         state: 'SHIPPED',
+        acceptedDate: '2025-06-25T11:24:52.265+00:00',
+        completedDate: null,
+        rejectedDate: null,
+        orderItem: [
+          {
+            id: 1,
+            name: 'Chicken Pavbhaji',
+            itemCount: 2,
+          },
+          {
+            id: 2,
+            name: 'Paneer Pavbhaji',
+            itemCount: 1,
+          },
+        ],
         totalAmount: 3200.0,
         totalItemCount: 1,
         productCount: 0,
@@ -263,6 +389,10 @@ export const mockOrders = {
         customerAddress:
           '{name=Ananya, addressLine1=Royal Gardens, addressLine2=Koramangala, addressLine3=, city=BENGALURU, state=KARNATAKA, pincode=560034, latitude=12.9352, longitude=77.6245}',
         state: 'SHIPPED',
+        acceptedDate: '2025-06-25T11:24:52.265+00:00',
+        completedDate: null,
+        rejectedDate: null,
+        orderItem: [],
         totalAmount: 3200.0,
         totalItemCount: 1,
         productCount: 0,

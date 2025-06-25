@@ -4,18 +4,11 @@ import axios from 'axios';
 import {mockOrders} from '../../assets/mockData/orders';
 import globalConfig from '../../utils/global/globalConfig';
 
-interface CustomerAddress {
+export interface OrderItems {
+  id: number;
   name: string;
-  addressLine1: string;
-  addressLine2: string;
-  addressLine3: string;
-  city: string;
-  state: string;
-  pincode: string;
-  latitude: number;
-  longitude: number;
+  itemCount: number;
 }
-
 export interface Order {
   orderId: string;
   campusId: string;
@@ -23,9 +16,14 @@ export interface Order {
   customerId: number;
   customerName: string;
   customerMobile: number;
-  customerAddress: string | CustomerAddress;
+  customerAddress: string;
+
   state: string;
   totalAmount: number;
+  acceptedDate: string;
+  completedDate: string;
+  rejectedDate: string;
+  orderItem: OrderItems[] | [];
   totalItemCount: number;
   productCount: number;
   invoiceAmount: number;
@@ -116,15 +114,19 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
           },
         },
       );
-      console.log('Fetched orders:', response);
+      // console.log('Fetched orders:', response);
       // await new Promise(resolve => setTimeout(resolve, 1000));
-
+      // const response = mockOrders;
       const parsedOrders = response.data.orders.order.map(order => {
         let customerAddress = order.customerAddress;
 
         return {
           ...order,
           customerAddress,
+          acceptedDate: order.acceptedDate ?? '',
+          completedDate: order.completedDate ?? '',
+          rejectedDate: order.rejectedDate ?? '',
+          orderItem: order.orderItem ?? [],
         };
       });
 

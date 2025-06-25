@@ -12,26 +12,22 @@ import {OrderStatus} from '../../types/Order';
 
 import {getStatusStyles} from './DashBoardUtil';
 import {useOrderStore} from '../../store/orders/useOrdersStore';
+import {Vendor} from '../../store/vendors/useVendorStore';
 
 type OrderCardProps = {
-  vendorName: string;
-  vendorLogoUrl: string;
+  vendor: Vendor;
   status: OrderStatus;
   children?: React.ReactNode;
-  vendorPhone: string;
-  vendorId: string; // Optional, if needed for further functionality
 };
 
 const CollapsableVendor: React.FC<OrderCardProps> = ({
-  vendorName,
-  vendorLogoUrl,
   status,
-  vendorPhone,
+  vendor,
   children,
-  vendorId,
 }) => {
   const [expanded, setExpanded] = useState(false);
   const {getVendorOrdersCountByStatus} = useOrderStore();
+  const {vendorId, vendorPhone, vendorLogoUrl, vendorName} = vendor || {};
   const handleToggleExpand = () => {
     setExpanded(prev => !prev);
   };
