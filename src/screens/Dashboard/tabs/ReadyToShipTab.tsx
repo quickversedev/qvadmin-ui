@@ -70,14 +70,11 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({
         vendorsWithreadyToShipOrders.map(vendor => (
           <CollapsableVendor
             key={`readytoship_${vendor.vendorId}`}
-            vendorName={vendor.vendorName}
-            vendorLogoUrl={vendor.vendorLogo}
-            status={ORDER_STATUS.PACKED}
-            vendorId={vendor.vendorId}
-            vendorPhone={vendor.vendorPhone}>
+            vendor={vendor}
+            status={ORDER_STATUS.PACKED}>
             <OrderCardList
               key={`readyToShip_orders_${vendor.vendorId}`}
-              vendorId={vendor.vendorId}
+              vendor={vendor}
               status={ORDER_STATUS.PACKED}
             />
           </CollapsableVendor>

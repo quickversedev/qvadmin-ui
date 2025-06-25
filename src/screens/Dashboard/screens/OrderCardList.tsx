@@ -2,15 +2,17 @@ import React from 'react';
 import {View, StyleSheet} from 'react-native';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
 import OrderSummaryCard from '../../../components/Dashboard/OrderSummaryCard';
+import {Vendor} from '../../../store/vendors/useVendorStore';
 
 interface OrderCardListProps {
-  vendorId: string;
+  vendor: Vendor;
   status: string;
 }
 
-const OrderCardList: React.FC<OrderCardListProps> = ({vendorId, status}) => {
+const OrderCardList: React.FC<OrderCardListProps> = ({vendor, status}) => {
   const {getVendorOrdersByStatus} = useOrderStore();
 
+  const {vendorId} = vendor || {};
   const getOrders = () => {
     if (status === 'CANCELLED') {
       const cancelledOrders = getVendorOrdersByStatus(
@@ -31,7 +33,11 @@ const OrderCardList: React.FC<OrderCardListProps> = ({vendorId, status}) => {
   return (
     <View style={styles.container}>
       {orders.map(order => (
-        <OrderSummaryCard key={`${status}_${order.orderId}`} {...order} />
+        <OrderSummaryCard
+          key={`${status}_${order.orderId}`}
+          {...order}
+          vendor={vendor}
+        />
       ))}
     </View>
   );

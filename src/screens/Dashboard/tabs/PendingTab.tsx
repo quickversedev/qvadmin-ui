@@ -75,14 +75,11 @@ const PendingTab: React.FC<PendingTabProps> = ({
         vendorsWithPendingOrders.map(vendor => (
           <CollapsableVendor
             key={`pending_${vendor.vendorId}`}
-            vendorName={vendor.vendorName}
-            vendorLogoUrl={vendor.vendorLogo}
-            status={ORDER_STATUS.PENDING}
-            vendorId={vendor.vendorId}
-            vendorPhone={vendor.vendorPhone}>
+            vendor={vendor}
+            status={ORDER_STATUS.PENDING}>
             <OrderCardList
               key={`pending_orders_${vendor.vendorId}`}
-              vendorId={vendor.vendorId}
+              vendor={vendor}
               status={ORDER_STATUS.PENDING}
             />
           </CollapsableVendor>

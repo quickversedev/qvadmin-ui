@@ -1,163 +1,200 @@
-import React from 'react';
+// src/components/OrderSummaryCard.tsx
+import React, {useState} from 'react';
 import {View, Text, TouchableOpacity, StyleSheet, Linking} from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Order} from '../../store/orders/useOrdersStore';
-import {useNavigation} from '@react-navigation/native';
-
-import {StackNavigationProp} from '@react-navigation/stack';
-import {HomeScreenStackParamList} from '../../navigation/HomeScreenNavigation';
-
 import {getStatusStyles} from './DashBoardUtil';
+import OrderDetailsModal from './OrderDetailsModel';
+import {convertUTCToIST, getTimeElapsed} from '../../utils/orderUtils';
+import {Vendor} from '../../store/vendors/useVendorStore';
+
+import {ORDER_STATUS} from '../../assets/constants/constant';
 
 type OrderSummaryCardProps = Order & {
-  key?: string; // accept key as optional
+  key?: string;
+  vendor: Vendor;
 };
-type WebViewScreenNavigationProp = StackNavigationProp<
-  HomeScreenStackParamList,
-  'WebViewScreen'
->;
 
-const OrderSummaryCard = ({
-  orderId,
-  customerName,
-  customerMobile,
-  totalItemCount,
-  creationTime,
-  orderLink,
-  state, // Add status prop to the type
-}: OrderSummaryCardProps) => {
-  const getPendingTime = () => {
-    const createdTimeUTC = new Date(creationTime).getTime(); // UTC time
-    const nowIST = new Date(); // local time (assumed IST if user's device is in IST)
-
-    // Convert local IST to UTC offset manually if you're running this on a server not in IST:
-    // const nowIST = new Date(new Date().getTime() + (5.5 * 60 * 60 * 1000));
-
-    const now = nowIST.getTime();
-    const diffMins = Math.floor((now - createdTimeUTC) / (1000 * 60));
-
-    const hours = Math.floor(diffMins / 60);
-    const minutes = diffMins % 60;
-
-    return `${hours}h:${minutes}m`;
+const OrderSummaryCard = (props: OrderSummaryCardProps) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const {
+    orderId,
+    customerName,
+    customerMobile,
+    totalItemCount,
+    creationTime,
+    acceptedDate,
+    rejectedDate,
+    completedDate,
+    state,
+    vendor,
+  } = props;
+  console.log('props:', props);
+  const statusStyles = getStatusStyles(state);
+  const getTime = () => {
+    switch (state) {
+      case ORDER_STATUS.PENDING:
+        return getTimeElapsed(creationTime);
+      case ORDER_STATUS.ACCEPTED:
+        return acceptedDate ? getTimeElapsed(acceptedDate) : '--';
+      case ORDER_STATUS.PACKED:
+        return '--';
+      case ORDER_STATUS.SHIPPED:
+        return '--';
+      case ORDER_STATUS.CANCELLED:
+        return rejectedDate ? convertUTCToIST(rejectedDate) : '--';
+      case ORDER_STATUS.REJECTED:
+        return rejectedDate ? convertUTCToIST(rejectedDate) : '--';
+      case ORDER_STATUS.COMPLETED:
+        return completedDate ? convertUTCToIST(completedDate) : '--';
+      default:
+        return '--';
+    }
   };
-
-  const navigation = useNavigation<WebViewScreenNavigationProp>();
   const handleCallCustomer = () => {
     const phoneNumber = `tel:${customerMobile}`;
     Linking.openURL(phoneNumber);
   };
-  const handleViewDetails = () => {
-    navigation.navigate('WebViewScreen', {url: orderLink});
-  };
-
-  const shouldShowPendingTime = ![
-    'CANCELLED',
-    'REJECTED',
-    'COMPLETED',
-  ].includes(state);
-
-  const statusStyles = getStatusStyles(state);
 
   return (
     <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <View style={{flexDirection: 'row', alignItems: 'center'}}>
-          <Text style={styles.orderId}>#{orderId}</Text>
-
-          <View
-            style={[
-              styles.statusBadge,
-              {backgroundColor: statusStyles.backgroundColor},
-            ]}>
-            <Icon
-              name={statusStyles.icon}
-              size={12}
-              color={statusStyles.color}
-              style={{marginRight: 4}}
-            />
-            <Text style={[styles.statusText, {color: statusStyles.color}]}>
-              {state}
-            </Text>
-          </View>
-        </View>
-        {shouldShowPendingTime && (
-          <Text style={styles.pendingTime}>{getPendingTime()}</Text>
-        )}
-      </View>
-      <View style={styles.customerRow}>
-        <View style={{flex: 1}}>
-          <View style={styles.customerInfo}>
-            <Icon
-              name="account"
-              size={18}
-              color="#0057A0"
-              style={{marginRight: 4}}
-            />
-            <Text style={styles.customerName}>{customerName}</Text>
-          </View>
-        </View>
-
-        <View style={styles.rightInfo}>
-          <View style={styles.customerInfo}>
-            <Icon
-              name="food-takeout-box-outline"
-              size={18}
-              color="#0057A0"
-              style={{marginRight: 4}}
-            />
-            <Text style={styles.itemCount}>{totalItemCount} Items</Text>
-          </View>
+      <View style={styles.header}>
+        <Text style={styles.orderId}>#{orderId}</Text>
+        <View style={{flexDirection: 'row'}}>
+          <Icon
+            name="clock-outline"
+            size={18}
+            color="#0057A0"
+            style={{marginRight: 4}}
+          />
+          <Text style={[styles.time, {color: statusStyles.color}]}>
+            {new Date(creationTime).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </Text>
         </View>
       </View>
+      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+        <View style={styles.customerInfo}>
+          <Icon
+            name="account"
+            size={18}
+            color="#0057A0"
+            style={{marginRight: 4}}
+          />
+          <Text style={styles.customerName}>{customerName}</Text>
+        </View>
+        <View
+          style={[
+            styles.statusBadge,
+            {backgroundColor: statusStyles.backgroundColor},
+          ]}>
+          <Icon
+            name={statusStyles.icon}
+            size={12}
+            color={statusStyles.color}
+            style={{marginRight: 4}}
+          />
+          <Text style={[styles.statusText, {color: statusStyles.color}]}>
+            {state}
+          </Text>
+        </View>
+      </View>
+      <View style={styles.details}>
+        <View style={styles.detailRow}>
+          <Text style={styles.detailLabel}>
+            {state === ORDER_STATUS.PENDING
+              ? 'Pending Time: '
+              : state === ORDER_STATUS.ACCEPTED
+              ? 'Preparing Time: '
+              : state === ORDER_STATUS.PACKED
+              ? 'Packed Time: '
+              : state === ORDER_STATUS.SHIPPED
+              ? 'Shipped Time: '
+              : state === ORDER_STATUS.COMPLETED
+              ? 'Completed In: '
+              : state === ORDER_STATUS.CANCELLED ||
+                state === ORDER_STATUS.REJECTED
+              ? 'Cancelled In: '
+              : 'Time: '}
+          </Text>
+          <Text style={[styles.pendingTimeValue, {color: statusStyles.color}]}>
+            {getTime()}
+          </Text>
+        </View>
+        <View style={styles.detailRow}>
+          <Icon
+            name="food-takeout-box-outline"
+            size={18}
+            color="#0057A0"
+            style={{marginRight: 4}}
+          />
+          <Text style={styles.detailLabel}>{totalItemCount} </Text>
+          <Text style={styles.itemsLabel}>Items</Text>
+        </View>
+      </View>
 
-      <View style={styles.footerRow}>
+      <View style={styles.actions}>
         <TouchableOpacity
-          style={styles.callButton}
+          style={[styles.button, styles.viewButton]}
+          onPress={() => setModalVisible(true)}>
+          <Text style={styles.buttonText}>View Order ➔</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.button, styles.contactButton]}
           onPress={handleCallCustomer}>
-          <Icon name="phone" size={16} color="#fff" style={{marginRight: 4}} />
-          <Text style={styles.callButtonText}>Call Customer</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={{marginTop: 8}} onPress={handleViewDetails}>
-          <Text style={styles.viewOrder}>View Order ➔</Text>
+          <Text style={styles.buttonText}>Contact Customer</Text>
         </TouchableOpacity>
       </View>
-      {/* uncomment when delivery app is ready */}
-      {/* {state === 'READY_TO_SHIP' && (
-        <TouchableOpacity
-          style={styles.assignButton}
-          onPress={() => console.log('Assign order pressed')}>
-          <Text style={styles.assignButtonText}>Assign Order</Text>
-        </TouchableOpacity>
-      )} */}
+
+      <OrderDetailsModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        order={props}
+        vendor={vendor}
+      />
     </View>
   );
 };
 
+export default OrderSummaryCard;
+
 const styles = StyleSheet.create({
   card: {
     backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 12,
-    margin: 1,
+    borderRadius: 8,
+    padding: 16,
+    marginVertical: 8,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 2},
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
     elevation: 3,
-    borderWidth: 0.5,
-    borderColor: '#ccc',
   },
-  headerRow: {
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: 12,
   },
   orderId: {
+    fontSize: 16,
     fontWeight: 'bold',
-    backgroundColor: '#e6f0fa',
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    borderRadius: 10,
-    color: '#0f3057',
-    fontSize: 12,
-    marginRight: 8,
+    color: '#333',
+  },
+  time: {
+    fontSize: 14,
+  },
+  details: {
+    marginBottom: 16,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+
+  detailRow: {
+    flexDirection: 'row',
+    marginBottom: 4,
   },
   statusBadge: {
     flexDirection: 'row',
@@ -172,16 +209,39 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textTransform: 'capitalize',
   },
-  pendingTime: {
-    color: 'red',
+  detailLabel: {
+    fontSize: 14,
     fontWeight: 'bold',
-    fontSize: 12,
+    color: '#000',
   },
-  customerRow: {
+  pendingTimeValue: {
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  itemsLabel: {
+    fontSize: 14,
+    color: 'gray',
+  },
+  actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginTop: 12,
+  },
+  button: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewButton: {
+    backgroundColor: '#f0f0f0',
+  },
+  contactButton: {
+    backgroundColor: '#f04d7d',
+  },
+  buttonText: {
+    fontSize: 14,
+    fontWeight: '500',
   },
   customerInfo: {
     flexDirection: 'row',
@@ -192,51 +252,10 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  itemCount: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
-  },
-  rightInfo: {
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-  },
-  callButton: {
-    backgroundColor: '#0057A0',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-  },
-  callButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  footerRow: {
-    marginTop: 10,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  viewOrder: {
+  viewButtonText: {
     color: '#0047AB',
-    fontWeight: 'bold',
-    fontSize: 14,
   },
-  assignButton: {
-    backgroundColor: '#f04d7d',
-    paddingVertical: 10,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginTop: 12,
-  },
-  assignButtonText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: 'bold',
+  contactButtonText: {
+    color: 'white',
   },
 });
-
-export default OrderSummaryCard;

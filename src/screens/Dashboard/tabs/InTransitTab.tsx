@@ -73,14 +73,11 @@ const InTransitTab: React.FC<InTransitTabProps> = ({
         vendorsWithInTransitOrders.map(vendor => (
           <CollapsableVendor
             key={`inTransit_${vendor.vendorId}`}
-            vendorName={vendor.vendorName}
-            vendorLogoUrl={vendor.vendorLogo}
-            status={ORDER_STATUS.SHIPPED}
-            vendorId={vendor.vendorId}
-            vendorPhone={vendor.vendorPhone}>
+            vendor={vendor}
+            status={ORDER_STATUS.SHIPPED}>
             <OrderCardList
               key={`InTransit_orders_${vendor.vendorId}`}
-              vendorId={vendor.vendorId}
+              vendor={vendor}
               status={ORDER_STATUS.SHIPPED}
             />
           </CollapsableVendor>

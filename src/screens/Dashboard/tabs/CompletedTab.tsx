@@ -72,14 +72,11 @@ const CompletedTab: React.FC<completedTabProps> = ({
         vendorsWithCompletedOrders.map(vendor => (
           <CollapsableVendor
             key={`Completed_${vendor.vendorId}`}
-            vendorName={vendor.vendorName}
-            vendorLogoUrl={vendor.vendorLogo}
-            status={ORDER_STATUS.COMPLETED}
-            vendorId={vendor.vendorId}
-            vendorPhone={vendor.vendorPhone}>
+            vendor={vendor}
+            status={ORDER_STATUS.COMPLETED}>
             <OrderCardList
               key={`Completed_orders_${vendor.vendorId}`}
-              vendorId={vendor.vendorId}
+              vendor={vendor}
               status={ORDER_STATUS.COMPLETED}
             />
           </CollapsableVendor>
