@@ -9,6 +9,7 @@ export const storage = new MMKV();
 // Define storage keys
 const StorageKeys = {
   SELECTED_CAMPUS: 'selectedCampus',
+  FCM_TOKEN: 'fcmToken',
 } as const;
 
 // Type-safe getters
@@ -33,6 +34,17 @@ export const StorageService = {
       return;
     }
     storage.set(StorageKeys.SELECTED_CAMPUS, JSON.stringify(campus));
+  },
+  getFCMToken: (): string | null => {
+    return storage.getString(StorageKeys.FCM_TOKEN) ?? null;
+  },
+
+  setFCMToken: (token: string | null): void => {
+    storage.set(StorageKeys.FCM_TOKEN, token);
+  },
+
+  deleteFCMToken: (): void => {
+    storage.delete(StorageKeys.FCM_TOKEN);
   },
 
   // Clear all storage (optional)

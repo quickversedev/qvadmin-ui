@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import globalConfig from '../../utils/global/globalConfig.ts';
+import {getToken} from '../../hooks/notification/useNotification.tsx';
 
 export type AuthData = {
   session: {
@@ -73,7 +74,13 @@ const verifyOtp = async (
   //     });
   //   }, 1000);
   // });
-
+  let token;
+  try {
+    token = await getToken();
+  } catch (error) {
+    console.error('Error getting FCM token:', error);
+    throw error;
+  }
   return axios
     .post(
       `${globalConfig.apiBaseUrl}/v1/login`,
@@ -81,6 +88,8 @@ const verifyOtp = async (
         mobile: phoneNumber,
         otp: otp,
         verificationId: verificationId,
+        userType: 'captain',
+        fcmToken: token,
       },
       {
         headers: {
