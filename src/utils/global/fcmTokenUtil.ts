@@ -13,13 +13,14 @@ const useFCMTokenHandler = () => {
     try {
       const currentToken = await getToken();
       const storedToken = StorageService.getFCMToken();
+      console.log('storedToken', storedToken);
       if (!currentToken) {
         console.warn('❌ FCM token is null or undefined');
         return;
       }
-      if (!storedToken || storedToken !== currentToken) {
+      if (storedToken && storedToken !== currentToken) {
         StorageService.setFCMToken(currentToken);
-        await sendFCMToken(currentToken, authData);
+        await sendFCMToken(storedToken, currentToken, authData);
       }
     } catch (error) {
       console.error('❌ Error getting FCM token', error);
@@ -29,8 +30,9 @@ const useFCMTokenHandler = () => {
   useEffect(() => {
     refreshFCMToken();
     const unsubscribe = messaging().onTokenRefresh(async newToken => {
+      const storedToken = StorageService.getFCMToken();
       StorageService.setFCMToken(newToken);
-      await sendFCMToken(newToken, authData);
+      storedToken && (await sendFCMToken(storedToken, newToken, authData));
     });
 
     return unsubscribe;
