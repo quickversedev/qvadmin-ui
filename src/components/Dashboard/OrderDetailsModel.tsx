@@ -77,7 +77,7 @@ const OrderDetailsModal = ({
 
             <View style={styles.section}>
               <View style={styles.itemsContainer}>
-                {orderItem?.length > 0 ? (
+                {orderItem?.length > 0 &&
                   orderItem.map(item => (
                     <View key={item.id} style={styles.itemRow}>
                       <Text style={styles.itemName}>{item.name}</Text>
@@ -85,10 +85,7 @@ const OrderDetailsModal = ({
                         X {item.itemCount}
                       </Text>
                     </View>
-                  ))
-                ) : (
-                  <Text style={styles.itemName}>No items in order</Text>
-                )}
+                  ))}
                 <View style={styles.itemRow}>
                   <Text
                     style={
