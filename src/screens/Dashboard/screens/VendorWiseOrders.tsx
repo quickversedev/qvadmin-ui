@@ -12,7 +12,7 @@ import {
 import PendingTab from '../tabs/PendingTab';
 import AcceptedTab from '../tabs/AcceptedTab';
 import ReadyToShipTab from '../tabs/ReadyToShipTab';
-import {useVendorStore, Vendor} from '../../../store/vendors/useVendorStore';
+import {useVendorStore} from '../../../store/vendors/useVendorStore';
 
 import {OrderStackParamList} from '../../../navigation/DashboardNavigation';
 import {RouteProp, useRoute} from '@react-navigation/native';
@@ -39,8 +39,13 @@ const VendorWiseOrders: React.FC = () => {
   const route = useRoute<VendorWiseOrdersRouteProp>();
   const {tab} = route.params;
   const [activeTab, setActiveTab] = useState<TabType>(tab);
-  const {vendors, loading, error, fetchVendors} = useVendorStore();
-  const [allVendors, setAllVEndors] = useState<Vendor[]>([]);
+  const {
+    loading,
+    vendors,
+    error,
+    fetchVendors,
+    getActiveVendors,
+  } = useVendorStore();
   const selectedRegion = useRegionsStore(state => state.selectedRegion);
   const [refreshing, setRefreshing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -55,16 +60,13 @@ const VendorWiseOrders: React.FC = () => {
   const {fetchOrders, getOrdersCountByStatus} = useOrderStore();
   const lastFilter = useOrderStore(state => state.lastTimeFilter);
   useEffect(() => {
-    if (selectedRegion) {
+    if (selectedRegion && vendors.length === 0) {
       fetchVendors(selectedRegion.regionId);
     }
-  }, [fetchVendors, selectedRegion]);
+  }, [fetchVendors, selectedRegion, vendors.length]);
 
-  useEffect(() => {
-    if (vendors.length > 0) {
-      setAllVEndors(vendors);
-    }
-  }, [vendors]);
+  // Get active vendors for display
+
 
   const scrollToTab = (taba: TabType) => {
     const index = TABS.indexOf(taba);
@@ -84,7 +86,7 @@ const VendorWiseOrders: React.FC = () => {
     if (tab && tab !== activeTab) {
       setActiveTab(tab);
     }
-  }, [tab]);
+  }, [tab, activeTab]);
 
   const setTabRef = (taba: TabType) => (ref: View | null) => {
     tabItemRefs.current[taba] = ref;
@@ -127,7 +129,7 @@ const VendorWiseOrders: React.FC = () => {
       case ORDER_STATUS.PENDING:
         return (
           <PendingTab
-            vendors={allVendors}
+            vendors={vendors}
             refreshing={refreshing}
             onRefresh={onRefresh}
           />
@@ -135,7 +137,7 @@ const VendorWiseOrders: React.FC = () => {
       case ORDER_STATUS.ACCEPTED:
         return (
           <AcceptedTab
-            vendors={allVendors}
+            vendors={vendors}
             refreshing={refreshing}
             onRefresh={onRefresh}
           />
@@ -143,7 +145,7 @@ const VendorWiseOrders: React.FC = () => {
       case ORDER_STATUS.PACKED:
         return (
           <ReadyToShipTab
-            vendors={allVendors}
+            vendors={vendors}
             refreshing={refreshing}
             onRefresh={onRefresh}
           />
@@ -151,7 +153,7 @@ const VendorWiseOrders: React.FC = () => {
       case ORDER_STATUS.CANCELLED:
         return (
           <CancelledTab
-            vendors={allVendors}
+            vendors={vendors}
             refreshing={refreshing}
             onRefresh={onRefresh}
           />
@@ -159,7 +161,7 @@ const VendorWiseOrders: React.FC = () => {
       case ORDER_STATUS.COMPLETED:
         return (
           <CompletedTab
-            vendors={allVendors}
+            vendors={vendors}
             refreshing={refreshing}
             onRefresh={onRefresh}
           />
@@ -167,7 +169,7 @@ const VendorWiseOrders: React.FC = () => {
       case ORDER_STATUS.SHIPPED:
         return (
           <InTransitTab
-            vendors={allVendors}
+            vendors={vendors}
             refreshing={refreshing}
             onRefresh={onRefresh}
           />
@@ -244,9 +246,9 @@ const VendorWiseOrders: React.FC = () => {
               source={require('../../../assets/images/empty-state.png')}
               style={styles.stateIcon}
             />
-            <Text style={styles.stateTitle}>No Vendors Available</Text>
+            <Text style={styles.stateTitle}>No Active Vendors</Text>
             <Text style={styles.stateSubtitle}>
-              There are currently no vendors registered at this region
+              There are currently no active vendors in this region
             </Text>
           </View>
         ) : (

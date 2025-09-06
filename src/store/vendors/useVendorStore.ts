@@ -1,6 +1,10 @@
 // src/store/vendorStore.ts
 import {create} from 'zustand';
-import axiosInstance, {apiCall, withHeaders} from '../../services/apis/axios.config';
+
+import axiosInstance, {
+  apiCall,
+  withHeaders,
+} from '../../services/apis/axios.config';
 
 export interface ShopAddress {
   address: string;
@@ -34,18 +38,25 @@ export interface Vendor {
 
 interface VendorState {
   vendors: Vendor[];
+  selectedVendor: Vendor | null;
   loading: boolean;
   error: string | null;
   fetchVendors: (regionId: string) => Promise<void>;
+  selectVendor: (vendor: Vendor) => void;
+  clearSelectedVendor: () => void;
   setVendors: (vendors: Vendor[]) => void;
   clearVendors: () => void;
   getVendorById: (shopId: string) => Vendor | undefined;
   getActiveVendors: () => Vendor[];
   getFeaturedVendors: () => Vendor[];
+  addVendor: (vendor: Vendor) => void;
+  updateVendor: (shopId: string, updatedData: Partial<Vendor>) => void;
+  deleteVendor: (shopId: string) => void;
 }
 
-export const useVendorStore = create<VendorState>((set, get) => ({
+export const useVendorStore = create<VendorState>()((set, get) => ({
   vendors: [],
+  selectedVendor: null,
   loading: false,
   error: null,
 
@@ -56,18 +67,27 @@ export const useVendorStore = create<VendorState>((set, get) => ({
       const headers = {
         Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
       };
-
+      console.log('endpoint in fetchVendors', endpoint);
       const vendors = await apiCall<Vendor[]>(
-        axiosInstance.get(endpoint, withHeaders(headers))
+        axiosInstance.get(endpoint, withHeaders(headers)),
       );
       console.log('vendors in fetchVendors', vendors);
       set({vendors, loading: false});
     } catch (error) {
       set({
-        error: error instanceof Error ? error.message : 'Failed to fetch vendors',
+        error:
+          error instanceof Error ? error.message : 'Failed to fetch vendors',
         loading: false,
       });
     }
+  },
+
+  selectVendor: (vendor: Vendor) => {
+    set({selectedVendor: vendor});
+  },
+
+  clearSelectedVendor: () => {
+    set({selectedVendor: null});
   },
 
   setVendors: vendors => set({vendors}),
@@ -87,5 +107,31 @@ export const useVendorStore = create<VendorState>((set, get) => ({
   getFeaturedVendors: () => {
     const vendors = get().vendors;
     return vendors.filter(vendor => vendor.featured);
+  },
+
+  addVendor: (vendor: Vendor) => {
+    set(state => ({
+      vendors: [...state.vendors, vendor],
+    }));
+  },
+
+  updateVendor: (shopId: string, updatedData: Partial<Vendor>) => {
+    set(state => ({
+      vendors: state.vendors.map(vendor =>
+        vendor.shopId === shopId ? {...vendor, ...updatedData} : vendor,
+      ),
+      selectedVendor:
+        state.selectedVendor?.shopId === shopId
+          ? {...state.selectedVendor, ...updatedData}
+          : state.selectedVendor,
+    }));
+  },
+
+  deleteVendor: (shopId: string) => {
+    set(state => ({
+      vendors: state.vendors.filter(vendor => vendor.shopId !== shopId),
+      selectedVendor:
+        state.selectedVendor?.shopId === shopId ? null : state.selectedVendor,
+    }));
   },
 }));
