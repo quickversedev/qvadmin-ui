@@ -19,12 +19,7 @@ type AuthContextData = {
     verificationId: string,
   ): Promise<void>;
   signOut(): void;
-  signUp(
-    fullName: string,
-    campusId: string,
-    email: string,
-    dob: string,
-  ): Promise<void>;
+
   setAuthData(token: string): void;
 };
 
@@ -56,6 +51,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
   });
 
   const sendOtp = async (phoneNumber: string): Promise<string> => {
+    console.log('phoneNumber', phoneNumber);
     return await authService.sendOtp(phoneNumber);
   };
 
@@ -77,20 +73,9 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
     }
   };
 
-  const signUp = async (
-    fullName: string,
-    campusId: string,
-    email: string,
-    dob: string,
-  ): Promise<void> => {
-    await authService.signUp(fullName, dob, campusId, email);
-  };
-
-  const signOut = (): void => {
-    // authService.signOut().catch(console.error);
+  const signOut = async (): Promise<void> => {
     setAuthData(undefined);
-    storage.delete('@AuthData');
-    storage.delete('@selectedCampus');
+    storage.clearAll();
   };
 
   return (
@@ -101,7 +86,7 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
         sendOtp,
         verifyOtp,
         signOut,
-        signUp,
+
         setAuthData,
       }}>
       {children}

@@ -1,6 +1,5 @@
 // src/api/fcmApi.ts
-import axios from 'axios';
-import globalConfig from '../../utils/global/globalConfig';
+import { apiCall, createRequestWithHeaders } from './axios.config';
 
 interface FCMTokenPayload {
   newFCMToken: string;
@@ -17,41 +16,44 @@ export const sendFCMToken = async (
     fcmToken,
   };
   try {
-    const response = await axios.put(
-      `${globalConfig.apiBaseUrl}/v1/updateDeviceInfo`,
-      payload,
-      {
-        headers: {
-          sessionToken,
-        },
-      },
+    const response = await apiCall(
+      createRequestWithHeaders(
+        'put',
+        '/v1/updateDeviceInfo',
+        payload,
+        {
+          sessionToken: sessionToken || '',
+        }
+      )
     );
-    console.log('✅ FCM token sent successfully:', response.data);
-    return response.data;
+    console.log('✅ FCM token sent successfully:', response);
+    return response;
   } catch (error: any) {
     console.error(
       '❌ Failed to send FCM token:',
-      error.response?.data || error.message,
+      error.message || 'Unknown error',
     );
     throw error;
   }
 };
 export const deleteFCMToken = async (sessionToken: string) => {
   try {
-    const response = await axios.delete(
-      `${globalConfig.apiBaseUrl}/api/fcm-token`,
-      {
-        headers: {
+    const response = await apiCall(
+      createRequestWithHeaders(
+        'delete',
+        '/api/fcm-token',
+        undefined,
+        {
           sessionToken,
-        },
-      },
+        }
+      )
     );
-    console.log('✅ FCM token deleted successfully:', response.data);
-    return response.data;
+    console.log('✅ FCM token deleted successfully:', response);
+    return response;
   } catch (error: any) {
     console.error(
       '❌ Failed to delete FCM token:',
-      error.response?.data || error.message,
+      error.message || 'Unknown error',
     );
     throw error;
   }

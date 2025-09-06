@@ -10,7 +10,7 @@ import {
   TouchableWithoutFeedback,
   Dimensions,
 } from 'react-native';
-import {Campus} from '../../store/campuses/useCampusesStore';
+import {Campus} from '../../store/campuses/regionStore';
 import {useCampuses} from '../../hooks/campuses/useCampuses';
 import Feather from 'react-native-vector-icons/Feather';
 

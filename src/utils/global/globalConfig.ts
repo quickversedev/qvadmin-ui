@@ -1,5 +1,7 @@
+import { API_CONFIG } from '../../services/apis/axios.config';
+
 const globalConfig = {
-  apiBaseUrl: 'http://prd.quickverse.in/quickVerse',
+  apiBaseUrl: API_CONFIG.baseURL,
 };
 
 export default globalConfig;

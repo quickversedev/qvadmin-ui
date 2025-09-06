@@ -1,6 +1,6 @@
 // src/services/storage.service.ts
 import {MMKV} from 'react-native-mmkv';
-import {Campus} from '../../../store/campuses/useCampusesStore';
+import {Campus} from '../../../store/campuses/regionStore';
 import {isValidCampus} from '../../../utils/global/campusValidator';
 
 // Initialize MMKV
@@ -39,7 +39,7 @@ export const StorageService = {
     return storage.getString(StorageKeys.FCM_TOKEN) ?? null;
   },
 
-  setFCMToken: (token: string | null): void => {
+  setFCMToken: (token: string): void => {
     storage.set(StorageKeys.FCM_TOKEN, token);
   },
 

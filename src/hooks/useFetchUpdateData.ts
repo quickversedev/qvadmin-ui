@@ -19,22 +19,22 @@ const useFetchUpdateData = () => {
     setError(null);
 
     try {
-      const response = await axios.get(
-        `${globalConfig.apiBaseUrl}/v1/initialConfig`,
-        {
-          headers: {
-            Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
-          },
-        },
-      ); // Replace with your API endpoint
-      // const response = {
-      //   data: {
-      //     minVersion: '1',
-      //     appStoreURL: 'http://www.google.com',
-      //     playStoreURL: 'http://www.facebook.com',
-      //     latestVersion: '4',
+      // const response = await axios.get(
+      //   `${globalConfig.apiBaseUrl}/v1/initialConfig`,
+      //   {
+      //     headers: {
+      //       Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
+      //     },
       //   },
-      // };
+      // ); // Replace with your API endpoint
+      const response = {
+        data: {
+          minVersionAdmin: '1',
+          adminAppStoreURL: 'http://www.google.com',
+          adminPlayStoreURL: 'http://www.facebook.com',
+          latestVersionAdmin: '4',
+        },
+      };
       setUpdateData({
         admin_min_required_version: response.data.minVersionAdmin,
         admin_ios_url: response.data.adminAppStoreURL,
