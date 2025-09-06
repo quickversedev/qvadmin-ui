@@ -14,8 +14,10 @@ import DashboardTile from './DashboardTile';
 import {useNavigation} from '@react-navigation/native';
 import {OrderStackParamList} from '../../navigation/DashboardNavigation';
 import {StackNavigationProp} from '@react-navigation/stack';
-import {useCampuses} from '../../hooks/campuses/useCampuses';
+
 import {ORDER_STATUS} from '../../assets/constants/constant';
+import { useRegionsStore } from '../../store/regions/useRegionsStore';
+import { useAuth } from '../../contexts/Login/AuthProvider';
 
 type OrderListScreenNavigationProp = StackNavigationProp<
   OrderStackParamList,
@@ -33,11 +35,12 @@ const OrderListScreen = () => {
     getOrdersCountByStatus,
   } = useOrderStore();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>('1d');
-  const {selectedCampus} = useCampuses();
+  const {selectedRegion} = useRegionsStore();
+  const {authData} = useAuth();
 
   const fetchFilteredOrders = useCallback(() => {
-    fetchOrders(selectedCampus?.campusId, timeFilter);
-  }, [fetchOrders, selectedCampus?.campusId, timeFilter]);
+    fetchOrders(selectedRegion?.regionId, timeFilter, authData?.jwt);
+  }, [fetchOrders, selectedRegion?.regionId, timeFilter, authData?.jwt]);
 
   useEffect(() => {
     fetchFilteredOrders();
@@ -84,7 +87,7 @@ const OrderListScreen = () => {
     </View>
   );
 
-  if (!selectedCampus) {
+  if (!selectedRegion) {
     return (
       <View style={styles.emptyStateContainer}>
         {renderFilterButtons()}
@@ -92,9 +95,9 @@ const OrderListScreen = () => {
           source={require('../../assets/images/task-list.png')}
           style={styles.emptyStateImage}
         />
-        <Text style={styles.emptyStateTitle}>No Campus Selected</Text>
+        <Text style={styles.emptyStateTitle}>No Region Selected</Text>
         <Text style={styles.emptyStateText}>
-          Please select a campus to view order summary
+          Please select a Region to view order summary
         </Text>
       </View>
     );

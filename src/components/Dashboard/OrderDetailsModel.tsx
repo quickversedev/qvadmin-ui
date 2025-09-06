@@ -44,15 +44,15 @@ const OrderDetailsModal = ({
     creationTime,
     customerAddress,
   } = order;
-  const {vendorAddress} = vendor || {};
+  const {shopAddress} = vendor || {};
   const customerAddr = customerAddress && parseAddress(customerAddress);
 
-  const vendorAddr = vendorAddress && parseAddress(vendorAddress);
-
-  const handleGetDirections = (address: string) => {
-    const addr = parseAddress(address);
-    const lat = addr.latitude || '0';
-    const lng = addr.longitude || '0';
+  const vendorAddr = shopAddress && parseAddress(shopAddress.address);
+  console.log('vendorAddr********************************************', vendorAddr);
+  const handleGetDirections = (latitude: number, longitude: number) => {
+   
+    const lat = latitude || '0';
+    const lng = longitude || '0';
     openMap({lat, lng, label: `${customerName}'s Location`});
   };
 
@@ -127,17 +127,15 @@ const OrderDetailsModal = ({
                 <View style={styles.addressSection}>
                   <Text style={styles.sectionTitle}>Pickup</Text>
                   <Text style={styles.addressText}>
-                    {vendorAddr.addressLine1}
+                    {shopAddress.address}
                   </Text>
+    
                   <Text style={styles.addressText}>
-                    {vendorAddr.addressLine2}
-                  </Text>
-                  <Text style={styles.addressText}>
-                    {vendorAddr.city}, {vendorAddr.state} - {vendorAddr.pincode}
+                    {shopAddress.city}, {shopAddress.state} - {shopAddress.postalCode}
                   </Text>
                   <TouchableOpacity
                     style={styles.directionsButton}
-                    onPress={() => handleGetDirections(vendorAddress)}>
+                    onPress={() => handleGetDirections(vendor?.coordinates?.latitude, vendor?.coordinates?.longitude)}>
                     <Text style={styles.directionsButtonText}>
                       Get Directions {'>'}
                     </Text>

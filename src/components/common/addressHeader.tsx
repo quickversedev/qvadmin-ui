@@ -10,45 +10,47 @@ import {
   TouchableWithoutFeedback,
   Dimensions,
 } from 'react-native';
-import {Campus} from '../../store/campuses/regionStore';
-import {useCampuses} from '../../hooks/campuses/useCampuses';
+
+import {Region, useRegionsStore} from '../../store/regions/useRegionsStore';
 import Feather from 'react-native-vector-icons/Feather';
 
-const CampusSelector = ({onSelect}: {onSelect: (campus: Campus) => void}) => {
+const RegionSelector = ({onSelect}: {onSelect: (region: Region) => void}) => {
+
+
   const {
-    campuses,
-    selectedCampus,
+    regions,
+    selectedRegion,
     isLoading,
     error,
-    fetchCampuses,
-    selectCampus,
-  } = useCampuses();
+    fetchRegions,
+    selectRegion,
+  } = useRegionsStore();
 
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const loadInitialData = async () => {
-      await fetchCampuses();
+      await fetchRegions();
 
-      // If there's a selected campus from the store, call onSelect
-      if (selectedCampus) {
-        onSelect(selectedCampus);
+      // If there's a selected region from the store, call onSelect
+      if (selectedRegion) {
+        onSelect(selectedRegion);
       }
     };
 
     loadInitialData();
-  }, [fetchCampuses, onSelect, selectedCampus]);
+  }, [fetchRegions, onSelect, selectedRegion]);
 
-  const filteredCampuses = campuses.filter(
-    campus =>
-      campus.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      campus.campusName.toLowerCase().includes(searchQuery.toLowerCase()),
+  const filteredRegions = regions.filter(
+    region =>
+      region.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      region.regionName.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  const handleSelect = (campus: Campus) => {
-    selectCampus(campus); // Update the store
-    onSelect(campus); // Call the prop callback
+  const handleSelect = (region: Region) => {
+    selectRegion(region); // Update the store
+    onSelect(region); // Call the prop callback
     setIsOpen(false);
     setSearchQuery('');
   };
@@ -56,7 +58,7 @@ const CampusSelector = ({onSelect}: {onSelect: (campus: Campus) => void}) => {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <Text>Loading campuses...</Text>
+        <Text>Loading Regions...</Text>
       </View>
     );
   }
@@ -77,17 +79,17 @@ const CampusSelector = ({onSelect}: {onSelect: (campus: Campus) => void}) => {
           setIsOpen(true);
         }}>
         <View style={styles.buttonContent}>
-          {selectedCampus ? (
+          {selectedRegion ? (
             <>
               <Feather name="map-pin" color="#003F66" size={24} />
-              <Text style={styles.selectedCampusText}>
-                {selectedCampus.displayName}
-              </Text>
-            </>
-          ) : (
-            <>
-              <Feather name="map-pin" color="#003F66" size={24} />
-              <Text style={styles.selectedCampusText}>Select Campus</Text>
+                <Text style={styles.selectedRegionText}>
+                  {selectedRegion.displayName}
+                </Text>
+              </>
+            ) : (
+              <>
+                <Feather name="map-pin" color="#003F66" size={24} />
+                <Text style={styles.selectedRegionText}>Select Region</Text>
             </>
           )}
         </View>
@@ -106,24 +108,24 @@ const CampusSelector = ({onSelect}: {onSelect: (campus: Campus) => void}) => {
           <View style={styles.dropdown}>
             <TextInput
               style={styles.searchInput}
-              placeholder="Search campuses..."
+              placeholder="Search Regions..."
               value={searchQuery}
               onChangeText={setSearchQuery}
               autoFocus={true}
             />
 
             <FlatList
-              data={filteredCampuses}
-              keyExtractor={item => item.campusId}
+              data={filteredRegions}
+              keyExtractor={item => item.regionId}
               renderItem={({item}) => (
                 <TouchableOpacity
-                  style={styles.campusItem}
+                  style={styles.regionItem}
                   onPress={() => handleSelect(item)}>
-                  <Text style={styles.campusDisplayName}>
+                  <Text style={styles.regionDisplayName}>
                     {item.displayName}
                   </Text>
-                  <Text style={styles.campusName}>{item.campusName}</Text>
-                  <Text style={styles.campusLocation}>{item.location}</Text>
+                  <Text style={styles.regionName}>{item.regionName}</Text>
+                  
                 </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -156,7 +158,7 @@ const styles = StyleSheet.create({
   locationIcon: {
     marginRight: 8,
   },
-  selectedCampusText: {
+  selectedRegionText: {
     fontSize: 16,
     fontWeight: 'bold',
     color: '#003F66',
@@ -196,22 +198,18 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
     fontSize: 16,
   },
-  campusItem: {
+  regionItem: {
     padding: 12,
   },
-  campusDisplayName: {
+  regionDisplayName: {
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 4,
   },
-  campusName: {
+  regionName: {
     fontSize: 14,
     color: '#555',
     marginBottom: 2,
-  },
-  campusLocation: {
-    fontSize: 12,
-    color: '#777',
   },
   separator: {
     height: 1,
@@ -219,4 +217,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CampusSelector;
+export default RegionSelector;

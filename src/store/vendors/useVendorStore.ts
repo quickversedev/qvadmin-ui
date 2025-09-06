@@ -1,35 +1,47 @@
 // src/store/vendorStore.ts
 import {create} from 'zustand';
-import axios from 'axios';
-import globalConfig from '../../utils/global/globalConfig';
+import axiosInstance, {apiCall, withHeaders} from '../../services/apis/axios.config';
+
+export interface ShopAddress {
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+}
+
+export interface Coordinates {
+  longitude: number;
+  latitude: number;
+}
 
 export interface Vendor {
-  vendorId: string;
-  campusId: string;
-  vendorName: string;
-  vendorEndPoint: string;
-  vendorAddress: string;
-  vendorBanner: string;
-  vendorOwner: string;
-  vendorPhone: string;
-  vendorLogoUrl: string;
-  vendorLogo: string;
-  distance: string;
-  storeOpeningTime: string;
-  storeClosingTime: string;
-  storeDescription: string;
-  storeCategory: string;
-  storeEnabled: boolean;
+  shopId: string;
+  name: string;
+  shopAddress: ShopAddress;
+  logo: string;
+  banner: string;
+  owner: string;
+  phone: string;
+  openingTime: string;
+  closingTime: string;
+  preparationTime: string;
+  description: string;
+  category: string;
+  coordinates: Coordinates;
+  storeActive: boolean;
+  featured: boolean;
 }
 
 interface VendorState {
   vendors: Vendor[];
   loading: boolean;
   error: string | null;
-  fetchVendors: (campusId: string) => Promise<void>;
+  fetchVendors: (regionId: string) => Promise<void>;
   setVendors: (vendors: Vendor[]) => void;
   clearVendors: () => void;
-  getVendorById: (vendorId: string) => Vendor | undefined;
+  getVendorById: (shopId: string) => Vendor | undefined;
+  getActiveVendors: () => Vendor[];
+  getFeaturedVendors: () => Vendor[];
 }
 
 export const useVendorStore = create<VendorState>((set, get) => ({
@@ -37,22 +49,24 @@ export const useVendorStore = create<VendorState>((set, get) => ({
   loading: false,
   error: null,
 
-  fetchVendors: async (campusId: string) => {
+  fetchVendors: async (regionId: string) => {
     set({loading: true, error: null});
     try {
-      const response = await axios.get(
-        `${globalConfig.apiBaseUrl}/v1/campus/${campusId}/vendors`,
-        {
-          headers: {
-            Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
-          },
-        },
-      );
+      const endpoint = `/v3/region/shops?region=${regionId}`;
+      const headers = {
+        Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
+      };
 
-      const vendors = response.data.vendors.vendor;
+      const vendors = await apiCall<Vendor[]>(
+        axiosInstance.get(endpoint, withHeaders(headers))
+      );
+      console.log('vendors in fetchVendors', vendors);
       set({vendors, loading: false});
-    } catch (error: any) {
-      set({error: error.message || 'Failed to fetch vendors', loading: false});
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to fetch vendors',
+        loading: false,
+      });
     }
   },
 
@@ -60,8 +74,18 @@ export const useVendorStore = create<VendorState>((set, get) => ({
 
   clearVendors: () => set({vendors: []}),
 
-  getVendorById: (vendorId: string) => {
+  getVendorById: (shopId: string) => {
     const vendors = get().vendors;
-    return vendors.find(vendor => vendor.vendorId === vendorId);
+    return vendors.find(vendor => vendor.shopId === shopId);
+  },
+
+  getActiveVendors: () => {
+    const vendors = get().vendors;
+    return vendors.filter(vendor => vendor.storeActive);
+  },
+
+  getFeaturedVendors: () => {
+    const vendors = get().vendors;
+    return vendors.filter(vendor => vendor.featured);
   },
 }));

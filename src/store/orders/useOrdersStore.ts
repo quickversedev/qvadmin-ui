@@ -1,8 +1,6 @@
 // stores/orderStore.ts
 import {create} from 'zustand';
-import axios from 'axios';
-import {mockOrders} from '../../assets/mockData/orders';
-import globalConfig from '../../utils/global/globalConfig';
+import axiosInstance, {apiCall, withHeaders} from '../../services/apis/axios.config';
 
 export interface OrderItems {
   id: number;
@@ -50,8 +48,9 @@ interface OrderStore {
   error: string | null;
   lastTimeFilter: TimeFilter;
   fetchOrders: (
-    campusId: string | undefined,
+    regionId: string | undefined,
     timeFilter?: TimeFilter,
+    authToken?: string,
   ) => Promise<void>;
   getOrderCount: () => number;
   getOrderById: (orderId: string) => Order | undefined;
@@ -100,24 +99,25 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   error: null,
   lastTimeFilter: '1d',
 
-  fetchOrders: async (campusId?: string, timeFilter: TimeFilter = '1d') => {
+  fetchOrders: async (regionId?: string, timeFilter: TimeFilter = '1d', authToken?: string) => {
     set({loading: true, error: null, lastTimeFilter: timeFilter});
     try {
       const startDate = getStartDate(timeFilter);
+      const endpoint = `/v2/order/OrderStatus?regionId=${regionId}&startDate=${startDate}`;
 
-      const response = await axios.get<OrderResponse>(
-        `${globalConfig.apiBaseUrl}/v2/OrderStatus?campusId=${campusId}&startDate=${startDate}`,
-        {
-          headers: {
-            SessionKey:
-              'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJtb2JpbGUiOiI5MTk3NjUwMDgxMTAiLCJpYXQiOjE3NDc2NDgzNDAsImV4cCI6MTc3OTE4NDM0MH0._cj5P6tzOZFbBPrVcNRUgaXv7qQrfyha43cBN1qCBHo',
-          },
-        },
+        if (!authToken) {
+        throw new Error('No authentication token available');
+        }
+
+      const headers = {
+        SessionKey: authToken,
+      };
+      console.log('headers', headers);
+      const response = await apiCall<OrderResponse>(
+        axiosInstance.get(endpoint, withHeaders(headers))
       );
-      // console.log('Fetched orders:', response);
-      // await new Promise(resolve => setTimeout(resolve, 1000));
-      // const response = mockOrders;
-      const parsedOrders = response.data.orders.order.map(order => {
+      console.log('response in fetchOrders', response);
+      const parsedOrders = response.orders.order.map(order => {
         let customerAddress = order.customerAddress;
 
         return {
@@ -132,8 +132,9 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
 
       set({orders: parsedOrders, loading: false});
     } catch (error) {
+      console.log('error in fetchOrders', error);
       set({
-        error: axios.isAxiosError(error) ? error.message : 'Unknown error',
+        error: error instanceof Error ? error.message : 'Unknown error',
         loading: false,
       });
     }

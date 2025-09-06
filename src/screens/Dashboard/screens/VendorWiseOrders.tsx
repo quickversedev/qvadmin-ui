@@ -13,7 +13,7 @@ import PendingTab from '../tabs/PendingTab';
 import AcceptedTab from '../tabs/AcceptedTab';
 import ReadyToShipTab from '../tabs/ReadyToShipTab';
 import {useVendorStore, Vendor} from '../../../store/vendors/useVendorStore';
-import {useCampusesStore} from '../../../store/campuses/useCampusesStore';
+
 import {OrderStackParamList} from '../../../navigation/DashboardNavigation';
 import {RouteProp, useRoute} from '@react-navigation/native';
 import CancelledTab from '../tabs/CancelledTab';
@@ -21,6 +21,7 @@ import CompletedTab from '../tabs/CompletedTab';
 import InTransitTab from '../tabs/InTransitTab';
 import {ORDER_STATUS} from '../../../assets/constants/constant';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
+import { useRegionsStore } from '../../../store/regions/useRegionsStore';
 
 type VendorWiseOrdersRouteProp = RouteProp<OrderStackParamList, 'VendorOrders'>;
 
@@ -40,7 +41,7 @@ const VendorWiseOrders: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabType>(tab);
   const {vendors, loading, error, fetchVendors} = useVendorStore();
   const [allVendors, setAllVEndors] = useState<Vendor[]>([]);
-  const selectedCampus = useCampusesStore(state => state.selectedCampus);
+  const selectedRegion = useRegionsStore(state => state.selectedRegion);
   const [refreshing, setRefreshing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const tabItemRefs = useRef<{[key in TabType]: View | null}>({
@@ -54,10 +55,10 @@ const VendorWiseOrders: React.FC = () => {
   const {fetchOrders, getOrdersCountByStatus} = useOrderStore();
   const lastFilter = useOrderStore(state => state.lastTimeFilter);
   useEffect(() => {
-    if (selectedCampus) {
-      fetchVendors(selectedCampus.campusId);
+    if (selectedRegion) {
+      fetchVendors(selectedRegion.regionId);
     }
-  }, [fetchVendors, selectedCampus]);
+  }, [fetchVendors, selectedRegion]);
 
   useEffect(() => {
     if (vendors.length > 0) {
@@ -92,7 +93,7 @@ const VendorWiseOrders: React.FC = () => {
     setRefreshing(true);
 
     try {
-      await fetchOrders(selectedCampus?.campusId, lastFilter);
+      await fetchOrders(selectedRegion?.regionId, lastFilter);
     } catch (err) {
       console.error('Error refreshing orders:', err);
     } finally {
@@ -232,7 +233,7 @@ const VendorWiseOrders: React.FC = () => {
             <TouchableOpacity
               style={styles.retryButton}
               onPress={() =>
-                selectedCampus && fetchVendors(selectedCampus.campusId)
+                selectedRegion && fetchVendors(selectedRegion.regionId)
               }>
               <Text style={styles.retryButtonText}>Try Again</Text>
             </TouchableOpacity>
@@ -245,7 +246,7 @@ const VendorWiseOrders: React.FC = () => {
             />
             <Text style={styles.stateTitle}>No Vendors Available</Text>
             <Text style={styles.stateSubtitle}>
-              There are currently no vendors registered at this campus
+              There are currently no vendors registered at this region
             </Text>
           </View>
         ) : (

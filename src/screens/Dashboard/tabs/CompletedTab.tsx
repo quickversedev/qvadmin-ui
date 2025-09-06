@@ -33,7 +33,7 @@ const CompletedTab: React.FC<completedTabProps> = ({
       const completedVendors: Vendor[] = vendors.filter(vendor => {
         // ⚡ vendor.vendorId is string, shopId is number — need to convert
         const completedOrders = getVendorOrdersByStatus(
-          Number(vendor.vendorId),
+          Number(vendor.shopId),
           ORDER_STATUS.COMPLETED,
         );
         return completedOrders?.length > 0;
@@ -71,11 +71,11 @@ const CompletedTab: React.FC<completedTabProps> = ({
       ) : (
         vendorsWithCompletedOrders.map(vendor => (
           <CollapsableVendor
-            key={`Completed_${vendor.vendorId}`}
+            key={`Completed_${vendor.shopId}`}
             vendor={vendor}
             status={ORDER_STATUS.COMPLETED}>
             <OrderCardList
-              key={`Completed_orders_${vendor.vendorId}`}
+              key={`Completed_orders_${vendor.shopId}`}
               vendor={vendor}
               status={ORDER_STATUS.COMPLETED}
             />

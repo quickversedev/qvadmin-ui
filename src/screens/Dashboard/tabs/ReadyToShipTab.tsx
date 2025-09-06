@@ -31,7 +31,7 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({
     const fetchReadyToShipVendors = () => {
       const readyToShipVendors: Vendor[] = vendors.filter(vendor => {
         const readyToShipOrders = getVendorOrdersByStatus(
-          Number(vendor.vendorId),
+          Number(vendor.shopId),
           ORDER_STATUS.PACKED,
         );
         return readyToShipOrders?.length > 0;
@@ -69,11 +69,11 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({
       ) : (
         vendorsWithreadyToShipOrders.map(vendor => (
           <CollapsableVendor
-            key={`readytoship_${vendor.vendorId}`}
+            key={`readytoship_${vendor.shopId}`}
             vendor={vendor}
             status={ORDER_STATUS.PACKED}>
             <OrderCardList
-              key={`readyToShip_orders_${vendor.vendorId}`}
+              key={`readyToShip_orders_${vendor.shopId}`}
               vendor={vendor}
               status={ORDER_STATUS.PACKED}
             />

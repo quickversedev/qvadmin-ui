@@ -17,7 +17,7 @@ export const Router = () => {
   return (
     <NavigationContainer>
       <ForceUpdateChecker>
-        {authData ? <AppStack /> : <AuthStack />}
+        {authData?.jwt ? <AppStack /> : <AuthStack />}
       </ForceUpdateChecker>
     </NavigationContainer>
   );

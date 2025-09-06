@@ -12,20 +12,20 @@ interface OrderCardListProps {
 const OrderCardList: React.FC<OrderCardListProps> = ({vendor, status}) => {
   const {getVendorOrdersByStatus} = useOrderStore();
 
-  const {vendorId} = vendor || {};
+  const {shopId} = vendor || {};
   const getOrders = () => {
     if (status === 'CANCELLED') {
       const cancelledOrders = getVendorOrdersByStatus(
-        Number(vendorId),
+        Number(shopId),
         'CANCELLED',
       );
       const rejectedOrders = getVendorOrdersByStatus(
-        Number(vendorId),
+        Number(shopId),
         'REJECTED',
       );
       return [...cancelledOrders, ...rejectedOrders];
     }
-    return getVendorOrdersByStatus(Number(vendorId), status);
+    return getVendorOrdersByStatus(Number(shopId), status);
   };
 
   const orders = getOrders();

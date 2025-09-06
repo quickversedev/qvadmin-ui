@@ -20,7 +20,7 @@ const useFCMTokenHandler = () => {
       }
       if (storedToken && storedToken !== currentToken) {
         StorageService.setFCMToken(currentToken);
-        await sendFCMToken(storedToken, currentToken, authData);
+        await sendFCMToken(storedToken, currentToken, authData?.jwt);
       }
     } catch (error) {
       console.error('❌ Error getting FCM token', error);
@@ -32,7 +32,7 @@ const useFCMTokenHandler = () => {
     const unsubscribe = messaging().onTokenRefresh(async newToken => {
       const storedToken = StorageService.getFCMToken();
       StorageService.setFCMToken(newToken);
-      storedToken && (await sendFCMToken(storedToken, newToken, authData));
+      storedToken && (await sendFCMToken(storedToken, newToken, authData?.jwt));
     });
 
     return unsubscribe;

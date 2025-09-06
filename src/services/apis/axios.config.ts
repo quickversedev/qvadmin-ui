@@ -47,7 +47,7 @@ const showToast = (message: string) => {
  */
 export const API_CONFIG = {
   /** Base URL for the QuickVerse API server */
-  baseURL: 'http://192.168.1.35:8080/quickVerse',
+  baseURL: 'http://192.168.1.34:8080/quickVerse',
 
   /** Default timeout for all requests (15 seconds) */
   timeout: 15000,
@@ -131,7 +131,7 @@ const handleAxiosError = (error: AxiosError | unknown): ApiError => {
       code: string;
       message: string;
     };
-
+    console.log('error responseData', responseData);
     // Backend always returns errors in this format:
     // { "error": { "code": "1052", "message": "Tag already exists" } }
     const errorMessage =

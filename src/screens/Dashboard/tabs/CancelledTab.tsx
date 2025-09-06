@@ -33,11 +33,11 @@ const CancelledTab: React.FC<cancelledTabProps> = ({
       const cancelledVendors: Vendor[] = vendors.filter(vendor => {
         // ⚡ vendor.vendorId is string, shopId is number — need to convert
         const rejectedOrders = getVendorOrdersByStatus(
-          Number(vendor.vendorId),
+          Number(vendor.shopId),
           ORDER_STATUS.REJECTED,
         );
         const cancelledOrders = getVendorOrdersByStatus(
-          Number(vendor.vendorId),
+          Number(vendor.shopId),
           ORDER_STATUS.CANCELLED,
         );
 
@@ -76,11 +76,11 @@ const CancelledTab: React.FC<cancelledTabProps> = ({
       ) : (
         vendorsWithCancelledOrders.map(vendor => (
           <CollapsableVendor
-            key={`cancelled_${vendor.vendorId}`}
+            key={`cancelled_${vendor.shopId}`}
             vendor={vendor}
             status={ORDER_STATUS.CANCELLED}>
             <OrderCardList
-              key={`cancelled_orders_${vendor.vendorId}`}
+              key={`cancelled_orders_${vendor.shopId}`}
               vendor={vendor}
               status={ORDER_STATUS.CANCELLED}
             />

@@ -33,7 +33,7 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
       const acceptedVendors: Vendor[] = vendors.filter(vendor => {
         // ⚡ vendor.vendorId is string, shopId is number — need to convert
         const acceptedOrders = getVendorOrdersByStatus(
-          Number(vendor.vendorId),
+          Number(vendor.shopId),
           ORDER_STATUS.ACCEPTED,
         );
         return acceptedOrders?.length > 0;
@@ -72,11 +72,11 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
       ) : (
         vendorsWithAcceptedOrders.map(vendor => (
           <CollapsableVendor
-            key={`accepted_${vendor.vendorId}`}
+            key={`accepted_${vendor.shopId}`}
             vendor={vendor}
             status={ORDER_STATUS.ACCEPTED}>
             <OrderCardList
-              key={`accepted_orders_${vendor.vendorId}`}
+              key={`accepted_orders_${vendor.shopId}`}
               vendor={vendor}
               status={ORDER_STATUS.ACCEPTED}
             />

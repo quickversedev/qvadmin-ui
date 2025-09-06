@@ -27,18 +27,18 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(false);
   const {getVendorOrdersCountByStatus} = useOrderStore();
-  const {vendorId, vendorPhone, vendorLogoUrl, vendorName} = vendor || {};
+  const {shopId, phone, logo, name} = vendor || {};
   const handleToggleExpand = () => {
     setExpanded(prev => !prev);
   };
   const handleCallCustomer = () => {
-    const phoneNumber = `tel:${vendorPhone}`;
+    const phoneNumber = `tel:${phone}`;
     Linking.openURL(phoneNumber);
   };
   const statusStyles = getStatusStyles(status);
-  const orderCount = getVendorOrdersCountByStatus(Number(vendorId), status);
+  const orderCount = getVendorOrdersCountByStatus(Number(shopId), status);
   console.log(
-    `CollapsableVendor: vendorId=${vendorId}, status=${status}, orderCount=${orderCount}`,
+    `CollapsableVendor: vendorId=${shopId}, status=${status}, orderCount=${orderCount}`,
   );
   return (
     <View style={styles.card}>
@@ -47,8 +47,8 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
           <View style={styles.logoContainer}>
             <Image
               source={
-                vendorLogoUrl
-                  ? {uri: vendorLogoUrl}
+                logo
+                  ? {uri: logo}
                   : require('../../assets/images/default_logo.png')
               }
               style={styles.vendorLogo}
@@ -62,7 +62,7 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
           </View>
 
           <Text numberOfLines={2} style={styles.vendorName}>
-            {vendorName}
+            {name}
           </Text>
 
           <Icon

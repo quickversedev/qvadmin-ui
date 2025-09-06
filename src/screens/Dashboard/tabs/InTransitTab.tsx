@@ -33,7 +33,7 @@ const InTransitTab: React.FC<InTransitTabProps> = ({
       const inTransitVendors: Vendor[] = vendors.filter(vendor => {
         // ⚡ vendor.vendorId is string, shopId is number — need to convert
         const inTransitOrders = getVendorOrdersByStatus(
-          Number(vendor.vendorId),
+          Number(vendor.shopId),
           ORDER_STATUS.SHIPPED,
         );
         return inTransitOrders?.length > 0;
@@ -72,11 +72,11 @@ const InTransitTab: React.FC<InTransitTabProps> = ({
       ) : (
         vendorsWithInTransitOrders.map(vendor => (
           <CollapsableVendor
-            key={`inTransit_${vendor.vendorId}`}
+            key={`inTransit_${vendor.shopId}`}
             vendor={vendor}
             status={ORDER_STATUS.SHIPPED}>
             <OrderCardList
-              key={`InTransit_orders_${vendor.vendorId}`}
+              key={`InTransit_orders_${vendor.shopId}`}
               vendor={vendor}
               status={ORDER_STATUS.SHIPPED}
             />

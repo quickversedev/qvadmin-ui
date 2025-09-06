@@ -3,7 +3,7 @@ import {View, StyleSheet} from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import {SafeAreaView} from 'react-native-safe-area-context'; // Add this import
 import OrderStackNavigator from '../../navigation/DashboardNavigation';
-import CampusSelector from '../../components/common/addressHeader';
+import RegionSelector from '../../components/common/addressHeader';
 
 const HomeScreen = () => {
   const handleCampusSelect = (campus: any) => {
@@ -38,7 +38,7 @@ const HomeScreen = () => {
           />
 
           <View style={styles.addressHeader}>
-            <CampusSelector onSelect={handleCampusSelect} />
+            <RegionSelector onSelect={handleCampusSelect} />
           </View>
         </View>
 

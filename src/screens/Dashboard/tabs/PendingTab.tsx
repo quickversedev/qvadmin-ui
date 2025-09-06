@@ -35,7 +35,7 @@ const PendingTab: React.FC<PendingTabProps> = ({
       const pendingVendors: Vendor[] = vendors.filter(vendor => {
         // ⚡ vendor.vendorId is string, shopId is number — need to convert
         const pendingOrders = getVendorOrdersByStatus(
-          Number(vendor.vendorId),
+          Number(vendor.shopId),
           ORDER_STATUS.PENDING,
         );
         return pendingOrders?.length > 0;
@@ -74,11 +74,11 @@ const PendingTab: React.FC<PendingTabProps> = ({
       ) : (
         vendorsWithPendingOrders.map(vendor => (
           <CollapsableVendor
-            key={`pending_${vendor.vendorId}`}
+            key={`pending_${vendor.shopId}`}
             vendor={vendor}
             status={ORDER_STATUS.PENDING}>
             <OrderCardList
-              key={`pending_orders_${vendor.vendorId}`}
+              key={`pending_orders_${vendor.shopId}`}
               vendor={vendor}
               status={ORDER_STATUS.PENDING}
             />
