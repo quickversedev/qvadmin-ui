@@ -29,7 +29,7 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
     state,
     vendor,
   } = props;
-  console.log('props:', props);
+ 
   const statusStyles = getStatusStyles(state);
   const getTime = () => {
     switch (state) {

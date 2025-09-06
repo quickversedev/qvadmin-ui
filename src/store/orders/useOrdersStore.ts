@@ -1,6 +1,9 @@
 // stores/orderStore.ts
 import {create} from 'zustand';
-import axiosInstance, {apiCall, withHeaders} from '../../services/apis/axios.config';
+import axiosInstance, {
+  apiCall,
+  withHeaders,
+} from '../../services/apis/axios.config';
 
 export interface OrderItems {
   id: number;
@@ -99,24 +102,28 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   error: null,
   lastTimeFilter: '1d',
 
-  fetchOrders: async (regionId?: string, timeFilter: TimeFilter = '1d', authToken?: string) => {
+  fetchOrders: async (
+    regionId?: string,
+    timeFilter: TimeFilter = '1d',
+    authToken?: string,
+  ) => {
     set({loading: true, error: null, lastTimeFilter: timeFilter});
     try {
       const startDate = getStartDate(timeFilter);
       const endpoint = `/v2/order/OrderStatus?regionId=${regionId}&startDate=${startDate}`;
 
-        if (!authToken) {
+      if (!authToken) {
         throw new Error('No authentication token available');
-        }
+      }
 
       const headers = {
         SessionKey: authToken,
       };
-      console.log('headers', headers);
+
       const response = await apiCall<OrderResponse>(
-        axiosInstance.get(endpoint, withHeaders(headers))
+        axiosInstance.get(endpoint, withHeaders(headers)),
       );
-      console.log('response in fetchOrders', response);
+
       const parsedOrders = response.orders.order.map(order => {
         let customerAddress = order.customerAddress;
 

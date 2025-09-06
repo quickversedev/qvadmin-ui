@@ -48,7 +48,7 @@ const OrderDetailsModal = ({
   const customerAddr = customerAddress && parseAddress(customerAddress);
 
   const vendorAddr = shopAddress && parseAddress(shopAddress.address);
-  console.log('vendorAddr********************************************', vendorAddr);
+ 
   const handleGetDirections = (latitude: number, longitude: number) => {
    
     const lat = latitude || '0';
@@ -158,7 +158,7 @@ const OrderDetailsModal = ({
                   </Text>
                   <TouchableOpacity
                     style={styles.directionsButton}
-                    onPress={() => handleGetDirections(customerAddress)}>
+                    onPress={() => handleGetDirections(customerAddress?.latitude, customerAddress?.longitude)}>
                     <Text style={styles.directionsButtonText}>
                       Get Directions {'>'}
                     </Text>

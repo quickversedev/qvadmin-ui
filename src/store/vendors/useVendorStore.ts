@@ -67,11 +67,11 @@ export const useVendorStore = create<VendorState>()((set, get) => ({
       const headers = {
         Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
       };
-      console.log('endpoint in fetchVendors', endpoint);
+
       const vendors = await apiCall<Vendor[]>(
         axiosInstance.get(endpoint, withHeaders(headers)),
       );
-      console.log('vendors in fetchVendors', vendors);
+
       set({vendors, loading: false});
     } catch (error) {
       set({

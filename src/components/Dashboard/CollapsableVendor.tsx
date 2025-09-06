@@ -37,9 +37,7 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
   };
   const statusStyles = getStatusStyles(status);
   const orderCount = getVendorOrdersCountByStatus(Number(shopId), status);
-  console.log(
-    `CollapsableVendor: vendorId=${shopId}, status=${status}, orderCount=${orderCount}`,
-  );
+  
   return (
     <View style={styles.card}>
       <TouchableOpacity style={styles.header} onPress={handleToggleExpand}>
