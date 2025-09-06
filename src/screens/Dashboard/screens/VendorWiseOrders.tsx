@@ -86,7 +86,7 @@ const VendorWiseOrders: React.FC = () => {
     if (tab && tab !== activeTab) {
       setActiveTab(tab);
     }
-  }, [tab, activeTab]);
+  }, [tab]);
 
   const setTabRef = (taba: TabType) => (ref: View | null) => {
     tabItemRefs.current[taba] = ref;
