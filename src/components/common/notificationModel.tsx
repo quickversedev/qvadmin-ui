@@ -33,7 +33,7 @@ const NotificationModal: React.FC<Props> = ({
     amount,
     campusName,
     campusId,
-    vendorId,
+    shopId,
     vendorName,
     customerName,
   } = parsedPayload || {};

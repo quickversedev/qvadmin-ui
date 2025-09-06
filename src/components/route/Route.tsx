@@ -5,11 +5,9 @@ import {useAuth} from '../../contexts/Login/AuthProvider';
 import AppStack from './AppStack';
 import {AuthStack} from './AuthStack';
 import ForceUpdateChecker from '../common/ForceUpdate';
-import {useNotification} from '../../hooks/notification/useNotification';
 
 export const Router = () => {
   const {authData, loading} = useAuth();
-  useNotification();
 
   if (loading) {
     return <Text>Loading</Text>;
