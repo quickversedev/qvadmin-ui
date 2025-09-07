@@ -16,8 +16,8 @@ import {OrderStackParamList} from '../../navigation/DashboardNavigation';
 import {StackNavigationProp} from '@react-navigation/stack';
 
 import {ORDER_STATUS} from '../../assets/constants/constant';
-import { useRegionsStore } from '../../store/regions/useRegionsStore';
-import { useAuth } from '../../contexts/Login/AuthProvider';
+import {useRegionsStore} from '../../store/regions/useRegionsStore';
+import {useAuth} from '../../contexts/Login/AuthProvider';
 
 type OrderListScreenNavigationProp = StackNavigationProp<
   OrderStackParamList,
@@ -61,7 +61,7 @@ const OrderListScreen = () => {
   const filterButtons: {id: TimeFilter; label: string}[] = [
     {id: '1h', label: 'Last Hour'},
     {id: '3h', label: 'Last 3 Hours'},
-    {id: '1d', label: '1 day'},
+    {id: '1d', label: 'Today'},
     {id: '30d', label: 'This Month'},
   ];
 

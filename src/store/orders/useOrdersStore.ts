@@ -77,10 +77,17 @@ const getStartDate = (filter: TimeFilter): string | undefined => {
       date = new Date(now.getTime() - 3 * 60 * 60 * 1000);
       break;
     case '1d':
-      date = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      date = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        0,
+        0,
+        0,
+      );
       break;
     case '30d':
-      date = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      date = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
       break;
     default:
       return undefined;
@@ -93,7 +100,7 @@ const getStartDate = (filter: TimeFilter): string | undefined => {
   const minutes = String(date.getUTCMinutes()).padStart(2, '0');
   const seconds = String(date.getUTCSeconds()).padStart(2, '0');
 
-  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+  return `${year}/${day}/${month} ${hours}:${minutes}:${seconds}`;
 };
 
 export const useOrderStore = create<OrderStore>((set, get) => ({

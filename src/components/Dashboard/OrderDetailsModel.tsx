@@ -43,14 +43,18 @@ const OrderDetailsModal = ({
     orderItem,
     creationTime,
     customerAddress,
+    totalAmount,
+    invoiceAmount,
+    amountExcludingDeliveryFee,
+    deliveryFee,
+    paymentMethod,
   } = order;
   const {shopAddress} = vendor || {};
   const customerAddr = customerAddress && parseAddress(customerAddress);
 
   const vendorAddr = shopAddress && parseAddress(shopAddress.address);
- 
+
   const handleGetDirections = (latitude: number, longitude: number) => {
-   
     const lat = latitude || '0';
     const lng = longitude || '0';
     openMap({lat, lng, label: `${customerName}'s Location`});
@@ -126,16 +130,20 @@ const OrderDetailsModal = ({
               {vendorAddr && (
                 <View style={styles.addressSection}>
                   <Text style={styles.sectionTitle}>Pickup</Text>
+                  <Text style={styles.addressText}>{shopAddress.address}</Text>
+
                   <Text style={styles.addressText}>
-                    {shopAddress.address}
-                  </Text>
-    
-                  <Text style={styles.addressText}>
-                    {shopAddress.city}, {shopAddress.state} - {shopAddress.postalCode}
+                    {shopAddress.city}, {shopAddress.state} -{' '}
+                    {shopAddress.postalCode}
                   </Text>
                   <TouchableOpacity
                     style={styles.directionsButton}
-                    onPress={() => handleGetDirections(vendor?.coordinates?.latitude, vendor?.coordinates?.longitude)}>
+                    onPress={() =>
+                      handleGetDirections(
+                        vendor?.coordinates?.latitude,
+                        vendor?.coordinates?.longitude,
+                      )
+                    }>
                     <Text style={styles.directionsButtonText}>
                       Get Directions {'>'}
                     </Text>
@@ -158,13 +166,47 @@ const OrderDetailsModal = ({
                   </Text>
                   <TouchableOpacity
                     style={styles.directionsButton}
-                    onPress={() => handleGetDirections(customerAddress?.latitude, customerAddress?.longitude)}>
+                    onPress={() =>
+                      handleGetDirections(
+                        Number(customerAddr?.latitude),
+                        Number(customerAddr?.longitude),
+                      )
+                    }>
                     <Text style={styles.directionsButtonText}>
                       Get Directions {'>'}
                     </Text>
                   </TouchableOpacity>
                 </View>
               )}
+            </View>
+            <View style={styles.divider} />
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Bill</Text>
+
+              <View style={styles.billRow}>
+                <Text style={styles.billLabel}>Subtotal</Text>
+                <Text style={styles.billAmount}>
+                  ₹{amountExcludingDeliveryFee || 0}
+                </Text>
+              </View>
+
+              <View style={styles.billRow}>
+                <Text style={styles.billLabel}>Delivery Fee</Text>
+                <Text style={styles.billAmount}>₹{deliveryFee || 0}</Text>
+              </View>
+
+              <View style={styles.billDivider} />
+
+              <View style={styles.billRow}>
+                <Text style={styles.billTotalLabel}>Total Amount</Text>
+                <Text style={styles.billTotalAmount}>₹{totalAmount || 0}</Text>
+              </View>
+
+              <View style={styles.billRow}>
+                <Text style={styles.billLabel}>Payment Method</Text>
+                <Text style={styles.billAmount}>{paymentMethod || 'N/A'}</Text>
+              </View>
             </View>
             <View style={styles.divider} />
 
@@ -420,6 +462,36 @@ const styles = StyleSheet.create({
     borderColor: '#f0f0f0',
     marginHorizontal: 5, // Add small margin between cards
     maxWidth: '48%', // Ensure both cards fit side by side
+  },
+  billRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  billLabel: {
+    fontSize: 14,
+    color: '#666',
+  },
+  billAmount: {
+    fontSize: 14,
+    color: '#333',
+    fontWeight: '500',
+  },
+  billTotalLabel: {
+    fontSize: 16,
+    color: '#000',
+    fontWeight: 'bold',
+  },
+  billTotalAmount: {
+    fontSize: 16,
+    color: '#000',
+    fontWeight: 'bold',
+  },
+  billDivider: {
+    height: 1,
+    backgroundColor: '#e0e0e0',
+    marginVertical: 8,
   },
 });
 

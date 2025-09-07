@@ -1,32 +1,26 @@
 import React, {useEffect} from 'react';
 import TabNavigation from '../../navigation/TabNavigation';
 
-import useFCMTokenHandler from '../../utils/global/fcmTokenUtil';
 import {
-  checkNotificationPermission,
-  getFcmToken,
   registerNotificationListeners,
   requestNotificationPermission,
-
 } from '../../hooks/notification/useNotification';
+import {useDeviceInfo} from '../../services/useDeviceInfo';
+
 
 const AppStack = () => {
+  const {updateDeviceInfo} = useDeviceInfo();
+
   useEffect(() => {
     async function initNotifications() {
-      const granted = await requestNotificationPermission();
-      if (granted) {
-        const alreadyGranted = await checkNotificationPermission();
-        if (alreadyGranted) {
-         const token = await getFcmToken();
-         console.log('token', token);
-        }
-      }
+      await requestNotificationPermission();
+
       registerNotificationListeners();
     }
 
     initNotifications();
+    updateDeviceInfo();
   }, []);
-  useFCMTokenHandler();
 
   return (
     <>

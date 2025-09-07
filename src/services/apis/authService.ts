@@ -1,13 +1,10 @@
-import { apiCall, createRequestWithHeaders } from './axios.config';
-
-import {StorageService} from '../storage/MMKV/storage.service.ts';
+import {apiCall, createRequestWithHeaders} from './axios.config';
 
 export type AuthData = {
   session: {
     token: string;
     phoneNumber: string;
     newUser?: boolean;
-   
   };
 };
 const sendOtp = async (phoneNumber: string): Promise<any> => {
@@ -24,12 +21,12 @@ const sendOtp = async (phoneNumber: string): Promise<any> => {
         'post',
         '/v1/requestOtp',
         {
-          phone: '91'+phoneNumber,
+          phone: phoneNumber,
         },
         {
           Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
-        }
-      )
+        },
+      ),
     );
     return response?.response?.verificationId;
   } catch (error) {
@@ -67,14 +64,14 @@ const verifyOtp = async (
         'post',
         '/v1/login',
         {
-          phone: '91'+phoneNumber,
+          phone: '91' + phoneNumber,
           otp: otp,
           verificationId: verificationId,
         },
         {
           Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
-        }
-      )
+        },
+      ),
     );
     console.log('response', response);
     const data = response;
@@ -83,7 +80,6 @@ const verifyOtp = async (
         token: data.jwt,
         phoneNumber: data.phone,
         newUser: data.newUser,
-        
       },
     };
   } catch (error) {
@@ -92,9 +88,7 @@ const verifyOtp = async (
   }
 };
 
-
 export const authService = {
   verifyOtp,
   sendOtp,
 };
-
