@@ -63,7 +63,7 @@ export const useVendorStore = create<VendorState>()((set, get) => ({
   fetchVendors: async (regionId: string) => {
     set({loading: true, error: null});
     try {
-      const endpoint = `/v3/region/shops?region=${regionId}`;
+      const endpoint = `/v3/regions/shops?regionId=${regionId}`;
       const headers = {
         Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
       };

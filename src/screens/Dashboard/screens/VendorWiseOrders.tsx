@@ -21,7 +21,8 @@ import CompletedTab from '../tabs/CompletedTab';
 import InTransitTab from '../tabs/InTransitTab';
 import {ORDER_STATUS} from '../../../assets/constants/constant';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
-import { useRegionsStore } from '../../../store/regions/useRegionsStore';
+import {useRegionsStore} from '../../../store/regions/useRegionsStore';
+import {useAuth} from '../../../contexts/Login/AuthProvider';
 
 type VendorWiseOrdersRouteProp = RouteProp<OrderStackParamList, 'VendorOrders'>;
 
@@ -39,13 +40,9 @@ const VendorWiseOrders: React.FC = () => {
   const route = useRoute<VendorWiseOrdersRouteProp>();
   const {tab} = route.params;
   const [activeTab, setActiveTab] = useState<TabType>(tab);
-  const {
-    loading,
-    vendors,
-    error,
-    fetchVendors,
-    getActiveVendors,
-  } = useVendorStore();
+  const {authData} = useAuth();
+  const {loading, vendors, error, fetchVendors, getActiveVendors} =
+    useVendorStore();
   const selectedRegion = useRegionsStore(state => state.selectedRegion);
   const [refreshing, setRefreshing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -59,14 +56,15 @@ const VendorWiseOrders: React.FC = () => {
   });
   const {fetchOrders, getOrdersCountByStatus} = useOrderStore();
   const lastFilter = useOrderStore(state => state.lastTimeFilter);
+
   useEffect(() => {
-    if (selectedRegion && vendors.length === 0) {
+    if (selectedRegion) {
+      onRefresh();
       fetchVendors(selectedRegion.regionId);
     }
-  }, [fetchVendors, selectedRegion, vendors.length]);
+  }, [fetchVendors, selectedRegion]);
 
   // Get active vendors for display
-
 
   const scrollToTab = (taba: TabType) => {
     const index = TABS.indexOf(taba);
@@ -95,7 +93,7 @@ const VendorWiseOrders: React.FC = () => {
     setRefreshing(true);
 
     try {
-      await fetchOrders(selectedRegion?.regionId, lastFilter);
+      await fetchOrders(selectedRegion?.regionId, lastFilter, authData?.jwt);
     } catch (err) {
       console.error('Error refreshing orders:', err);
     } finally {

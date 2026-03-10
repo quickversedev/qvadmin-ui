@@ -117,7 +117,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({loading: true, error: null, lastTimeFilter: timeFilter});
     try {
       const startDate = getStartDate(timeFilter);
-      const endpoint = `/v2/order/OrderStatus?regionId=${regionId}&startDate=${startDate}`;
+      const endpoint = `/v2/order/OrderStatus?regionId=${regionId}&status=''`;
 
       if (!authToken) {
         throw new Error('No authentication token available');

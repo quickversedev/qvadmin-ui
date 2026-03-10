@@ -1,6 +1,6 @@
-import axios, { AxiosError, AxiosResponse } from 'axios';
-import { Alert, Platform, ToastAndroid } from 'react-native';
-import { ApiError } from './axios.types';
+import axios, {AxiosError, AxiosResponse} from 'axios';
+import {Alert, Platform, ToastAndroid} from 'react-native';
+import {ApiError} from './axios.types';
 
 /**
  * Callback function type for handling session expiration
@@ -47,10 +47,12 @@ const showToast = (message: string) => {
  */
 export const API_CONFIG = {
   /** Base URL for the QuickVerse API server */
-  baseURL: 'http://prd.quickverse.in/quickVerse',
+  // baseURL: 'http://prd.quickverse.in/quickVerse',
+  baseURL:
+    'https://superscientifically-revengeless-ronald.ngrok-free.dev/quickVerse',
 
-  /** Default timeout for all requests (15 seconds) */
-  timeout: 15000,
+  /** Default timeout for all requests (30 seconds) */
+  timeout: 30000,
 
   /** Default headers applied to all requests */
   headers: {
@@ -107,7 +109,8 @@ const handleAxiosError = (error: AxiosError | unknown): ApiError => {
   if (axiosError.code === 'ECONNABORTED') {
     return {
       status: 408,
-      message: 'Request timed out. Please check your internet connection and try again.',
+      message:
+        'Request timed out. Please check your internet connection and try again.',
       code: 'TIMEOUT',
       isCancelled: false,
       apiEndpoint: (axiosError as AxiosError).config?.url || 'Unknown',
@@ -128,14 +131,20 @@ const handleAxiosError = (error: AxiosError | unknown): ApiError => {
   // Handle HTTP errors
   if ((axiosError as AxiosError).response) {
     const responseData = (axiosError as AxiosError)?.response?.data as {
-      code: string;
-      message: string;
+      code?: string;
+      message?: string;
+      error?: {
+        code?: string;
+        message?: string;
+      };
     };
     console.log('error responseData', responseData);
     // Backend always returns errors in this format:
     // { "error": { "code": "1052", "message": "Tag already exists" } }
     const errorMessage =
-      responseData?.message || responseData?.error?.message || 'An error occurred';
+      responseData?.message ||
+      responseData?.error?.message ||
+      'An error occurred';
     const errorCode = responseData?.code || responseData?.error?.code || '';
 
     // Check for session expired error (code 1047)
@@ -150,14 +159,19 @@ const handleAxiosError = (error: AxiosError | unknown): ApiError => {
       code: errorCode,
       isCancelled: false,
       apiEndpoint: (axiosError as AxiosError).config?.url || 'Unknown',
-      error: responseData || { code: errorCode, message: errorMessage },
+      error: {
+        code: responseData?.error?.code || responseData?.code || errorCode,
+        message:
+          responseData?.error?.message || responseData?.message || errorMessage,
+      },
     };
   }
 
   // Handle any other errors
   return {
     status: 500,
-    message: (axiosError as AxiosError).message || 'An unexpected error occurred',
+    message:
+      (axiosError as AxiosError).message || 'An unexpected error occurred',
     code: 'UNKNOWN_ERROR',
     isCancelled: false,
     apiEndpoint: (axiosError as AxiosError).config?.url || 'Unknown',
@@ -169,7 +183,9 @@ const handleAxiosError = (error: AxiosError | unknown): ApiError => {
  *
  * Wraps axios calls with simple error handling
  */
-export const apiCall = async <T>(promise: Promise<AxiosResponse<T>>): Promise<T> => {
+export const apiCall = async <T>(
+  promise: Promise<AxiosResponse<T>>,
+): Promise<T> => {
   try {
     const response = await promise;
     return response.data;
@@ -191,9 +207,9 @@ export const createRequestWithHeaders = (
   method: 'get' | 'post' | 'put' | 'delete' | 'patch',
   url: string,
   data?: unknown,
-  extraHeaders?: Record<string, string>
+  extraHeaders?: Record<string, string>,
 ) => {
-  const config: { headers?: Record<string, string> } = {};
+  const config: {headers?: Record<string, string>} = {};
 
   if (extraHeaders) {
     config.headers = extraHeaders;
