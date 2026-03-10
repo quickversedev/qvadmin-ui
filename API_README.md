@@ -14,9 +14,9 @@
 
 ## Base Configuration
 
-| Property         | Value                                         |
-| ---------------- | --------------------------------------------- |
-| **Base URL**     | http://prd.quickverse.in/quickVerse           |
+| Property     | Value                               |
+| ------------ | ----------------------------------- |
+| **Base URL** | http://prd.quickverse.in/quickVerse |
 
 ### Common Headers
 
@@ -119,50 +119,6 @@ Content-Type: application/json
 
 ---
 
-## Campus
-
-> 🔒 All campus APIs require Bearer token authentication.
-
----
-
-### 3. Get All Campuses
-
-Fetches list of all campuses available to the admin.
-
-```http
-GET /v1/campus
-```
-
-**Headers:**
-
-```http
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-```
-
-**Response:**
-
-```json
-{
-  "status": "success",
-  "response": [
-    {
-      "id": "campus_001",
-      "name": "IIM Udaipur",
-      "location": "Udaipur, Rajasthan"
-    }
-  ]
-}
-```
-
-| Field      | Type     | Description                     |
-| ---------- | -------- | ------------------------------- |
-| `id`       | `string` | Unique campus identifier        |
-| `name`     | `string` | Display name of the campus      |
-| `location` | `string` | Physical location of the campus |
-
----
-
 ## Orders
 
 > 🔒 All order APIs require Bearer token authentication.
@@ -174,7 +130,7 @@ Content-Type: application/json
 Fetches paginated list of orders filtered by campus, status, and time range.
 
 ```http
-GET /v1/captain/orders
+GET /v2/order/OrderStatus
 ```
 
 **Headers:**
@@ -188,7 +144,7 @@ Content-Type: application/json
 
 | Parameter  | Type     | Required | Description                                |
 | ---------- | -------- | -------- | ------------------------------------------ |
-| `campusId` | `string` | ✅       | ID of the selected campus                  |
+| `regionId` | `string` | ✅       | ID of the selected campus                  |
 | `status`   | `string` | ✅       | Order status filter (see statuses below)   |
 | `from`     | `string` | ✅       | Start datetime (ISO 8601 format)           |
 | `to`       | `string` | ✅       | End datetime (ISO 8601 format)             |
@@ -209,7 +165,7 @@ Content-Type: application/json
 **Example Request:**
 
 ```http
-GET /v1/captain/orders?campusId=campus_001&status=PENDING&from=2026-03-03T00:00:00Z&to=2026-03-03T23:59:59Z&page=1&limit=20
+GET /v1/order/OrderStatus?regionId=campus_001&status=PENDING&from=2026-03-03T00:00:00Z&to=2026-03-03T23:59:59Z&page=1&limit=20
 ```
 
 **Response:**
@@ -248,50 +204,6 @@ GET /v1/captain/orders?campusId=campus_001&status=PENDING&from=2026-03-03T00:00:
 
 ---
 
-### 5. Update Order Status
-
-Updates the status of a specific order.
-
-```http
-PUT /v1/captain/orders/:orderId/status
-```
-
-**Headers:**
-
-```http
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-```
-
-**Path Parameters:**
-
-| Parameter | Type     | Required | Description               |
-| --------- | -------- | -------- | ------------------------- |
-| `orderId` | `string` | ✅       | Unique order ID to update |
-
-**Request Body:**
-
-```json
-{
-  "status": "ACCEPTED"
-}
-```
-
-**Response:**
-
-```json
-{
-  "status": "success",
-  "response": {
-    "id": "order_001",
-    "status": "ACCEPTED",
-    "updatedAt": "2026-03-03T10:10:00Z"
-  }
-}
-```
-
----
-
 ## Vendor
 
 > 🔒 All vendor APIs require Bearer token authentication.
@@ -303,7 +215,7 @@ Content-Type: application/json
 Fetches all vendors operating within a specific campus.
 
 ```http
-GET /v1/campus/:campusId/vendors
+GET /v3/regions/shops?regionId=REG-ID
 ```
 
 **Headers:**
@@ -317,7 +229,7 @@ Content-Type: application/json
 
 | Parameter  | Type     | Required | Description      |
 | ---------- | -------- | -------- | ---------------- |
-| `campusId` | `string` | ✅       | ID of the campus |
+| `regionId` | `string` | ✅       | ID of the campus |
 
 **Response:**
 
@@ -335,99 +247,6 @@ Content-Type: application/json
   ]
 }
 ```
-
----
-
-## Notifications
-
-> 🔒 All notification APIs require Bearer token authentication.
-
----
-
-### 7. Register FCM Token
-
-Registers the device's Firebase Cloud Messaging (FCM) token for push notifications.
-
-```http
-POST /v1/captain/notification/token
-```
-
-**Headers:**
-
-```http
-Authorization: Bearer <jwt_token>
-Content-Type: application/json
-```
-
-**Request Body:**
-
-```json
-{
-  "fcmToken": "fxyz1234:APA91bHPRgkFLJ...",
-  "platform": "android"
-}
-```
-
-| Field      | Type     | Description                          |
-| ---------- | -------- | ------------------------------------ |
-| `fcmToken` | `string` | Device FCM registration token        |
-| `platform` | `string` | Device platform (`android` or `ios`) |
-
-**Response:**
-
-```json
-{
-  "status": "success",
-  "response": {
-    "message": "Token registered successfully"
-  }
-}
-```
-
----
-
-## App Config
-
----
-
-### 8. Get App Version Config
-
-Fetches the minimum required app version for force update checks.
-
-```http
-GET /v1/app/config
-```
-
-**Headers:**
-
-```http
-Content-Type: application/json
-```
-
-**Response:**
-
-```json
-{
-  "status": "success",
-  "response": {
-    "minVersion": "1.2.0",
-    "latestVersion": "1.5.0",
-    "forceUpdate": true,
-    "playStoreUrl": "https://play.google.com/store/apps/details?id=com.quickverse.admin",
-    "appStoreUrl": "https://apps.apple.com/app/quickverse-admin/id123456789"
-  }
-}
-```
-
-| Field           | Type      | Description                     |
-| --------------- | --------- | ------------------------------- |
-| `minVersion`    | `string`  | Minimum supported app version   |
-| `latestVersion` | `string`  | Latest available app version    |
-| `forceUpdate`   | `boolean` | Whether to force user to update |
-| `playStoreUrl`  | `string`  | Android store link              |
-| `appStoreUrl`   | `string`  | iOS store link                  |
-
----
 
 ## Error Handling
 
