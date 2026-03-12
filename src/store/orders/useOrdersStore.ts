@@ -68,39 +68,30 @@ export type TimeFilter = '1h' | '3h' | '1d' | '7d' | '30d' | 'all';
 const getStartDate = (filter: TimeFilter): string | undefined => {
   const now = new Date();
   let date: Date;
+  let timeRange: string;
 
   switch (filter) {
     case '1h':
-      date = new Date(now.getTime() - 60 * 60 * 1000);
+      timeRange = 'LAST_1_HOUR';
       break;
+
     case '3h':
-      date = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+      timeRange = 'LAST_3_HOUR';
       break;
+
     case '1d':
-      date = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        0,
-        0,
-        0,
-      );
+      timeRange = 'TODAY';
       break;
+
     case '30d':
-      date = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+      timeRange = 'LAST_1_MONTH';
       break;
+
     default:
-      return undefined;
+      return 'LAST_1_HOUR';
   }
 
-  const year = date.getUTCFullYear();
-  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date.getUTCDate()).padStart(2, '0');
-  const hours = String(date.getUTCHours()).padStart(2, '0');
-  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
-
-  return `${year}/${day}/${month} ${hours}:${minutes}:${seconds}`;
+  return timeRange;
 };
 
 export const useOrderStore = create<OrderStore>((set, get) => ({
@@ -116,9 +107,8 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
   ) => {
     set({loading: true, error: null, lastTimeFilter: timeFilter});
     try {
-      const startDate = getStartDate(timeFilter);
-      console.log(startDate);
-      const endpoint = `/v2/order/OrderStatus?regionId=${regionId}&startDate=${startDate}`;
+      const timeRange = getStartDate(timeFilter);
+      const endpoint = `/v2/order/region-orders?regionId=${regionId}&timeRange=${timeRange}`;
 
       if (!authToken) {
         throw new Error('No authentication token available');
