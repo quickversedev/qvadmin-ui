@@ -12,6 +12,7 @@ import {storage} from '../../services/storage/MMKV/storage.service';
 type AuthData = {
   jwt: string;
   phone: string;
+  empId: string;
 };
 
 type AuthContextData = {
@@ -71,13 +72,16 @@ const AuthProvider: React.FC<AuthProviderProps> = ({children}) => {
       otp,
       verificationId,
     );
+    console.log('OTP verification response', response);
     const token = response?.session?.token;
     const phone = response?.session?.phoneNumber;
+    const empId = response?.session?.empId;
 
     if (token && phone) {
       const authDataObj = {
         jwt: token,
         phone: phone,
+        empId: empId,
       };
       setAuthData(authDataObj);
       storage.set('@AuthData', JSON.stringify(authDataObj));

@@ -19,6 +19,7 @@ export interface DeviceInfoRequest {
   longitude?: number;
   latitude?: number;
   loginTimestamp: string;
+  empId: string;
 }
 
 export interface DeviceInfoResponse {
@@ -73,7 +74,10 @@ class DeviceInfoService {
   /**
    * Update device information to backend
    */
-  async updateDeviceInfo(sessionKey: string): Promise<DeviceInfoResponse> {
+  async updateDeviceInfo(
+    sessionKey: string,
+    empId: string,
+  ): Promise<DeviceInfoResponse> {
     try {
       const deviceInfo = await this.getDeviceInfo();
 
@@ -91,11 +95,12 @@ class DeviceInfoService {
         longitude: undefined,
         latitude: undefined,
         loginTimestamp: deviceInfo.loginTimestamp || new Date().toISOString(),
+        empId: empId,
       };
-   
+
       const response = await apiCall(
         axiosInstance.post<DeviceInfoResponse>(
-          '/v1/updateDevice',
+          '/v1/updateCaptainDevice',
           requestData,
           {
             headers: {

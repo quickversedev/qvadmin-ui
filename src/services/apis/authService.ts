@@ -2,6 +2,7 @@ import {apiCall, createRequestWithHeaders} from './axios.config';
 
 export type AuthData = {
   session: {
+    empId: any;
     token: string;
     phoneNumber: string;
     newUser?: boolean;
@@ -80,6 +81,7 @@ const verifyOtp = async (
         token: data.jwt,
         phoneNumber: data.phone,
         newUser: data.newUser,
+        empId: data.empId,
       },
     };
   } catch (error) {
