@@ -12,14 +12,20 @@ const AppStack = () => {
   const {updateDeviceInfo} = useDeviceInfo();
 
   useEffect(() => {
+    let unsubscribeNotifications = () => {};
+
     async function initNotifications() {
       await requestNotificationPermission();
 
-      registerNotificationListeners();
+      unsubscribeNotifications = registerNotificationListeners();
     }
 
     initNotifications();
     updateDeviceInfo();
+
+    return () => {
+      unsubscribeNotifications();
+    };
   }, []);
 
   return (

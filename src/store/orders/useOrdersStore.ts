@@ -10,6 +10,33 @@ export interface OrderItems {
   name: string;
   itemCount: number;
 }
+
+export interface ShopAddress {
+  id?: number;
+  address?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+}
+
+export interface ShopDetails {
+  shopId?: string;
+  name?: string;
+  logo?: string;
+  banner?: string;
+  owner?: string;
+  phone?: string;
+  openingTime?: string;
+  closingTime?: string;
+  preparationTime?: string;
+  description?: string;
+  category?: string;
+  storeActive?: boolean;
+  storeEnabled?: boolean;
+  featured?: boolean;
+  address?: ShopAddress;
+}
+
 export interface Order {
   orderId: string;
   campusId: string;
@@ -37,6 +64,7 @@ export interface Order {
   orderDescription: string;
   orderLink: string;
   paymentMethod: string;
+  shop?: ShopDetails;
 }
 
 interface OrderResponse {

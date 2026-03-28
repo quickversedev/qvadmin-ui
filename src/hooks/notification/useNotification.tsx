@@ -1,6 +1,12 @@
 import messaging from '@react-native-firebase/messaging';
-import notifee, { AndroidImportance } from '@notifee/react-native';
-import { Platform, PermissionsAndroid } from 'react-native';
+import notifee, {AndroidImportance, EventType} from '@notifee/react-native';
+import {AppState, PermissionsAndroid, Platform} from 'react-native';
+import {openViewOrderFromNotification} from '../../navigation/RootNavigation';
+import {
+  consumePendingOrderId,
+  extractOrderIdFromNotificationPayload,
+  persistPendingOrderId,
+} from '../../services/notification/notificationRedirect';
 
 // ✅ Ask for notification permission (iOS + Android 13+)
 export async function requestNotificationPermission(): Promise<boolean> {
@@ -97,6 +103,7 @@ async function displayNotification(remoteMessage: any): Promise<void> {
     await notifee.displayNotification({
       title: finalTitle,
       body: finalBody,
+      data: remoteMessage?.data,
       android: {
         channelId,
         pressAction: { id: 'default' },
@@ -112,11 +119,41 @@ async function displayNotification(remoteMessage: any): Promise<void> {
 // ✅ Register notification listeners
 export function registerNotificationListeners() {
   try {
-    // Foreground → show custom notification
+    const openPersistedOrderIfAny = () => {
+      const pendingOrderId = consumePendingOrderId();
+      if (pendingOrderId) {
+        console.log('[notification] consuming persisted orderId:', pendingOrderId);
+        openViewOrderFromNotification(pendingOrderId);
+      }
+    };
+
+    const handleNotificationPayload = (remoteMessage: any) => {
+      const orderId = extractOrderIdFromNotificationPayload(remoteMessage);
+
+      console.log('[notification] resolved orderId:', orderId, {
+        data: remoteMessage?.data,
+        body: remoteMessage?.notification?.body,
+      });
+
+      if (orderId) {
+        persistPendingOrderId(orderId);
+        openViewOrderFromNotification(orderId);
+      }
+    };
+
+    // Foreground → auto-open order details when orderId is present
     const unsubscribe = messaging().onMessage(async remoteMessage => {
       try {
         console.log('Foreground Message:', remoteMessage);
-        await displayNotification(remoteMessage); // only here
+
+        const orderId = extractOrderIdFromNotificationPayload(remoteMessage);
+        if (orderId) {
+          // Auto-navigate in foreground without persisting (since we're navigating immediately)
+          openViewOrderFromNotification(orderId);
+        }
+
+        // Always show notification, even if navigating
+        await displayNotification(remoteMessage);
       } catch (err) {
         console.error('Foreground listener error:', err);
       }
@@ -126,7 +163,7 @@ export function registerNotificationListeners() {
     messaging().onNotificationOpenedApp(remoteMessage => {
       try {
         console.log('App opened from background by notification:', remoteMessage);
-        // ❌ don't call displayNotification here
+        handleNotificationPayload(remoteMessage);
       } catch (err) {
         console.error('Background notification handler error:', err);
       }
@@ -138,14 +175,69 @@ export function registerNotificationListeners() {
       .then(remoteMessage => {
         if (remoteMessage) {
           console.log('App opened from quit state by notification:', remoteMessage);
-          // ❌ don't call displayNotification here
+          handleNotificationPayload(remoteMessage);
         }
       })
       .catch(err => {
         console.error('Killed state notification handler error:', err);
       });
 
-    return unsubscribe;
+    const unsubscribeNotifee = notifee.onForegroundEvent(({type, detail}) => {
+      if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
+        const orderId = extractOrderIdFromNotificationPayload({
+          data: detail?.notification?.data as Record<string, unknown> | undefined,
+          body: detail?.notification?.body,
+        });
+
+        console.log('[notification] notifee foreground press:', {
+          type,
+          orderId,
+          data: detail?.notification?.data,
+          body: detail?.notification?.body,
+        });
+
+        if (orderId) {
+          persistPendingOrderId(orderId);
+          openViewOrderFromNotification(String(orderId));
+        }
+      }
+    });
+
+    notifee
+      .getInitialNotification()
+      .then(initialNotification => {
+        const orderId = extractOrderIdFromNotificationPayload({
+          data: initialNotification?.notification?.data as
+            | Record<string, unknown>
+            | undefined,
+          body: initialNotification?.notification?.body,
+        });
+
+        if (orderId) {
+          persistPendingOrderId(orderId);
+          openViewOrderFromNotification(String(orderId));
+        }
+      })
+      .catch(err => {
+        console.error('Notifee initial notification handler error:', err);
+      });
+
+    openPersistedOrderIfAny();
+
+    const appStateSubscription = AppState.addEventListener(
+      'change',
+      nextState => {
+        if (nextState === 'active') {
+          openPersistedOrderIfAny();
+        }
+      },
+    );
+
+    return () => {
+      unsubscribe();
+      unsubscribeNotifee();
+      appStateSubscription.remove();
+    };
   } catch (error) {
     console.error('Error registering notification listeners:', error);
     return () => {};
