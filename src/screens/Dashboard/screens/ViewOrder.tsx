@@ -207,7 +207,7 @@ const ViewOrderScreen = () => {
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Items ({order.totalItemCount})</Text>
+        <Text style={styles.sectionTitle}>Items ({order.orderItem?.length})</Text>
         {order.orderItem?.length ? (
           order.orderItem.map(item => (
             <View key={item.id} style={styles.itemRow}>
