@@ -1,10 +1,9 @@
 import React from 'react';
 
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import HomeScreen from '../screens/Home/HomeScreen';
-import SettingsScreen from '../screens/Settings/SettingScreen';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import HomeScreenNavigation from './HomeScreenNavigation';
+import SettingsNavigation from './SettingsNavigation';
 
 const Tab = createBottomTabNavigator();
 
@@ -28,7 +27,7 @@ const TabNavigation: React.FC = () => {
       />
       <Tab.Screen
         name="Settings"
-        component={SettingsScreen}
+        component={SettingsNavigation}
         options={{
           tabBarLabel: 'Settings',
           tabBarIcon: ({color, size}) => (
