@@ -10,12 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {RouteProp, useRoute} from '@react-navigation/native';
+import {RouteProp, useFocusEffect, useRoute} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {HomeScreenStackParamList} from '../../../navigation/HomeScreenNavigation';
 import {useAuth} from '../../../contexts/Login/AuthProvider';
 import {useOrderStore, Order} from '../../../store/orders/useOrdersStore';
 import {useRegionsStore} from '../../../store/regions/useRegionsStore';
+import {useVendorStore} from '../../../store/vendors/useVendorStore';
 import {fetchOrderDetails} from '../../../services/apis/orderService';
 import {convertUTCToIST, formatTime, openMap, parseAddress} from '../../../utils/orderUtils';
 
@@ -27,12 +28,11 @@ const ViewOrderScreen = () => {
   const {authData} = useAuth();
   const selectedRegion = useRegionsStore(state => state.selectedRegion);
   const {getOrderById, fetchOrders, lastTimeFilter} = useOrderStore();
+  const {getVendorById, vendors, fetchVendors} = useVendorStore();
 
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const formatCurrency = (value?: number) => `Rs. ${Number(value || 0).toFixed(2)}`;
 
   const loadOrder = useCallback(async () => {
     if (!orderId) {
@@ -79,9 +79,16 @@ const ViewOrderScreen = () => {
   }, [authData?.jwt, fetchOrders, getOrderById, lastTimeFilter, orderId, selectedRegion?.regionId]);
 
   useEffect(() => {
-    loadOrder();
-    console.log("Order : ", order)
-  }, [loadOrder]);
+    if (vendors.length === 0 && selectedRegion?.regionId) {
+      fetchVendors(selectedRegion.regionId);
+    }
+  }, [vendors.length, selectedRegion?.regionId, fetchVendors]);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadOrder();
+    }, [loadOrder]),
+  );
 
   if (loading) {
     return (
@@ -170,11 +177,22 @@ const ViewOrderScreen = () => {
     });
   };
 
+  // Fee calculation matching client app logic
+  const vendor = getVendorById(String(order.shopId));
+  const vendorCategory = vendor?.category || order.shop?.category || '';
+  const isGrocery = vendorCategory.toLowerCase().includes('grocery');
   const subTotalAmount = Number(order.amountExcludingDeliveryFee || 0);
-  const deliveryFeeAmount = Number(order.deliveryFee || 0);
-  const invoiceAmount = Number(order.invoiceAmount || 0);
-  const totalAmount = Number(order.totalAmount || invoiceAmount || subTotalAmount + deliveryFeeAmount);
-  const shouldShowInvoice = invoiceAmount > 0 && Math.abs(invoiceAmount - totalAmount) > 0.01;
+  const deliveryFee = isGrocery ? 17 : 20;
+  const deliveryFeeOriginal = 39;
+  const platformFee = isGrocery ? 3 : 5;
+  const platformFeeOriginal = 12;
+  const packagingCharges = 0;
+  const packagingChargesOriginal = isGrocery ? 4 : 8;
+  const commissionRate = isGrocery ? 0.02 : 0.1;
+  const commission = commissionRate * subTotalAmount;
+  const taxableAmount = commission + deliveryFee + platformFee;
+  const taxes = Math.round(0.18 * taxableAmount);
+  const totalAmount = subTotalAmount + deliveryFee + platformFee + packagingCharges + taxes;
 
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.container}>
@@ -292,30 +310,43 @@ const ViewOrderScreen = () => {
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Bill</Text>
         <View style={styles.billRow}>
-          <Text style={styles.billLabel}>Subtotal</Text>
-          <Text style={styles.billValue}>{formatCurrency(subTotalAmount)}</Text>
+          <Text style={styles.billLabel}>Sub Total</Text>
+          <Text style={styles.billValue}>₹{subTotalAmount.toFixed(2)}</Text>
         </View>
 
-        {(deliveryFeeAmount > 0 || order.fulfillmentOption === 'DELIVERY') && (
-          <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Delivery Fee</Text>
-            <Text style={styles.billValue}>
-              {deliveryFeeAmount > 0 ? formatCurrency(deliveryFeeAmount) : 'Free'}
-            </Text>
+        <View style={styles.billRow}>
+          <Text style={styles.billLabel}>Delivery Fee</Text>
+          <View style={styles.billAmountRow}>
+            <Text style={styles.strikethroughAmount}>₹{deliveryFeeOriginal}</Text>
+            <Text style={styles.billValue}>₹{deliveryFee.toFixed(2)}</Text>
           </View>
-        )}
+        </View>
 
-        {shouldShowInvoice && (
-          <View style={styles.billRow}>
-            <Text style={styles.billLabel}>Invoice Amount</Text>
-            <Text style={styles.billValue}>{formatCurrency(invoiceAmount)}</Text>
+        <View style={styles.billRow}>
+          <Text style={styles.billLabel}>Platform Fee</Text>
+          <View style={styles.billAmountRow}>
+            <Text style={styles.strikethroughAmount}>₹{platformFeeOriginal}</Text>
+            <Text style={styles.billValue}>₹{platformFee.toFixed(2)}</Text>
           </View>
-        )}
+        </View>
+
+        <View style={styles.billRow}>
+          <Text style={styles.billLabel}>Packaging Charges</Text>
+          <View style={styles.billAmountRow}>
+            <Text style={styles.strikethroughAmount}>₹{packagingChargesOriginal}</Text>
+            <Text style={styles.billValue}>₹{packagingCharges.toFixed(2)}</Text>
+          </View>
+        </View>
+
+        <View style={styles.billRow}>
+          <Text style={styles.billLabel}>Taxes (GST & Services)</Text>
+          <Text style={styles.billValue}>₹{taxes.toFixed(2)}</Text>
+        </View>
 
         <View style={styles.billDivider} />
         <View style={styles.billRow}>
-          <Text style={styles.billTotalLabel}>Total Amount</Text>
-          <Text style={styles.billTotalValue}>{formatCurrency(totalAmount)}</Text>
+          <Text style={styles.billTotalLabel}>Total Pay</Text>
+          <Text style={styles.billTotalValue}>₹{totalAmount.toFixed(2)}</Text>
         </View>
         <View style={[styles.billRow, styles.paymentRow]}>
           <Text style={styles.billLabel}>Payment Method</Text>
@@ -544,6 +575,16 @@ const styles = StyleSheet.create({
     color: '#2d2d2d',
     fontSize: 14,
     fontWeight: '600',
+  },
+  billAmountRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  strikethroughAmount: {
+    fontSize: 13,
+    color: '#999',
+    textDecorationLine: 'line-through' as const,
   },
   billDivider: {
     height: 1,

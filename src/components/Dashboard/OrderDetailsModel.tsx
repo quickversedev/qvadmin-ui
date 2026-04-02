@@ -43,13 +43,28 @@ const OrderDetailsModal = ({
     orderItem,
     creationTime,
     customerAddress,
-    totalAmount,
-    invoiceAmount,
     amountExcludingDeliveryFee,
-    deliveryFee,
     paymentMethod,
   } = order;
+  console.log(order)
   const {shopAddress} = vendor || {};
+
+  // Fee calculation matching client app logic — use vendor store category first, fallback to order's shop
+  const vendorCategory = vendor?.category || order.shop?.category || '';
+  const isGrocery = vendorCategory.toLowerCase().includes('grocery');
+  const subTotal = amountExcludingDeliveryFee || 0;
+  const deliveryFee = isGrocery ? 17 : 20;
+  const deliveryFeeOriginal = 39;
+  const platformFee = isGrocery ? 3 : 5;
+  const platformFeeOriginal = 12;
+  const packagingCharges = 0;
+  const packagingChargesOriginal = isGrocery ? 4 : 8;
+  const commissionRate = isGrocery ? 0.02 : 0.1;
+  const commission = commissionRate * Number(subTotal);
+  const taxableAmount = commission + deliveryFee + platformFee;
+  const taxes = Math.round(0.18 * taxableAmount);
+  const calculatedTotal =
+    Number(subTotal) + deliveryFee + platformFee + packagingCharges + taxes;
   const customerAddr = customerAddress && parseAddress(customerAddress);
 
   const vendorAddr = shopAddress && parseAddress(shopAddress.address);
@@ -101,7 +116,7 @@ const OrderDetailsModal = ({
                     style={
                       styles.itemQuantity && {fontWeight: 'bold', fontSize: 18}
                     }>
-                    {totalItemCount}
+                    {orderItem?.length}
                   </Text>
                 </View>
               </View>
@@ -185,22 +200,58 @@ const OrderDetailsModal = ({
               <Text style={styles.sectionTitle}>Bill</Text>
 
               <View style={styles.billRow}>
-                <Text style={styles.billLabel}>Subtotal</Text>
-                <Text style={styles.billAmount}>
-                  ₹{amountExcludingDeliveryFee || 0}
-                </Text>
+                <Text style={styles.billLabel}>Sub Total</Text>
+                <Text style={styles.billAmount}>₹{subTotal.toFixed(2)}</Text>
               </View>
 
               <View style={styles.billRow}>
                 <Text style={styles.billLabel}>Delivery Fee</Text>
-                <Text style={styles.billAmount}>₹{deliveryFee || 0}</Text>
+                <View style={styles.billAmountRow}>
+                  <Text style={styles.strikethroughAmount}>
+                    ₹{deliveryFeeOriginal}
+                  </Text>
+                  <Text style={styles.billAmount}>
+                    ₹{deliveryFee.toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.billRow}>
+                <Text style={styles.billLabel}>Platform Fee</Text>
+                <View style={styles.billAmountRow}>
+                  <Text style={styles.strikethroughAmount}>
+                    ₹{platformFeeOriginal}
+                  </Text>
+                  <Text style={styles.billAmount}>
+                    ₹{platformFee.toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.billRow}>
+                <Text style={styles.billLabel}>Packaging Charges</Text>
+                <View style={styles.billAmountRow}>
+                  <Text style={styles.strikethroughAmount}>
+                    ₹{packagingChargesOriginal}
+                  </Text>
+                  <Text style={styles.billAmount}>
+                    ₹{packagingCharges.toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.billRow}>
+                <Text style={styles.billLabel}>Taxes (GST & Services)</Text>
+                <Text style={styles.billAmount}>₹{taxes.toFixed(2)}</Text>
               </View>
 
               <View style={styles.billDivider} />
 
               <View style={styles.billRow}>
-                <Text style={styles.billTotalLabel}>Total Amount</Text>
-                <Text style={styles.billTotalAmount}>₹{totalAmount || 0}</Text>
+                <Text style={styles.billTotalLabel}>Total Pay</Text>
+                <Text style={styles.billTotalAmount}>
+                  ₹{calculatedTotal.toFixed(2)}
+                </Text>
               </View>
 
               <View style={styles.billRow}>
@@ -477,6 +528,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     fontWeight: '500',
+  },
+  billAmountRow: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 6,
+  },
+  strikethroughAmount: {
+    fontSize: 13,
+    color: '#999',
+    textDecorationLine: 'line-through' as const,
   },
   billTotalLabel: {
     fontSize: 16,
