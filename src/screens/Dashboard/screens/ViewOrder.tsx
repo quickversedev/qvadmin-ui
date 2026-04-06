@@ -18,7 +18,20 @@ import {useOrderStore, Order} from '../../../store/orders/useOrdersStore';
 import {useRegionsStore} from '../../../store/regions/useRegionsStore';
 import {useVendorStore} from '../../../store/vendors/useVendorStore';
 import {fetchOrderDetails} from '../../../services/apis/orderService';
-import {convertUTCToIST, formatTime, openMap, parseAddress} from '../../../utils/orderUtils';
+import {
+  fetchPricingConfigurations,
+  PricingConfig,
+} from '../../../services/apis/pricingConfigService';
+import {
+  convertUTCToIST,
+  formatTime,
+  openMap,
+  parseAddress,
+} from '../../../utils/orderUtils';
+import {
+  getServiceTypeFromCategory,
+  resolvePricingForService,
+} from '../../../utils/pricingConfigUtils';
 
 type ViewOrderRouteProp = RouteProp<HomeScreenStackParamList, 'ViewOrder'>;
 
@@ -33,6 +46,7 @@ const ViewOrderScreen = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pricingConfigs, setPricingConfigs] = useState<PricingConfig[]>([]);
 
   const loadOrder = useCallback(async () => {
     if (!orderId) {
@@ -57,7 +71,11 @@ const ViewOrderScreen = () => {
 
       if (selectedRegion?.regionId && authData?.jwt) {
         try {
-          await fetchOrders(selectedRegion.regionId, lastTimeFilter, authData.jwt);
+          await fetchOrders(
+            selectedRegion.regionId,
+            lastTimeFilter,
+            authData.jwt,
+          );
           const refreshedOrder = getOrderById(orderId);
           if (refreshedOrder) {
             setOrder(refreshedOrder);
@@ -76,7 +94,14 @@ const ViewOrderScreen = () => {
     } finally {
       setLoading(false);
     }
-  }, [authData?.jwt, fetchOrders, getOrderById, lastTimeFilter, orderId, selectedRegion?.regionId]);
+  }, [
+    authData?.jwt,
+    fetchOrders,
+    getOrderById,
+    lastTimeFilter,
+    orderId,
+    selectedRegion?.regionId,
+  ]);
 
   useEffect(() => {
     if (vendors.length === 0 && selectedRegion?.regionId) {
@@ -89,6 +114,27 @@ const ViewOrderScreen = () => {
       loadOrder();
     }, [loadOrder]),
   );
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPricingConfigurations = async () => {
+      try {
+        const response = await fetchPricingConfigurations();
+        if (isMounted) {
+          setPricingConfigs(response || []);
+        }
+      } catch (pricingError) {
+        console.error('Failed to fetch pricing configurations:', pricingError);
+      }
+    };
+
+    loadPricingConfigurations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -115,7 +161,9 @@ const ViewOrderScreen = () => {
     return (
       <View style={styles.centered}>
         <Text style={styles.errorTitle}>Order not found</Text>
-        <Text style={styles.errorMessage}>No order found for ID: {orderId}</Text>
+        <Text style={styles.errorMessage}>
+          No order found for ID: {orderId}
+        </Text>
       </View>
     );
   }
@@ -180,19 +228,21 @@ const ViewOrderScreen = () => {
   // Fee calculation matching client app logic
   const vendor = getVendorById(String(order.shopId));
   const vendorCategory = vendor?.category || order.shop?.category || '';
-  const isGrocery = vendorCategory.toLowerCase().includes('grocery');
+  const serviceType = getServiceTypeFromCategory(vendorCategory);
+  const pricing = resolvePricingForService(pricingConfigs, serviceType);
   const subTotalAmount = Number(order.amountExcludingDeliveryFee || 0);
-  const deliveryFee = isGrocery ? 17 : 20;
-  const deliveryFeeOriginal = 39;
-  const platformFee = isGrocery ? 3 : 5;
-  const platformFeeOriginal = 12;
-  const packagingCharges = 0;
-  const packagingChargesOriginal = isGrocery ? 4 : 8;
-  const commissionRate = isGrocery ? 0.02 : 0.1;
+  const deliveryFee = pricing.deliveryFeeActual;
+  const deliveryFeeOriginal = pricing.deliveryFeeExpected;
+  const platformFee = pricing.platformFeeActual;
+  const platformFeeOriginal = pricing.platformFeeExpected;
+  const packagingCharges = pricing.packagingChargesActual;
+  const packagingChargesOriginal = pricing.packagingChargesExpected;
+  const commissionRate = pricing.commissionRate;
   const commission = commissionRate * subTotalAmount;
   const taxableAmount = commission + deliveryFee + platformFee;
-  const taxes = Math.round(0.18 * taxableAmount);
-  const totalAmount = subTotalAmount + deliveryFee + platformFee + packagingCharges + taxes;
+  const taxes = Math.round(pricing.gstRate * taxableAmount);
+  const totalAmount =
+    subTotalAmount + deliveryFee + platformFee + packagingCharges + taxes;
 
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.container}>
@@ -207,7 +257,9 @@ const ViewOrderScreen = () => {
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>Items ({order.orderItem?.length})</Text>
+        <Text style={styles.sectionTitle}>
+          Items ({order.orderItem?.length})
+        </Text>
         {order.orderItem?.length ? (
           order.orderItem.map(item => (
             <View key={item.id} style={styles.itemRow}>
@@ -224,7 +276,9 @@ const ViewOrderScreen = () => {
         <Text style={styles.sectionTitle}>Customer</Text>
         <View style={styles.customerHeaderRow}>
           <Text style={styles.customerName}>{order.customerName || 'N/A'}</Text>
-          <TouchableOpacity style={styles.inlineButton} onPress={handleCallCustomer}>
+          <TouchableOpacity
+            style={styles.inlineButton}
+            onPress={handleCallCustomer}>
             <Icon name="phone" size={16} color="#0057A0" />
             <Text style={styles.inlineButtonText}>Call</Text>
           </TouchableOpacity>
@@ -256,13 +310,17 @@ const ViewOrderScreen = () => {
               <Text style={styles.metaChip}>{order.shop.category}</Text>
             )}
             {!!order.shop.preparationTime && (
-              <Text style={styles.metaChip}>Prep: {order.shop.preparationTime}</Text>
+              <Text style={styles.metaChip}>
+                Prep: {order.shop.preparationTime}
+              </Text>
             )}
           </View>
 
           <View style={styles.shopActionRow}>
             {!!order.shop.phone && (
-              <TouchableOpacity style={styles.inlineButton} onPress={handleCallShop}>
+              <TouchableOpacity
+                style={styles.inlineButton}
+                onPress={handleCallShop}>
                 <Icon name="phone" size={16} color="#0057A0" />
                 <Text style={styles.inlineButtonText}>Call Shop</Text>
               </TouchableOpacity>
@@ -293,16 +351,26 @@ const ViewOrderScreen = () => {
 
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Delivery Address</Text>
-        <Text style={styles.addressText}>{customerAddress?.addressLine1 || '--'}</Text>
+        <Text style={styles.addressText}>
+          {customerAddress?.addressLine1 || '--'}
+        </Text>
         {!!customerAddress?.addressLine2 && (
-          <Text style={styles.addressText}>{customerAddress?.addressLine2}</Text>
+          <Text style={styles.addressText}>
+            {customerAddress?.addressLine2}
+          </Text>
         )}
         <Text style={styles.addressText}>
-          {[customerAddress?.city, customerAddress?.state, customerAddress?.pincode]
+          {[
+            customerAddress?.city,
+            customerAddress?.state,
+            customerAddress?.pincode,
+          ]
             .filter(Boolean)
             .join(', ') || '--'}
         </Text>
-        <TouchableOpacity style={styles.linkButton} onPress={handleOpenDirections}>
+        <TouchableOpacity
+          style={styles.linkButton}
+          onPress={handleOpenDirections}>
           <Text style={styles.linkButtonText}>Get Directions</Text>
         </TouchableOpacity>
       </View>
@@ -317,7 +385,9 @@ const ViewOrderScreen = () => {
         <View style={styles.billRow}>
           <Text style={styles.billLabel}>Delivery Fee</Text>
           <View style={styles.billAmountRow}>
-            <Text style={styles.strikethroughAmount}>₹{deliveryFeeOriginal}</Text>
+            <Text style={styles.strikethroughAmount}>
+              ₹{deliveryFeeOriginal}
+            </Text>
             <Text style={styles.billValue}>₹{deliveryFee.toFixed(2)}</Text>
           </View>
         </View>
@@ -325,7 +395,9 @@ const ViewOrderScreen = () => {
         <View style={styles.billRow}>
           <Text style={styles.billLabel}>Platform Fee</Text>
           <View style={styles.billAmountRow}>
-            <Text style={styles.strikethroughAmount}>₹{platformFeeOriginal}</Text>
+            <Text style={styles.strikethroughAmount}>
+              ₹{platformFeeOriginal}
+            </Text>
             <Text style={styles.billValue}>₹{platformFee.toFixed(2)}</Text>
           </View>
         </View>
@@ -333,7 +405,9 @@ const ViewOrderScreen = () => {
         <View style={styles.billRow}>
           <Text style={styles.billLabel}>Packaging Charges</Text>
           <View style={styles.billAmountRow}>
-            <Text style={styles.strikethroughAmount}>₹{packagingChargesOriginal}</Text>
+            <Text style={styles.strikethroughAmount}>
+              ₹{packagingChargesOriginal}
+            </Text>
             <Text style={styles.billValue}>₹{packagingCharges.toFixed(2)}</Text>
           </View>
         </View>
@@ -358,39 +432,67 @@ const ViewOrderScreen = () => {
         <Text style={styles.sectionTitle}>Order Timeline</Text>
 
         <View style={styles.timelineRow}>
-          <Icon name="clock-outline" size={18} color="#0057A0" style={styles.timelineIcon} />
+          <Icon
+            name="clock-outline"
+            size={18}
+            color="#0057A0"
+            style={styles.timelineIcon}
+          />
           <View>
             <Text style={styles.timelineLabel}>Order Created</Text>
-            <Text style={styles.timelineValue}>{convertUTCToIST(order.creationTime)}</Text>
+            <Text style={styles.timelineValue}>
+              {convertUTCToIST(order.creationTime)}
+            </Text>
           </View>
         </View>
 
         {!!order.acceptedDate && (
           <View style={styles.timelineRow}>
-            <Icon name="check-circle-outline" size={18} color="#2E7D32" style={styles.timelineIcon} />
+            <Icon
+              name="check-circle-outline"
+              size={18}
+              color="#2E7D32"
+              style={styles.timelineIcon}
+            />
             <View>
               <Text style={styles.timelineLabel}>Order Accepted</Text>
-              <Text style={styles.timelineValue}>{convertUTCToIST(order.acceptedDate)}</Text>
+              <Text style={styles.timelineValue}>
+                {convertUTCToIST(order.acceptedDate)}
+              </Text>
             </View>
           </View>
         )}
 
         {!!order.completedDate && (
           <View style={styles.timelineRow}>
-            <Icon name="check-all" size={18} color="#1B5E20" style={styles.timelineIcon} />
+            <Icon
+              name="check-all"
+              size={18}
+              color="#1B5E20"
+              style={styles.timelineIcon}
+            />
             <View>
               <Text style={styles.timelineLabel}>Order Completed</Text>
-              <Text style={styles.timelineValue}>{convertUTCToIST(order.completedDate)}</Text>
+              <Text style={styles.timelineValue}>
+                {convertUTCToIST(order.completedDate)}
+              </Text>
             </View>
           </View>
         )}
 
         {!!order.rejectedDate && (
           <View style={styles.timelineRow}>
-            <Icon name="close-circle-outline" size={18} color="#C62828" style={styles.timelineIcon} />
+            <Icon
+              name="close-circle-outline"
+              size={18}
+              color="#C62828"
+              style={styles.timelineIcon}
+            />
             <View>
               <Text style={styles.timelineLabel}>Order Rejected</Text>
-              <Text style={styles.timelineValue}>{convertUTCToIST(order.rejectedDate)}</Text>
+              <Text style={styles.timelineValue}>
+                {convertUTCToIST(order.rejectedDate)}
+              </Text>
             </View>
           </View>
         )}

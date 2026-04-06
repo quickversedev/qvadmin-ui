@@ -1,5 +1,5 @@
 // src/components/OrderDetailsModal.tsx
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,14 @@ import {
   parseAddress,
 } from '../../utils/orderUtils';
 import {Vendor} from '../../store/vendors/useVendorStore';
+import {
+  fetchPricingConfigurations,
+  PricingConfig,
+} from '../../services/apis/pricingConfigService';
+import {
+  getServiceTypeFromCategory,
+  resolvePricingForService,
+} from '../../utils/pricingConfigUtils';
 
 type OrderDetailsModalProps = {
   visible: boolean;
@@ -32,6 +40,8 @@ const OrderDetailsModal = ({
   order,
   vendor,
 }: OrderDetailsModalProps) => {
+  const [pricingConfigs, setPricingConfigs] = useState<PricingConfig[]>([]);
+
   const {
     orderId,
     customerName,
@@ -46,23 +56,45 @@ const OrderDetailsModal = ({
     amountExcludingDeliveryFee,
     paymentMethod,
   } = order;
-  console.log(order)
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadPricingConfigurations = async () => {
+      try {
+        const response = await fetchPricingConfigurations();
+        if (isMounted) {
+          setPricingConfigs(response || []);
+        }
+      } catch (pricingError) {
+        console.error('Failed to fetch pricing configurations:', pricingError);
+      }
+    };
+
+    loadPricingConfigurations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const {shopAddress} = vendor || {};
 
   // Fee calculation matching client app logic — use vendor store category first, fallback to order's shop
   const vendorCategory = vendor?.category || order.shop?.category || '';
-  const isGrocery = vendorCategory.toLowerCase().includes('grocery');
+  const serviceType = getServiceTypeFromCategory(vendorCategory);
+  const pricing = resolvePricingForService(pricingConfigs, serviceType);
   const subTotal = amountExcludingDeliveryFee || 0;
-  const deliveryFee = isGrocery ? 17 : 20;
-  const deliveryFeeOriginal = 39;
-  const platformFee = isGrocery ? 3 : 5;
-  const platformFeeOriginal = 12;
-  const packagingCharges = 0;
-  const packagingChargesOriginal = isGrocery ? 4 : 8;
-  const commissionRate = isGrocery ? 0.02 : 0.1;
+  const deliveryFee = pricing.deliveryFeeActual;
+  const deliveryFeeOriginal = pricing.deliveryFeeExpected;
+  const platformFee = pricing.platformFeeActual;
+  const platformFeeOriginal = pricing.platformFeeExpected;
+  const packagingCharges = pricing.packagingChargesActual;
+  const packagingChargesOriginal = pricing.packagingChargesExpected;
+  const commissionRate = pricing.commissionRate;
   const commission = commissionRate * Number(subTotal);
   const taxableAmount = commission + deliveryFee + platformFee;
-  const taxes = Math.round(0.18 * taxableAmount);
+  const taxes = Math.round(pricing.gstRate * taxableAmount);
   const calculatedTotal =
     Number(subTotal) + deliveryFee + platformFee + packagingCharges + taxes;
   const customerAddr = customerAddress && parseAddress(customerAddress);

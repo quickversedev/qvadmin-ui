@@ -1,7 +1,17 @@
 import {apiCall, createRequestWithHeaders} from './axios.config';
 
 export type ServiceType = 'FOOD' | 'GROCERY';
-export type ConfigKey = 'PLATFORM_FEE' | 'DELIVERY_CHARGE' | 'SERVICE_TAX' | 'COMMISSION';
+export type ConfigKey =
+  | 'PLATFORM_FEE'
+  | 'DELIVERY_CHARGE'
+  | 'DELIVERY_FEE'
+  | 'PACKAGING_CHARGE'
+  | 'PACKAGING_FEE'
+  | 'SERVICE_TAX'
+  | 'GST'
+  | 'GST_PERCENT'
+  | 'COMMISSION'
+  | 'COMMISSION_PERCENT';
 
 export interface PricingConfig {
   id?: string;
@@ -24,33 +34,25 @@ export interface PricingConfigResponse {
   };
 }
 
-const BASIC_AUTH_HEADER =
-  'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx';
+const BASIC_AUTH_HEADER = 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx';
 
 /**
  * Fetch pricing configurations by service type
  * GET /quickVerse/v3/pricing-configurations?serviceType=FOOD
  */
 export const fetchPricingConfigurations = async (
-  serviceType: ServiceType,
+  serviceType?: ServiceType,
 ): Promise<PricingConfig[]> => {
-  if (!serviceType) {
-    throw new Error('Service Type is required');
-  }
-
-  const endpoint = `/v3/pricing-configurations?serviceType=${encodeURIComponent(
-    serviceType,
-  )}`;
+  const endpoint = serviceType
+    ? `/v3/pricing-configurations?serviceType=${encodeURIComponent(
+        serviceType,
+      )}`
+    : '/v3/pricing-configurations';
 
   const response = await apiCall<PricingConfig[]>(
-    createRequestWithHeaders(
-      'get',
-      endpoint,
-      undefined,
-      {
-        Authorization: BASIC_AUTH_HEADER,
-      },
-    ),
+    createRequestWithHeaders('get', endpoint, undefined, {
+      Authorization: BASIC_AUTH_HEADER,
+    }),
   );
 
   const pricingConfigs = response;
@@ -78,15 +80,10 @@ export const updatePricingConfiguration = async (
   const endpoint = `/v3/pricing-configurations/${encodeURIComponent(id)}`;
 
   const response = await apiCall<PricingConfig>(
-    createRequestWithHeaders(
-      'put',
-      endpoint,
-      config,
-      {
-        Authorization: BASIC_AUTH_HEADER,
-        SessionKey: authToken || '',
-      },
-    ),
+    createRequestWithHeaders('put', endpoint, config, {
+      Authorization: BASIC_AUTH_HEADER,
+      SessionKey: authToken || '',
+    }),
   );
 
   const pricingConfig = response;
@@ -108,15 +105,10 @@ export const createPricingConfiguration = async (
   const endpoint = `/v3/pricing-configurations`;
 
   const response = await apiCall<PricingConfig>(
-    createRequestWithHeaders(
-      'post',
-      endpoint,
-      config,
-      {
-        Authorization: BASIC_AUTH_HEADER,
-        SessionKey: authToken || '',
-      },
-    ),
+    createRequestWithHeaders('post', endpoint, config, {
+      Authorization: BASIC_AUTH_HEADER,
+      SessionKey: authToken || '',
+    }),
   );
 
   const pricingConfig = response;
