@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   TextInput,
   ActivityIndicator,
@@ -20,7 +19,8 @@ import {
   ServiceType,
   updatePricingConfiguration,
 } from '../../services/apis/pricingConfigService';
-import { useAuth } from '../../contexts/Login/AuthProvider';
+import {useAuth} from '../../contexts/Login/AuthProvider';
+import {SafeAreaView} from 'react-native-safe-area-context'; // Add this import
 
 type Props = StackScreenProps<SettingsStackParamList, 'Configurations'>;
 
@@ -79,14 +79,31 @@ const chargeKeyCandidates = {
 
 const findByCandidates = (configs: PricingConfig[], candidates: string[]) => {
   const upperCandidates = candidates.map(item => item.toUpperCase());
-  return configs.find(item => upperCandidates.includes(String(item.configKey).toUpperCase()));
+  return configs.find(item =>
+    upperCandidates.includes(String(item.configKey).toUpperCase()),
+  );
 };
 
-const mapApiToModel = (serviceType: ServiceType, configs: PricingConfig[]): ConfigModel => {
-  const platform = findByCandidates(configs, feeKeyToConfigCandidates.platformFee);
-  const delivery = findByCandidates(configs, feeKeyToConfigCandidates.deliveryFee);
-  const packaging = findByCandidates(configs, feeKeyToConfigCandidates.packagingCharge);
-  const commission = findByCandidates(configs, chargeKeyCandidates.commissionPercent);
+const mapApiToModel = (
+  serviceType: ServiceType,
+  configs: PricingConfig[],
+): ConfigModel => {
+  const platform = findByCandidates(
+    configs,
+    feeKeyToConfigCandidates.platformFee,
+  );
+  const delivery = findByCandidates(
+    configs,
+    feeKeyToConfigCandidates.deliveryFee,
+  );
+  const packaging = findByCandidates(
+    configs,
+    feeKeyToConfigCandidates.packagingCharge,
+  );
+  const commission = findByCandidates(
+    configs,
+    chargeKeyCandidates.commissionPercent,
+  );
   const gst = findByCandidates(configs, chargeKeyCandidates.gstPercent);
 
   return {
@@ -115,7 +132,9 @@ const mapApiToModel = (serviceType: ServiceType, configs: PricingConfig[]): Conf
 const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
   const {authData} = useAuth();
   const [serviceType, setServiceType] = useState<ServiceType>('FOOD');
-  const [apiConfigsByType, setApiConfigsByType] = useState<Record<ServiceType, PricingConfig[]>>({
+  const [apiConfigsByType, setApiConfigsByType] = useState<
+    Record<ServiceType, PricingConfig[]>
+  >({
     FOOD: [],
     GROCERY: [],
   });
@@ -151,7 +170,10 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
       console.log(configs);
       setApiConfigsByType(prev => ({...prev, [type]: configs || []}));
     } catch (error: any) {
-      Alert.alert('Error', error?.message || 'Failed to fetch pricing configurations');
+      Alert.alert(
+        'Error',
+        error?.message || 'Failed to fetch pricing configurations',
+      );
     } finally {
       setIsLoading(false);
     }
@@ -164,7 +186,9 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
   const mergeUpdatedConfig = (updated: PricingConfig) => {
     setApiConfigsByType(prev => {
       const current = prev[serviceType] || [];
-      const foundById = current.findIndex(item => item.id && item.id === updated.id);
+      const foundById = current.findIndex(
+        item => item.id && item.id === updated.id,
+      );
 
       if (foundById >= 0) {
         const cloned = [...current];
@@ -173,7 +197,9 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
       }
 
       const foundByKey = current.findIndex(
-        item => String(item.configKey).toUpperCase() === String(updated.configKey).toUpperCase(),
+        item =>
+          String(item.configKey).toUpperCase() ===
+          String(updated.configKey).toUpperCase(),
       );
 
       if (foundByKey >= 0) {
@@ -203,7 +229,11 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
     };
 
     if (existing?.id) {
-      const updated = await updatePricingConfiguration(existing.id, payload, authData?.jwt);
+      const updated = await updatePricingConfiguration(
+        existing.id,
+        payload,
+        authData?.jwt,
+      );
       mergeUpdatedConfig(updated);
       return;
     }
@@ -237,7 +267,10 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
       await upsertConfig(feeKeyToConfigCandidates[feeKey], actual, expected);
       cancelEditFee();
     } catch (error: any) {
-      Alert.alert('Update Failed', error?.message || 'Failed to update fee configuration');
+      Alert.alert(
+        'Update Failed',
+        error?.message || 'Failed to update fee configuration',
+      );
     } finally {
       setIsSaving(false);
     }
@@ -266,7 +299,10 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
     }
 
     const current = apiConfigsByType[serviceType] || [];
-    const commissionConfig = findByCandidates(current, chargeKeyCandidates.commissionPercent);
+    const commissionConfig = findByCandidates(
+      current,
+      chargeKeyCandidates.commissionPercent,
+    );
     const gstConfig = findByCandidates(current, chargeKeyCandidates.gstPercent);
 
     setIsSaving(true);
@@ -285,7 +321,10 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
       ]);
       cancelEditCharges();
     } catch (error: any) {
-      Alert.alert('Update Failed', error?.message || 'Failed to update charges');
+      Alert.alert(
+        'Update Failed',
+        error?.message || 'Failed to update charges',
+      );
     } finally {
       setIsSaving(false);
     }
@@ -298,7 +337,7 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <TouchableOpacity
@@ -306,7 +345,11 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
             style={styles.iconButton}
             accessibilityRole="button"
             accessibilityLabel="Back">
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#1F2937" />
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={22}
+              color="#1F2937"
+            />
           </TouchableOpacity>
           <Text style={styles.title}>Configurations</Text>
           <View style={styles.iconButtonPlaceholder} />
@@ -330,7 +373,11 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
                     key={type}
                     style={[styles.typePill, active && styles.typePillActive]}
                     onPress={() => onSelectServiceType(type)}>
-                    <Text style={[styles.typePillText, active && styles.typePillTextActive]}>
+                    <Text
+                      style={[
+                        styles.typePillText,
+                        active && styles.typePillTextActive,
+                      ]}>
                       {type === 'FOOD' ? 'Food' : 'Grocery'}
                     </Text>
                   </TouchableOpacity>
@@ -374,7 +421,9 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
                           placeholderTextColor="#94A3B8"
                         />
                       ) : (
-                        <Text style={styles.expectedValue}>Rs {item.expected}</Text>
+                        <Text style={styles.expectedValue}>
+                          Rs {item.expected}
+                        </Text>
                       )}
                     </View>
                     <View style={styles.valueBoxActive}>
@@ -407,12 +456,15 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
                         style={[styles.saveBtn, isSaving && styles.disabledBtn]}
                         onPress={() => saveFee(fee.key)}
                         disabled={isSaving}>
-                        <Text style={styles.saveBtnText}>{isSaving ? 'Saving...' : 'Save'}</Text>
+                        <Text style={styles.saveBtnText}>
+                          {isSaving ? 'Saving...' : 'Save'}
+                        </Text>
                       </TouchableOpacity>
                     </View>
                   ) : null}
                   <Text style={styles.hintText}>
-                    Expected shows with line-through in customer app, actual is charged.
+                    Expected shows with line-through in customer app, actual is
+                    charged.
                   </Text>
                 </View>
               );
@@ -423,8 +475,14 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
               <View style={styles.cardTitleRow}>
                 <Text style={styles.cardTitle}>Charges</Text>
                 {!isEditingCharges ? (
-                  <TouchableOpacity onPress={startEditCharges} style={styles.editIconButton}>
-                    <MaterialCommunityIcons name="pencil-outline" size={18} color="#0F766E" />
+                  <TouchableOpacity
+                    onPress={startEditCharges}
+                    style={styles.editIconButton}>
+                    <MaterialCommunityIcons
+                      name="pencil-outline"
+                      size={18}
+                      color="#0F766E"
+                    />
                   </TouchableOpacity>
                 ) : null}
               </View>
@@ -434,14 +492,19 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
                   <TextInput
                     value={chargesDraft.commissionPercent}
                     onChangeText={value =>
-                      setChargesDraft(prev => ({...prev, commissionPercent: value}))
+                      setChargesDraft(prev => ({
+                        ...prev,
+                        commissionPercent: value,
+                      }))
                     }
                     style={styles.smallInput}
                     keyboardType="decimal-pad"
                     placeholder="0"
                   />
                 ) : (
-                  <Text style={styles.rowValue}>{config.charges.commissionPercent}%</Text>
+                  <Text style={styles.rowValue}>
+                    {config.charges.commissionPercent}%
+                  </Text>
                 )}
               </View>
               <View style={styles.rowDivider} />
@@ -450,13 +513,17 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
                 {isEditingCharges ? (
                   <TextInput
                     value={chargesDraft.gstPercent}
-                    onChangeText={value => setChargesDraft(prev => ({...prev, gstPercent: value}))}
+                    onChangeText={value =>
+                      setChargesDraft(prev => ({...prev, gstPercent: value}))
+                    }
                     style={styles.smallInput}
                     keyboardType="decimal-pad"
                     placeholder="0"
                   />
                 ) : (
-                  <Text style={styles.rowValue}>{config.charges.gstPercent}%</Text>
+                  <Text style={styles.rowValue}>
+                    {config.charges.gstPercent}%
+                  </Text>
                 )}
               </View>
               {isEditingCharges ? (
@@ -471,7 +538,9 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
                     style={[styles.saveBtn, isSaving && styles.disabledBtn]}
                     onPress={saveCharges}
                     disabled={isSaving}>
-                    <Text style={styles.saveBtnText}>{isSaving ? 'Saving...' : 'Save'}</Text>
+                    <Text style={styles.saveBtnText}>
+                      {isSaving ? 'Saving...' : 'Save'}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               ) : null}

@@ -1,16 +1,10 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Text,
-  Alert,
-  SafeAreaView,
-} from 'react-native';
+import {View, StyleSheet, TouchableOpacity, Text, Alert} from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useAuth} from '../../contexts/Login/AuthProvider';
 import {SettingsStackParamList} from '../../navigation/SettingsNavigation';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 type Props = StackScreenProps<SettingsStackParamList, 'SettingsHome'>;
 
@@ -37,7 +31,7 @@ const SettingsScreen: React.FC<Props> = ({navigation}) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         <Text style={styles.headerTitle}>Settings</Text>
 

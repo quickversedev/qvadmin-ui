@@ -4,7 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   TextInput,
   ScrollView,
   Alert,
@@ -14,6 +13,7 @@ import {StackScreenProps} from '@react-navigation/stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Asset, launchImageLibrary} from 'react-native-image-picker';
 import {SettingsStackParamList} from '../../navigation/SettingsNavigation';
+import {SafeAreaView} from 'react-native-safe-area-context'; // Add this import
 
 type Props = StackScreenProps<SettingsStackParamList, 'AddTransporter'>;
 type Gender = 'Male' | 'Female' | 'Other' | '';
@@ -54,7 +54,7 @@ const AddTransporterScreen: React.FC<Props> = ({navigation}) => {
         break;
     }
 
-    setErrors((prev) => ({
+    setErrors(prev => ({
       ...prev,
       [fieldName]: error,
     }));
@@ -72,7 +72,7 @@ const AddTransporterScreen: React.FC<Props> = ({navigation}) => {
 
     setErrors(newErrors);
 
-    return Object.values(newErrors).every((err) => err === '');
+    return Object.values(newErrors).every(err => err === '');
   };
 
   const pickImage = async (setter: (asset: Asset | null) => void) => {
@@ -87,11 +87,15 @@ const AddTransporterScreen: React.FC<Props> = ({navigation}) => {
     }
 
     if (result.errorCode) {
-      Alert.alert('Image Error', result.errorMessage || 'Unable to select image');
+      Alert.alert(
+        'Image Error',
+        result.errorMessage || 'Unable to select image',
+      );
       return;
     }
 
-    const selected = result.assets && result.assets[0] ? result.assets[0] : null;
+    const selected =
+      result.assets && result.assets[0] ? result.assets[0] : null;
     setter(selected);
   };
 
@@ -107,7 +111,7 @@ const AddTransporterScreen: React.FC<Props> = ({navigation}) => {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <TouchableOpacity
@@ -115,7 +119,11 @@ const AddTransporterScreen: React.FC<Props> = ({navigation}) => {
             style={styles.iconButton}
             accessibilityRole="button"
             accessibilityLabel="Back">
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#1F2937" />
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={22}
+              color="#1F2937"
+            />
           </TouchableOpacity>
           <Text style={styles.title}>Add Delivery Partner</Text>
           <View style={styles.iconButtonPlaceholder} />
@@ -134,10 +142,7 @@ const AddTransporterScreen: React.FC<Props> = ({navigation}) => {
             onBlur={() => handleFieldBlur('fullName', fullName)}
             placeholder="Enter full name"
             placeholderTextColor="#94A3B8"
-            style={[
-              styles.input,
-              errors.fullName && styles.inputError,
-            ]}
+            style={[styles.input, errors.fullName && styles.inputError]}
           />
           {errors.fullName ? (
             <Text style={styles.errorText}>{errors.fullName}</Text>
@@ -150,10 +155,7 @@ const AddTransporterScreen: React.FC<Props> = ({navigation}) => {
             onBlur={() => handleFieldBlur('mobileNumber', mobileNumber)}
             placeholder="Enter mobile number"
             placeholderTextColor="#94A3B8"
-            style={[
-              styles.input,
-              errors.mobileNumber && styles.inputError,
-            ]}
+            style={[styles.input, errors.mobileNumber && styles.inputError]}
             keyboardType="number-pad"
             maxLength={10}
           />
@@ -174,7 +176,7 @@ const AddTransporterScreen: React.FC<Props> = ({navigation}) => {
 
           <Text style={styles.label}>Gender</Text>
           <View style={styles.genderRow}>
-            {(['Male', 'Female', 'Other'] as const).map((value) => {
+            {(['Male', 'Female', 'Other'] as const).map(value => {
               const active = gender === value;
               return (
                 <TouchableOpacity
@@ -235,9 +237,13 @@ const AddTransporterScreen: React.FC<Props> = ({navigation}) => {
             onPick={() => pickImage(setAadharImage)}
           />
 
-          {Object.values(errors).some((err) => err !== '') && (
+          {Object.values(errors).some(err => err !== '') && (
             <View style={styles.errorSummary}>
-              <MaterialCommunityIcons name="alert-circle" size={16} color="#DC2626" />
+              <MaterialCommunityIcons
+                name="alert-circle"
+                size={16}
+                color="#DC2626"
+              />
               <Text style={styles.errorSummaryText}>
                 Please fix the errors below
               </Text>
@@ -261,7 +267,13 @@ type DocPickerProps = {
   error?: string;
 };
 
-const DocPicker: React.FC<DocPickerProps> = ({label, required, asset, onPick, error}) => {
+const DocPicker: React.FC<DocPickerProps> = ({
+  label,
+  required,
+  asset,
+  onPick,
+  error,
+}) => {
   return (
     <View style={styles.docCard}>
       <View style={styles.docHeader}>
@@ -282,20 +294,23 @@ const DocPicker: React.FC<DocPickerProps> = ({label, required, asset, onPick, er
       {asset?.uri ? (
         <Image source={{uri: asset.uri}} style={styles.docPreview} />
       ) : (
-        <View style={[styles.docPlaceholder, error && styles.docPlaceholderError]}>
+        <View
+          style={[styles.docPlaceholder, error && styles.docPlaceholderError]}>
           <MaterialCommunityIcons
             name="image-outline"
             size={18}
             color={error ? '#DC2626' : '#94A3B8'}
           />
-          <Text style={[styles.docPlaceholderText, error && styles.docPlaceholderTextError]}>
+          <Text
+            style={[
+              styles.docPlaceholderText,
+              error && styles.docPlaceholderTextError,
+            ]}>
             No image selected
           </Text>
         </View>
       )}
-      {error ? (
-        <Text style={styles.errorText}>{error}</Text>
-      ) : null}
+      {error ? <Text style={styles.errorText}>{error}</Text> : null}
     </View>
   );
 };

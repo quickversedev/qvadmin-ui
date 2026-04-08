@@ -1,15 +1,9 @@
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  FlatList,
-  SafeAreaView,
-} from 'react-native';
+import {View, Text, StyleSheet, TouchableOpacity, FlatList} from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SettingsStackParamList} from '../../navigation/SettingsNavigation';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 type Props = StackScreenProps<SettingsStackParamList, 'Transporters'>;
 
@@ -17,7 +11,7 @@ const mockTransporters = ['Ravi Kumar', 'Sandeep Yadav', 'Pooja Sharma'];
 
 const TransportersScreen: React.FC<Props> = ({navigation}) => {
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <TouchableOpacity
@@ -25,7 +19,11 @@ const TransportersScreen: React.FC<Props> = ({navigation}) => {
             style={styles.iconButton}
             accessibilityRole="button"
             accessibilityLabel="Back">
-            <MaterialCommunityIcons name="arrow-left" size={22} color="#1F2937" />
+            <MaterialCommunityIcons
+              name="arrow-left"
+              size={22}
+              color="#1F2937"
+            />
           </TouchableOpacity>
           <Text style={styles.title}>Delivery Partners</Text>
           <TouchableOpacity
@@ -38,11 +36,15 @@ const TransportersScreen: React.FC<Props> = ({navigation}) => {
 
         <FlatList
           data={mockTransporters}
-          keyExtractor={(item) => item}
+          keyExtractor={item => item}
           contentContainerStyle={styles.listContent}
           renderItem={({item}) => (
             <View style={styles.transporterCard}>
-              <MaterialCommunityIcons name="truck-fast-outline" size={20} color="#0F766E" />
+              <MaterialCommunityIcons
+                name="truck-fast-outline"
+                size={20}
+                color="#0F766E"
+              />
               <Text style={styles.transporterName}>{item}</Text>
             </View>
           )}
