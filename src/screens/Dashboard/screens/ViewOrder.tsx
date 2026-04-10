@@ -275,7 +275,7 @@ const ViewOrderScreen = () => {
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Customer</Text>
         <View style={styles.customerHeaderRow}>
-          <Text style={styles.customerName}>{order.customerName || 'N/A'}</Text>
+          {/* <Text style={styles.customerName}>{order.customerName || 'N/A'}</Text> */}
           <TouchableOpacity
             style={styles.inlineButton}
             onPress={handleCallCustomer}>

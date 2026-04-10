@@ -1,7 +1,10 @@
 import {create} from 'zustand';
 import {persist, createJSONStorage} from 'zustand/middleware';
 
-import axiosInstance, {apiCall, withHeaders} from '../../services/apis/axios.config';
+import axiosInstance, {
+  apiCall,
+  withHeaders,
+} from '../../services/apis/axios.config';
 import {zustandMmkvStorage} from '../../services/storage/MMKV/zustandMmkvStorage';
 
 export interface Region {
@@ -25,7 +28,7 @@ interface RegionsState {
   getEnabledRegions: () => Region[];
 }
 
-const API_ENDPOINT = '/v3/regions'; // Endpoint relative to base URL
+const API_ENDPOINT = '/quickVerse/v3/regions'; // Endpoint relative to base URL
 const AUTH_HEADER = {
   Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
 };
@@ -42,7 +45,7 @@ export const useRegionsStore = create<RegionsState>()(
         set({isLoading: true, error: null});
         try {
           const regions = await apiCall<Region[]>(
-            axiosInstance.get(API_ENDPOINT, withHeaders(AUTH_HEADER))
+            axiosInstance.get(API_ENDPOINT, withHeaders(AUTH_HEADER)),
           );
 
           set({regions, isLoading: false});
@@ -82,9 +85,7 @@ export const useRegionsStore = create<RegionsState>()(
 
       deleteRegion: (regionId: string) => {
         set(state => ({
-          regions: state.regions.filter(
-            region => region.regionId !== regionId,
-          ),
+          regions: state.regions.filter(region => region.regionId !== regionId),
           selectedRegion:
             state.selectedRegion?.regionId === regionId
               ? null

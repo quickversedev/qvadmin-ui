@@ -47,9 +47,8 @@ const showToast = (message: string) => {
  */
 export const API_CONFIG = {
   /** Base URL for the QuickVerse API server */
-  baseURL: 'http://prd.quickverse.in/quickVerse',
-  // baseURL:
-  //   'https://superscientifically-revengeless-ronald.ngrok-free.dev/quickVerse',
+  baseURL: 'http://prd.quickverse.in',
+  // baseURL: 'https://superscientifically-revengeless-ronald.ngrok-free.dev',
 
   /** Default timeout for all requests (30 seconds) */
   timeout: 30000,
@@ -83,6 +82,7 @@ const axiosInstance = axios.create({
 const handleAxiosError = (error: AxiosError | unknown): ApiError => {
   // Type guard to check if it's an AxiosError
   if (!axios.isAxiosError(error)) {
+    console.log('Axios Error : ', error);
     return {
       status: 500,
       message: 'An unexpected error occurred',
@@ -188,8 +188,10 @@ export const apiCall = async <T>(
 ): Promise<T> => {
   try {
     const response = await promise;
+    console.log(response);
     return response.data;
   } catch (error) {
+    console.log(error);
     console.error('error caught in Axios Config', error);
     throw handleAxiosError(error as AxiosError);
   }

@@ -44,10 +44,10 @@ export const fetchPricingConfigurations = async (
   serviceType?: ServiceType,
 ): Promise<PricingConfig[]> => {
   const endpoint = serviceType
-    ? `/v3/pricing-configurations?serviceType=${encodeURIComponent(
+    ? `/quickVerse/v3/pricing-configurations?serviceType=${encodeURIComponent(
         serviceType,
       )}`
-    : '/v3/pricing-configurations';
+    : '/quickVerse/v3/pricing-configurations';
 
   const response = await apiCall<PricingConfig[]>(
     createRequestWithHeaders('get', endpoint, undefined, {
@@ -77,7 +77,9 @@ export const updatePricingConfiguration = async (
     throw new Error('Configuration ID is required');
   }
 
-  const endpoint = `/v3/pricing-configurations/${encodeURIComponent(id)}`;
+  const endpoint = `/quickVerse/v3/pricing-configurations/${encodeURIComponent(
+    id,
+  )}`;
 
   const response = await apiCall<PricingConfig>(
     createRequestWithHeaders('put', endpoint, config, {
@@ -102,7 +104,7 @@ export const createPricingConfiguration = async (
   config: Omit<PricingConfig, 'id' | 'createdAt' | 'updatedAt'>,
   authToken?: string,
 ): Promise<PricingConfig> => {
-  const endpoint = `/v3/pricing-configurations`;
+  const endpoint = `/quickVerse/v3/pricing-configurations`;
 
   const response = await apiCall<PricingConfig>(
     createRequestWithHeaders('post', endpoint, config, {

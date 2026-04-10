@@ -57,6 +57,8 @@ const OrderDetailsModal = ({
     paymentMethod,
   } = order;
 
+  console.log(order);
+
   useEffect(() => {
     let isMounted = true;
 
@@ -148,7 +150,7 @@ const OrderDetailsModal = ({
                     style={
                       styles.itemQuantity && {fontWeight: 'bold', fontSize: 18}
                     }>
-                    {orderItem?.length}
+                    {totalItemCount}
                   </Text>
                 </View>
               </View>
@@ -162,7 +164,7 @@ const OrderDetailsModal = ({
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                 }}>
-                <Text style={styles.customerNameText}>{customerName}</Text>
+                {/* <Text style={styles.customerNameText}>{customerName}</Text> */}
                 <TouchableOpacity
                   style={styles.phoneButton}
                   onPress={handleCallCustomer}>

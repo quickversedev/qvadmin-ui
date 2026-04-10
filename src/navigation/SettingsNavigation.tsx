@@ -8,16 +8,21 @@ import ConfigurationsScreen from '../screens/Settings/ConfigurationsScreen';
 export type SettingsStackParamList = {
   SettingsHome: undefined;
   Transporters: undefined;
-  AddTransporter: undefined;
+  AddTransporter:
+    | {
+        transporterId?: string;
+      }
+    | undefined;
   Configurations: undefined;
 };
 
 const Stack = createStackNavigator<SettingsStackParamList>();
+const initialRouteName: keyof SettingsStackParamList = 'SettingsHome';
 
 const SettingsNavigation = () => {
   return (
     <Stack.Navigator
-      initialRouteName="SettingsHome"
+      initialRouteName={initialRouteName}
       screenOptions={{
         headerShown: false,
       }}>

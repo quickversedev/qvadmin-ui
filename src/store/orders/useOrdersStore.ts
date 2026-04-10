@@ -136,7 +136,7 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({loading: true, error: null, lastTimeFilter: timeFilter});
     try {
       const timeRange = getStartDate(timeFilter);
-      const endpoint = `/v2/order/region-orders?regionId=${regionId}&timeRange=${timeRange}`;
+      const endpoint = `/quickVerse/v2/order/region-orders?regionId=${regionId}&timeRange=${timeRange}`;
 
       if (!authToken) {
         throw new Error('No authentication token available');

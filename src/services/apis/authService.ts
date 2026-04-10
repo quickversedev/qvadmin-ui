@@ -20,7 +20,7 @@ const sendOtp = async (phoneNumber: string): Promise<any> => {
     const response = await apiCall(
       createRequestWithHeaders(
         'post',
-        '/v1/requestOtp',
+        '/quickVerse/v1/requestOtp',
         {
           phone: phoneNumber,
         },
@@ -63,7 +63,7 @@ const verifyOtp = async (
     const response = await apiCall(
       createRequestWithHeaders(
         'post',
-        '/v1/login',
+        '/quickVerse/v1/login',
         {
           phone: '91' + phoneNumber,
           otp: otp,

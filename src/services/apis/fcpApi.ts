@@ -19,7 +19,7 @@ export const sendFCMToken = async (
     const response = await apiCall(
       createRequestWithHeaders(
         'put',
-        '/v1/updateDeviceInfo',
+        '/quickVerse/v1/updateDeviceInfo',
         payload,
         {
           sessionToken: sessionToken || '',
@@ -41,7 +41,7 @@ export const deleteFCMToken = async (sessionToken: string) => {
     const response = await apiCall(
       createRequestWithHeaders(
         'delete',
-        '/api/fcm-token',
+        '/quickVerse/api/fcm-token',
         undefined,
         {
           sessionToken,

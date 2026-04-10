@@ -30,7 +30,7 @@ interface CampusesResponse {
   };
   message: string;
 }
-const API_ENDPOINT = '/v1/campus'; // Endpoint relative to base URL
+const API_ENDPOINT = '/quickVerse/v1/campus'; // Endpoint relative to base URL
 const AUTH_HEADER = {
   Authorization: 'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
 };

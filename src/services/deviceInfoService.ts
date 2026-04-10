@@ -100,7 +100,7 @@ class DeviceInfoService {
 
       const response = await apiCall(
         axiosInstance.post<DeviceInfoResponse>(
-          '/v1/updateCaptainDevice',
+          '/quickVerse/v1/updateCaptainDevice',
           requestData,
           {
             headers: {

@@ -16,7 +16,7 @@ export const fetchOrderDetails = async (orderId: string): Promise<Order> => {
     throw new Error('Order ID is required');
   }
 
-  const endpoint = `/v2/order/${encodeURIComponent(orderId)}`;
+  const endpoint = `/quickVerse/v2/order/${encodeURIComponent(orderId)}`;
 
   const response = await apiCall<OrderDetailsApiResponse>(
     createRequestWithHeaders(

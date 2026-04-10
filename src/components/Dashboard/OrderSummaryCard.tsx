@@ -76,7 +76,7 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
         </View>
       </View>
       <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-        <View style={styles.customerInfo}>
+        {/* <View style={styles.customerInfo}>
           <Icon
             name="account"
             size={18}
@@ -84,7 +84,7 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
             style={{marginRight: 4}}
           />
           <Text style={styles.customerName}>{customerName}</Text>
-        </View>
+        </View> */}
         <View
           style={[
             styles.statusBadge,
