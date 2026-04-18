@@ -3,13 +3,25 @@ import {View, StyleSheet} from 'react-native';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
 import OrderSummaryCard from '../../../components/Dashboard/OrderSummaryCard';
 import {Vendor} from '../../../store/vendors/useVendorStore';
+import {DeliveryPartner} from '../../../services/apis/deliveryPartnerService';
 
 interface OrderCardListProps {
   vendor: Vendor;
   status: string;
+  showAssignment?: boolean;
+  onlinePartners?: DeliveryPartner[];
+  assignedPartnerByOrder?: Record<string, string>;
+  onAssignPartner?: (orderId: string, partnerId: string) => void;
 }
 
-const OrderCardList: React.FC<OrderCardListProps> = ({vendor, status}) => {
+const OrderCardList: React.FC<OrderCardListProps> = ({
+  vendor,
+  status,
+  showAssignment = false,
+  onlinePartners = [],
+  assignedPartnerByOrder = {},
+  onAssignPartner,
+}) => {
   const {getVendorOrdersByStatus} = useOrderStore();
 
   const {shopId} = vendor || {};
@@ -37,6 +49,10 @@ const OrderCardList: React.FC<OrderCardListProps> = ({vendor, status}) => {
           key={`${status}_${order.orderId}`}
           {...order}
           vendor={vendor}
+          showAssignment={showAssignment}
+          onlinePartners={onlinePartners}
+          assignedPartnerId={assignedPartnerByOrder[order.orderId]}
+          onAssignPartner={onAssignPartner}
         />
       ))}
     </View>

@@ -8,6 +8,7 @@ import {
   DeliveryPartnerPayload,
   fetchDeliveryPartnerById,
   fetchDeliveryPartners,
+  fetchOnlineDeliveryPartners,
   getDeliveryPartnerId,
   updateDeliveryPartner,
 } from '../../services/apis/deliveryPartnerService';
@@ -15,8 +16,10 @@ import {
 interface DeliveryPartnerState {
   partners: DeliveryPartner[];
   selectedPartner: DeliveryPartner | null;
+  onlinePartners: DeliveryPartner[];
   loading: boolean;
   loadingSelected: boolean;
+  loadingOnlinePartners: boolean;
   error: string | null;
   fetchPartners: (
     filter?: DeliveryPartnerFilter,
@@ -26,6 +29,7 @@ interface DeliveryPartnerState {
     id: string,
     sessionKey?: string,
   ) => Promise<DeliveryPartner | null>;
+  fetchOnlinePartners: (sessionKey?: string) => Promise<DeliveryPartner[]>;
   createPartner: (
     payload: DeliveryPartnerPayload,
     sessionKey?: string,
@@ -67,8 +71,10 @@ export const useDeliveryPartnerStore = create<DeliveryPartnerState>()(
   (set, get) => ({
     partners: [],
     selectedPartner: null,
+    onlinePartners: [],
     loading: false,
     loadingSelected: false,
+    loadingOnlinePartners: false,
     error: null,
 
     fetchPartners: async (filter, sessionKey) => {
@@ -105,6 +111,23 @@ export const useDeliveryPartnerStore = create<DeliveryPartnerState>()(
             ? error.message
             : 'Failed to fetch delivery partner';
         set({error: message, loadingSelected: false});
+        throw error;
+      }
+    },
+
+    fetchOnlinePartners: async (sessionKey?: string) => {
+      set({loadingOnlinePartners: true, error: null});
+
+      try {
+        const partners = await fetchOnlineDeliveryPartners(sessionKey);
+        set({onlinePartners: partners, loadingOnlinePartners: false});
+        return partners;
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch online delivery partners';
+        set({error: message, loadingOnlinePartners: false});
         throw error;
       }
     },

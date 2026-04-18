@@ -24,6 +24,7 @@ import {
   getDeliveryPartnerId,
 } from '../../services/apis/deliveryPartnerService';
 import {useDeliveryPartnerStore} from '../../store/deliveryPartners/useDeliveryPartnerStore';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 type Props = StackScreenProps<SettingsStackParamList, 'AddTransporter'>;
 
@@ -139,6 +140,22 @@ const normalizeMobileNumber = (value: unknown): string => {
   return String(value).trim();
 };
 
+const getDisplayMobileNumber = (value: unknown): string => {
+  const normalized = normalizeMobileNumber(value).replace(/\D/g, '');
+
+  if (normalized.length > 10 && normalized.startsWith('91')) {
+    return normalized.slice(2, 12);
+  }
+
+  return normalized.slice(0, 10);
+};
+
+const getApiMobileNumber = (value: string): string => {
+  const digits = value.replace(/\D/g, '');
+  const localNumber = digits.length > 10 ? digits.slice(-10) : digits;
+  return `91${localNumber}`;
+};
+
 const extractPartner = (value: any): DeliveryPartner | null => {
   if (!value) {
     return null;
@@ -173,7 +190,7 @@ const extractPartner = (value: any): DeliveryPartner | null => {
 
 const toFormState = (partner: DeliveryPartner): FormState => ({
   name: partner.name || partner.fullName || '',
-  mobileNumber: normalizeMobileNumber(
+  mobileNumber: getDisplayMobileNumber(
     partner.mobileNumber ||
       (partner as any).mobile ||
       (partner as any).phoneNumber ||
@@ -445,7 +462,7 @@ const AddTransporterScreen: React.FC<Props> = ({navigation, route}) => {
 
     const payload: DeliveryPartnerPayload = {
       name: form.name.trim(),
-      mobileNumber: form.mobileNumber.trim(),
+      mobileNumber: getApiMobileNumber(form.mobileNumber.trim()),
       email: form.email.trim() || undefined,
       address: form.address.trim() || undefined,
       gender: form.gender || undefined,
@@ -542,7 +559,12 @@ const AddTransporterScreen: React.FC<Props> = ({navigation, route}) => {
             <Text style={styles.label}>Mobile Number *</Text>
             <TextInput
               value={form.mobileNumber}
-              onChangeText={text => updateField('mobileNumber', text)}
+              onChangeText={text =>
+                updateField(
+                  'mobileNumber',
+                  text.replace(/\D/g, '').slice(0, 10),
+                )
+              }
               placeholder="Enter mobile number"
               placeholderTextColor="#94A3B8"
               style={[styles.input, errors.mobileNumber && styles.inputError]}
@@ -822,7 +844,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#0F172A',
   },
   loadingState: {
@@ -835,18 +857,18 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: '#475569',
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   sectionTitle: {
     marginTop: 8,
     marginBottom: 10,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#0F172A',
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
     color: '#334155',
     marginBottom: 6,
   },
@@ -868,7 +890,7 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#DC2626',
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
     marginBottom: 12,
     marginLeft: 2,
   },
@@ -887,7 +909,7 @@ const styles = StyleSheet.create({
   errorSummaryText: {
     color: '#DC2626',
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
     marginLeft: 8,
   },
   multilineInput: {
@@ -915,7 +937,7 @@ const styles = StyleSheet.create({
   },
   genderPillText: {
     color: '#334155',
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
     fontSize: 13,
   },
   genderPillTextActive: {
@@ -937,7 +959,7 @@ const styles = StyleSheet.create({
   },
   docTitle: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#0F172A',
   },
   docButton: {
@@ -952,7 +974,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 12,
     marginLeft: 5,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   docPreview: {
     width: '100%',
@@ -983,7 +1005,7 @@ const styles = StyleSheet.create({
   docPlaceholderText: {
     color: '#0F172A',
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   docPlaceholderTextError: {
     color: '#DC2626',
@@ -1008,7 +1030,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     color: '#FFFFFF',
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
 });
 

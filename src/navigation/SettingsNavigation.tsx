@@ -4,6 +4,9 @@ import SettingsScreen from '../screens/Settings/SettingScreen';
 import TransportersScreen from '../screens/Settings/TransportersScreen';
 import AddTransporterScreen from '../screens/Settings/AddTransporterScreen';
 import ConfigurationsScreen from '../screens/Settings/ConfigurationsScreen';
+import PagesPromotionalBannersScreen from '../screens/Settings/PagesPromotionalBannersScreen';
+import AddPromotionBannerScreen from '../screens/Settings/AddPromotionBannerScreen';
+import {PromotionBanner} from '../services/apis/pagesService';
 
 export type SettingsStackParamList = {
   SettingsHome: undefined;
@@ -14,6 +17,16 @@ export type SettingsStackParamList = {
       }
     | undefined;
   Configurations: undefined;
+  PagesPromotionalBanners: undefined;
+  AddPromotionBanner:
+    | {
+        mode?: 'create' | 'edit';
+        pageName?: string;
+        regionId?: string;
+        promotionId?: string;
+        promotionData?: PromotionBanner;
+      }
+    | undefined;
 };
 
 const Stack = createStackNavigator<SettingsStackParamList>();
@@ -30,6 +43,14 @@ const SettingsNavigation = () => {
       <Stack.Screen name="Transporters" component={TransportersScreen} />
       <Stack.Screen name="AddTransporter" component={AddTransporterScreen} />
       <Stack.Screen name="Configurations" component={ConfigurationsScreen} />
+      <Stack.Screen
+        name="PagesPromotionalBanners"
+        component={PagesPromotionalBannersScreen}
+      />
+      <Stack.Screen
+        name="AddPromotionBanner"
+        component={AddPromotionBannerScreen}
+      />
     </Stack.Navigator>
   );
 };

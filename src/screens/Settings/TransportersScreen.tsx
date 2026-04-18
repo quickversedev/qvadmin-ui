@@ -22,6 +22,7 @@ import {
   getDeliveryPartnerName,
 } from '../../services/apis/deliveryPartnerService';
 import {useDeliveryPartnerStore} from '../../store/deliveryPartners/useDeliveryPartnerStore';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 type Props = StackScreenProps<SettingsStackParamList, 'Transporters'>;
 
@@ -40,6 +41,19 @@ const getErrorMessage = (error: unknown) => {
   }
 
   return 'Unable to load delivery partners';
+};
+
+const getDisplayMobileNumber = (value?: string) => {
+  if (!value) {
+    return 'No mobile number';
+  }
+
+  const digits = String(value).replace(/\D/g, '');
+  if (digits.length > 10 && digits.startsWith('91')) {
+    return digits.slice(2, 12);
+  }
+
+  return digits || 'No mobile number';
 };
 
 const TransportersScreen: React.FC<Props> = ({navigation}) => {
@@ -143,7 +157,7 @@ const TransportersScreen: React.FC<Props> = ({navigation}) => {
           </View>
 
           <Text style={styles.transporterMeta} numberOfLines={1}>
-            {item.mobileNumber || 'No mobile number'}
+            {getDisplayMobileNumber(item.mobileNumber)}
           </Text>
           <Text style={styles.transporterMeta} numberOfLines={2}>
             {item.address || 'No address available'}
@@ -289,7 +303,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#0F172A',
   },
   addButton: {
@@ -303,7 +317,7 @@ const styles = StyleSheet.create({
   addText: {
     marginLeft: 4,
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     fontSize: 14,
   },
   errorBanner: {
@@ -321,7 +335,7 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     color: '#991B1B',
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
     flex: 1,
   },
   listContent: {
@@ -360,7 +374,7 @@ const styles = StyleSheet.create({
   transporterName: {
     flex: 1,
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#0F172A',
     marginRight: 10,
   },
@@ -369,7 +383,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#DCFCE7',
     color: '#166534',
     fontSize: 11,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     paddingHorizontal: 10,
     paddingVertical: 4,
     overflow: 'hidden',
@@ -406,7 +420,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     color: '#0F766E',
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   deleteActionText: {
     color: '#DC2626',
@@ -415,7 +429,7 @@ const styles = StyleSheet.create({
     width: '100%',
     color: '#94A3B8',
     fontSize: 11,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
     marginTop: 2,
   },
   loadingState: {
@@ -428,7 +442,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: '#475569',
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   emptyState: {
     flex: 1,
@@ -440,7 +454,7 @@ const styles = StyleSheet.create({
   emptyTitle: {
     marginTop: 14,
     fontSize: 18,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.outfitExtraBold,
     color: '#0F172A',
   },
   emptyText: {
@@ -459,7 +473,7 @@ const styles = StyleSheet.create({
   },
   emptyButtonText: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     fontSize: 14,
   },
 });

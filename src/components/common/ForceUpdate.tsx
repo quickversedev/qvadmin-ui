@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import useFetchUpdateData from '../../hooks/useFetchUpdateData';
 import DeviceInfo from 'react-native-device-info';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 const {height} = Dimensions.get('window');
 
@@ -164,7 +165,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     color: '#F3F4F6',
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
     textAlign: 'center',
   },
   subtitle: {
@@ -216,7 +217,7 @@ const styles = StyleSheet.create({
   },
   link: {
     color: '#FAE588',
-    // fontWeight: "600",
+    // fontFamily: FONT_FAMILY.bricolageMedium,
   },
 
   changeNumber: {
@@ -269,6 +270,6 @@ const styles = StyleSheet.create({
   retryButtonText: {
     color: 'white',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
 });

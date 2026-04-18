@@ -13,6 +13,7 @@ import {OrderStatus} from '../../types/Order';
 import {getStatusStyles} from './DashBoardUtil';
 import {useOrderStore} from '../../store/orders/useOrdersStore';
 import {Vendor} from '../../store/vendors/useVendorStore';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 type OrderCardProps = {
   vendor: Vendor;
@@ -37,7 +38,7 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
   };
   const statusStyles = getStatusStyles(status);
   const orderCount = getVendorOrdersCountByStatus(Number(shopId), status);
-  
+
   return (
     <View style={styles.card}>
       <TouchableOpacity style={styles.header} onPress={handleToggleExpand}>
@@ -104,12 +105,17 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     backgroundColor: '#fff',
-    borderRadius: 10,
+    borderRadius: 14,
     padding: 12,
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#e5e7eb',
     marginVertical: 5,
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.06,
+    shadowRadius: 9,
+    shadowOffset: {width: 0, height: 2},
+    elevation: 2,
   },
   header: {
     flexDirection: 'row',
@@ -128,10 +134,10 @@ const styles = StyleSheet.create({
   // },
   vendorName: {
     fontSize: 16,
-    fontWeight: '600',
     color: '#111',
     marginRight: 6,
     width: '50%',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   // statusStyle: {
   //   width: 12,
@@ -143,7 +149,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   callButton: {
-    backgroundColor: '#0057A0',
+    backgroundColor: '#0f62fe',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 6,
@@ -155,7 +161,7 @@ const styles = StyleSheet.create({
   callButtonText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   details: {
     marginTop: 12,
@@ -191,7 +197,7 @@ const styles = StyleSheet.create({
   countText: {
     color: 'white',
     fontSize: 10,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
 });
 

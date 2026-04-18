@@ -18,6 +18,7 @@ import {StackNavigationProp} from '@react-navigation/stack';
 import {ORDER_STATUS} from '../../assets/constants/constant';
 import {useRegionsStore} from '../../store/regions/useRegionsStore';
 import {useAuth} from '../../contexts/Login/AuthProvider';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 type OrderListScreenNavigationProp = StackNavigationProp<
   OrderStackParamList,
@@ -66,24 +67,29 @@ const OrderListScreen = () => {
   ];
 
   const renderFilterButtons = () => (
-    <View style={styles.filterContainer}>
-      {filterButtons.map(filter => (
-        <TouchableOpacity
-          key={filter.id}
-          style={[
-            styles.filterButton,
-            timeFilter === filter.id && styles.activeFilterButton,
-          ]}
-          onPress={() => setTimeFilter(filter.id)}>
-          <Text
+    <View style={styles.filterWrapper}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.filterContainer}>
+        {filterButtons.map(filter => (
+          <TouchableOpacity
+            key={filter.id}
             style={[
-              styles.filterButtonText,
-              timeFilter === filter.id && styles.activeFilterButtonText,
-            ]}>
-            {filter.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
+              styles.filterButton,
+              timeFilter === filter.id && styles.activeFilterButton,
+            ]}
+            onPress={() => setTimeFilter(filter.id)}>
+            <Text
+              style={[
+                styles.filterButtonText,
+                timeFilter === filter.id && styles.activeFilterButtonText,
+              ]}>
+              {filter.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
     </View>
   );
 
@@ -227,7 +233,7 @@ const OrderListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f3f7ff',
     paddingHorizontal: 10,
   },
   centered: {
@@ -237,17 +243,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   errorText: {
-    color: 'red',
+    color: '#b91c1c',
     marginBottom: 20,
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   retryButton: {
-    backgroundColor: '#4169E1',
-    padding: 10,
-    borderRadius: 5,
+    backgroundColor: '#0f62fe',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
   },
   retryButtonText: {
     color: 'white',
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   emptyStateContainer: {
     flex: 1,
@@ -264,38 +272,45 @@ const styles = StyleSheet.create({
   },
   emptyStateTitle: {
     fontSize: 22,
-    fontWeight: 'bold',
     marginBottom: 10,
-    color: '#333',
+    color: '#0f172a',
+    fontFamily: FONT_FAMILY.outfitExtraBold,
   },
   emptyStateText: {
     fontSize: 16,
-    color: '#666',
+    color: '#475569',
     textAlign: 'center',
     marginBottom: 20,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   filterContainer: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginVertical: 10,
-    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingRight: 8,
+  },
+  filterWrapper: {
+    width: '100%',
+    minHeight: 56,
   },
   filterButton: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 8,
-    margin: 4,
-    borderRadius: 10,
-    backgroundColor: '#e0e0e0',
+    marginRight: 8,
+    borderRadius: 999,
+    backgroundColor: '#e2e8f0',
   },
   activeFilterButton: {
-    backgroundColor: '#4169E1',
+    backgroundColor: '#0f62fe',
   },
   filterButtonText: {
-    color: '#333',
-    fontSize: 14,
+    color: '#334155',
+    fontSize: 13,
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   activeFilterButtonText: {
     color: 'white',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
 });
 

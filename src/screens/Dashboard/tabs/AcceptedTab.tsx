@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {
+  ActivityIndicator,
   ScrollView,
   View,
   Text,
@@ -12,6 +13,9 @@ import {Vendor} from '../../../store/vendors/useVendorStore';
 import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
 import OrderCardList from '../screens/OrderCardList';
 import {ORDER_STATUS} from '../../../assets/constants/constant';
+import {useAuth} from '../../../contexts/Login/AuthProvider';
+import {useDeliveryPartnerStore} from '../../../store/deliveryPartners/useDeliveryPartnerStore';
+import {FONT_FAMILY} from '../../../assets/constants/fonts';
 
 interface AcceptedTabProps {
   vendors: Vendor[];
@@ -23,10 +27,20 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
   refreshing = false,
   onRefresh,
 }) => {
+  const {authData} = useAuth();
   const {getVendorOrdersByStatus} = useOrderStore();
+  const {
+    onlinePartners,
+    loadingOnlinePartners,
+    fetchOnlinePartners,
+    error: deliveryPartnerError,
+  } = useDeliveryPartnerStore();
   const [vendorsWithAcceptedOrders, setVendorsWithAcceptedOrders] = useState<
     Vendor[]
   >([]);
+  const [assignedPartnerByOrder, setAssignedPartnerByOrder] = useState<
+    Record<string, string>
+  >({});
 
   useEffect(() => {
     const fetchAcceptedVendors = () => {
@@ -47,9 +61,40 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
     }
   }, [getVendorOrdersByStatus, vendors]);
 
+  useEffect(() => {
+    if (!authData?.jwt) {
+      return;
+    }
+
+    fetchOnlinePartners(authData.jwt).catch(error => {
+      console.log('Failed to fetch online delivery partners', error);
+    });
+  }, [authData?.jwt, fetchOnlinePartners]);
+
+  const acceptedOrderCount = vendorsWithAcceptedOrders.reduce(
+    (total, vendor) =>
+      total +
+      getVendorOrdersByStatus(Number(vendor.shopId), ORDER_STATUS.ACCEPTED)
+        .length,
+    0,
+  );
+
+  const assignedOrderCount = Object.keys(assignedPartnerByOrder).length;
+
+  const handleAssignPartner = (orderId: string, partnerId: string) => {
+    if (!orderId || !partnerId) {
+      return;
+    }
+
+    setAssignedPartnerByOrder(prev => ({
+      ...prev,
+      [orderId]: partnerId,
+    }));
+  };
+
   return (
     <ScrollView
-      style={{marginHorizontal: 16}}
+      style={styles.wrapper}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -58,6 +103,35 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
           tintColor="#f04d7d"
         />
       }>
+      <View style={styles.heroCard}>
+        <View style={styles.heroTopRow}>
+          <Text style={styles.heroTitle}>Accepted Orders Control Desk</Text>
+          {loadingOnlinePartners ? (
+            <ActivityIndicator size="small" color="#0369A1" />
+          ) : null}
+        </View>
+        <Text style={styles.heroSubtitle}>
+          Assign available delivery partners to accepted orders quickly.
+        </Text>
+        <View style={styles.heroStatsRow}>
+          <View style={styles.heroStatBox}>
+            <Text style={styles.heroStatValue}>{acceptedOrderCount}</Text>
+            <Text style={styles.heroStatLabel}>Accepted</Text>
+          </View>
+          <View style={styles.heroStatBox}>
+            <Text style={styles.heroStatValue}>{onlinePartners.length}</Text>
+            <Text style={styles.heroStatLabel}>Online Partners</Text>
+          </View>
+          <View style={styles.heroStatBox}>
+            <Text style={styles.heroStatValue}>{assignedOrderCount}</Text>
+            <Text style={styles.heroStatLabel}>Assigned</Text>
+          </View>
+        </View>
+        {!!deliveryPartnerError && (
+          <Text style={styles.heroErrorText}>{deliveryPartnerError}</Text>
+        )}
+      </View>
+
       {vendorsWithAcceptedOrders?.length === 0 ? (
         <View style={[styles.stateContainer, styles.emptyContainer]}>
           <Image
@@ -79,6 +153,10 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
               key={`accepted_orders_${vendor.shopId}`}
               vendor={vendor}
               status={ORDER_STATUS.ACCEPTED}
+              showAssignment
+              onlinePartners={onlinePartners}
+              assignedPartnerByOrder={assignedPartnerByOrder}
+              onAssignPartner={handleAssignPartner}
             />
           </CollapsableVendor>
         ))
@@ -90,6 +168,66 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
 export default AcceptedTab;
 
 const styles = StyleSheet.create({
+  wrapper: {
+    marginHorizontal: 16,
+  },
+  heroCard: {
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#D1EAFE',
+    backgroundColor: '#EFF8FF',
+  },
+  heroTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  heroTitle: {
+    fontSize: 16,
+    color: '#0C4A6E',
+    fontFamily: FONT_FAMILY.outfitExtraBold,
+  },
+  heroSubtitle: {
+    marginTop: 4,
+    marginBottom: 12,
+    fontSize: 13,
+    color: '#0369A1',
+    fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  heroStatsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  heroStatBox: {
+    flex: 1,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    alignItems: 'center',
+  },
+  heroStatValue: {
+    fontSize: 17,
+    color: '#075985',
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  heroStatLabel: {
+    marginTop: 2,
+    fontSize: 11,
+    color: '#0C4A6E',
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  heroErrorText: {
+    marginTop: 10,
+    color: '#b91c1c',
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
   stateContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -113,10 +251,10 @@ const styles = StyleSheet.create({
   },
   stateTitle: {
     fontSize: 20,
-    fontWeight: '600',
     color: '#333',
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   stateSubtitle: {
     fontSize: 16,
@@ -124,5 +262,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
 });

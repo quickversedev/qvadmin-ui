@@ -49,13 +49,13 @@ export const API_CONFIG = {
   /** Base URL for the QuickVerse API server */
   baseURL: 'http://prd.quickverse.in',
   // baseURL: 'https://superscientifically-revengeless-ronald.ngrok-free.dev',
+  // baseURL: 'http://13.204.233.104:8080',
 
   /** Default timeout for all requests (30 seconds) */
   timeout: 30000,
 
   /** Default headers applied to all requests */
   headers: {
-    'Content-Type': 'application/json',
     'Request-Origin': 'CAPTAIN', // Identifies this as a customer app request
   },
 } as const;

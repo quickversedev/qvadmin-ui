@@ -13,10 +13,9 @@ import {
 
 import {Region, useRegionsStore} from '../../store/regions/useRegionsStore';
 import Feather from 'react-native-vector-icons/Feather';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 const RegionSelector = ({onSelect}: {onSelect: (region: Region) => void}) => {
-
-
   const {
     regions,
     selectedRegion,
@@ -82,14 +81,14 @@ const RegionSelector = ({onSelect}: {onSelect: (region: Region) => void}) => {
           {selectedRegion ? (
             <>
               <Feather name="map-pin" color="#003F66" size={24} />
-                <Text style={styles.selectedRegionText}>
-                  {selectedRegion.displayName}
-                </Text>
-              </>
-            ) : (
-              <>
-                <Feather name="map-pin" color="#003F66" size={24} />
-                <Text style={styles.selectedRegionText}>Select Region</Text>
+              <Text style={styles.selectedRegionText}>
+                {selectedRegion.displayName}
+              </Text>
+            </>
+          ) : (
+            <>
+              <Feather name="map-pin" color="#003F66" size={24} />
+              <Text style={styles.selectedRegionText}>Select Region</Text>
             </>
           )}
         </View>
@@ -125,7 +124,6 @@ const RegionSelector = ({onSelect}: {onSelect: (region: Region) => void}) => {
                     {item.displayName}
                   </Text>
                   <Text style={styles.regionName}>{item.regionName}</Text>
-                  
                 </TouchableOpacity>
               )}
               ItemSeparatorComponent={() => <View style={styles.separator} />}
@@ -148,7 +146,7 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   selectorButton: {
-    padding: 15,
+    paddingTop: 16,
   },
   buttonContent: {
     flexDirection: 'row',
@@ -160,8 +158,9 @@ const styles = StyleSheet.create({
   },
   selectedRegionText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#003F66',
+    marginLeft: 8,
   },
   buttonText: {
     fontSize: 16,
@@ -203,7 +202,7 @@ const styles = StyleSheet.create({
   },
   regionDisplayName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
     marginBottom: 4,
   },
   regionName: {

@@ -5,10 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   GestureResponderEvent,
+  ViewStyle,
 } from 'react-native';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 interface OrderStatusCardProps {
-  size: 's' | 'm' | 'l';
+  size: 'm' | 'l';
   label: string;
   value: number;
   color: string;
@@ -30,22 +32,6 @@ const DashboardTile: React.FC<OrderStatusCardProps> = ({
   const currentSize = sizeStyles[size];
 
   return (
-    // <View
-    //   style={[
-    //     styles.container,
-    //     {
-    //       backgroundColor: color,
-    //       width: currentSize.width,
-    //       height: currentSize.height,
-    //     },
-    //   ]}>
-    //   <Text style={[styles.valueText, {fontSize: currentSize.fontSizeValue}]}>
-    //     {value}
-    //   </Text>
-    //   <Text style={[styles.labelText, {fontSize: currentSize.fontSizeLabel}]}>
-    //     {label} ›
-    //   </Text>
-    // </View>
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.7}
@@ -56,7 +42,7 @@ const DashboardTile: React.FC<OrderStatusCardProps> = ({
           backgroundColor: color,
           width: currentSize.width,
           height: currentSize.height,
-        },
+        } as ViewStyle,
       ]}>
       <Text style={[styles.valueText, {fontSize: currentSize.fontSizeValue}]}>
         {value}
@@ -70,19 +56,27 @@ const DashboardTile: React.FC<OrderStatusCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 16,
-    padding: 10,
+    borderRadius: 18,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     margin: 8,
+    borderWidth: 1,
+    borderColor: '#dbe9ff',
+    shadowColor: '#0f172a',
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    shadowOffset: {width: 0, height: 3},
+    elevation: 2,
   },
   valueText: {
-    fontWeight: 'bold',
-    color: '#000',
+    color: '#0f172a',
+    fontFamily: FONT_FAMILY.outfitExtraBold,
   },
   labelText: {
-    fontWeight: '600',
-    color: '#000',
+    color: '#0f172a',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
 });
 

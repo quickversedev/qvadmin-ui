@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 interface Props {
   visible: boolean;
@@ -105,7 +106,7 @@ const styles = StyleSheet.create({
   },
   titleText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: 'black',
     marginBottom: 6,
     textAlign: 'center',

@@ -5,6 +5,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {useAuth} from '../../contexts/Login/AuthProvider';
 import {SettingsStackParamList} from '../../navigation/SettingsNavigation';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 type Props = StackScreenProps<SettingsStackParamList, 'SettingsHome'>;
 
@@ -77,6 +78,29 @@ const SettingsScreen: React.FC<Props> = ({navigation}) => {
               color="#64748B"
             />
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.optionRow}
+            onPress={() => navigation.navigate('PagesPromotionalBanners')}
+            activeOpacity={0.8}>
+            <View style={styles.optionLeft}>
+              <View style={styles.iconWrap}>
+                <MaterialCommunityIcons
+                  name="image-multiple-outline"
+                  size={20}
+                  color="#0F766E"
+                />
+              </View>
+              <Text style={styles.optionLabel}>
+                Pages / Promotional Banners
+              </Text>
+            </View>
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={22}
+              color="#64748B"
+            />
+          </TouchableOpacity>
         </View>
 
         <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
@@ -99,7 +123,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.outfitExtraBold,
     color: '#0F172A',
     marginBottom: 18,
   },
@@ -135,7 +159,7 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
     color: '#1E293B',
   },
   signOutButton: {
@@ -148,7 +172,7 @@ const styles = StyleSheet.create({
   },
   signOutButtonText: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     fontSize: 16,
   },
 });

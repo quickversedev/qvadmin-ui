@@ -20,6 +20,7 @@ import CountryPicker, {
 import {LoginStackParamList} from '../../navigation/LoginNavigation';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {useNavigation} from '@react-navigation/native';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 const {height} = Dimensions.get('window');
 type LoginScreenNavigationProp = StackNavigationProp<
@@ -149,7 +150,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     color: '#F3F4F6',
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
     textAlign: 'center',
   },
   subtitle: {

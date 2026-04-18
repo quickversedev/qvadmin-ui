@@ -24,6 +24,8 @@ export interface DeliveryPartner {
   drivingLicence?: string;
   rcDocument?: string;
   isDeleted?: boolean;
+  isOnline?: boolean;
+  onlineStatus?: boolean | string;
   createdAt?: string;
   updatedAt?: string;
   created_at?: string;
@@ -70,6 +72,57 @@ const buildHeaders = (sessionKey?: string, multipart = false) => {
 };
 
 const validateStatus = (status: number) => status >= 200 && status <= 302;
+
+const normalizeDeliveryPartnersResponse = (
+  response: unknown,
+): DeliveryPartner[] => {
+  if (Array.isArray(response)) {
+    return response as DeliveryPartner[];
+  }
+
+  const payload = response as {
+    response?:
+      | DeliveryPartner[]
+      | {
+          partners?: DeliveryPartner[];
+          deliveryPartners?: DeliveryPartner[];
+          data?: DeliveryPartner[];
+        };
+    partners?: DeliveryPartner[];
+    deliveryPartners?: DeliveryPartner[];
+    data?: DeliveryPartner[];
+  };
+
+  if (Array.isArray(payload?.response)) {
+    return payload.response;
+  }
+
+  if (Array.isArray(payload?.response?.partners)) {
+    return payload.response.partners;
+  }
+
+  if (Array.isArray(payload?.response?.deliveryPartners)) {
+    return payload.response.deliveryPartners;
+  }
+
+  if (Array.isArray(payload?.response?.data)) {
+    return payload.response.data;
+  }
+
+  if (Array.isArray(payload?.partners)) {
+    return payload.partners;
+  }
+
+  if (Array.isArray(payload?.deliveryPartners)) {
+    return payload.deliveryPartners;
+  }
+
+  if (Array.isArray(payload?.data)) {
+    return payload.data;
+  }
+
+  return [];
+};
 
 const buildFormData = (payload: DeliveryPartnerPayload) => {
   const formData = new FormData();
@@ -139,6 +192,23 @@ export const fetchDeliveryPartners = async (
   );
 
   return response;
+};
+
+export const fetchOnlineDeliveryPartners = async (
+  sessionKey?: string,
+): Promise<DeliveryPartner[]> => {
+  const response = await apiCall<unknown>(
+    axiosInstance.get(
+      `${DELIVERY_PARTNER_BASE_PATH}getPartnersByOnlineStatus`,
+      {
+        headers: buildHeaders(sessionKey),
+        validateStatus,
+      },
+    ),
+  );
+  console.log(response, 'Online Delivery Partners Response');
+
+  return normalizeDeliveryPartnersResponse(response);
 };
 
 export const fetchDeliveryPartnerById = async (
@@ -220,6 +290,7 @@ export const deleteDeliveryPartner = async (
 
 export const deliveryPartnerService = {
   fetchDeliveryPartners,
+  fetchOnlineDeliveryPartners,
   fetchDeliveryPartnerById,
   createDeliveryPartner,
   updateDeliveryPartner,

@@ -32,6 +32,7 @@ import {
   getServiceTypeFromCategory,
   resolvePricingForService,
 } from '../../../utils/pricingConfigUtils';
+import {FONT_FAMILY} from '../../../assets/constants/fonts';
 
 type ViewOrderRouteProp = RouteProp<HomeScreenStackParamList, 'ViewOrder'>;
 
@@ -257,9 +258,7 @@ const ViewOrderScreen = () => {
       </View>
 
       <View style={styles.sectionCard}>
-        <Text style={styles.sectionTitle}>
-          Items ({order.orderItem?.length})
-        </Text>
+        <Text style={styles.sectionTitle}>Items ({order?.totalItemCount})</Text>
         {order.orderItem?.length ? (
           order.orderItem.map(item => (
             <View key={item.id} style={styles.itemRow}>
@@ -529,7 +528,7 @@ const styles = StyleSheet.create({
   orderId: {
     color: '#ffffff',
     fontSize: 20,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.outfitExtraBold,
   },
   orderTime: {
     marginTop: 6,
@@ -545,7 +544,7 @@ const styles = StyleSheet.create({
   statusChipText: {
     color: '#0C5D9B',
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   sectionCard: {
     backgroundColor: '#fff',
@@ -562,7 +561,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#2d2d2d',
     marginBottom: 10,
   },
@@ -580,7 +579,7 @@ const styles = StyleSheet.create({
   },
   itemQty: {
     color: '#5a5a5a',
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   emptyText: {
     color: '#757575',
@@ -593,7 +592,7 @@ const styles = StyleSheet.create({
   },
   customerName: {
     color: '#1d1d1d',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     fontSize: 16,
   },
   inlineButton: {
@@ -607,7 +606,7 @@ const styles = StyleSheet.create({
   inlineButtonText: {
     color: '#0057A0',
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     marginLeft: 6,
   },
   subtleText: {
@@ -646,7 +645,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     fontSize: 12,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
     backgroundColor: '#F2F8FD',
   },
   addressText: {
@@ -660,7 +659,7 @@ const styles = StyleSheet.create({
   },
   linkButtonText: {
     color: '#0057A0',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     fontSize: 14,
   },
   billRow: {
@@ -676,7 +675,7 @@ const styles = StyleSheet.create({
   billValue: {
     color: '#2d2d2d',
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   billAmountRow: {
     flexDirection: 'row' as const,
@@ -696,12 +695,12 @@ const styles = StyleSheet.create({
   billTotalLabel: {
     color: '#151515',
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   billTotalValue: {
     color: '#151515',
     fontSize: 15,
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.outfitExtraBold,
   },
   paymentRow: {
     marginTop: 4,
@@ -715,7 +714,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     fontSize: 12,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   timelineRow: {
     flexDirection: 'row',
@@ -729,7 +728,7 @@ const styles = StyleSheet.create({
   timelineLabel: {
     fontSize: 14,
     color: '#2d2d2d',
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   timelineValue: {
     fontSize: 13,
@@ -738,7 +737,7 @@ const styles = StyleSheet.create({
   },
   errorTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     marginBottom: 6,
     color: '#222',
   },
@@ -756,7 +755,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: '#fff',
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   subtitle: {
     marginTop: 8,

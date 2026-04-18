@@ -12,6 +12,7 @@ import {Vendor} from '../../../store/vendors/useVendorStore';
 import CollapsableVendor from '../../../components/Dashboard/CollapsableVendor';
 import OrderCardList from '../screens/OrderCardList';
 import {ORDER_STATUS} from '../../../assets/constants/constant';
+import {FONT_FAMILY} from '../../../assets/constants/fonts';
 
 interface InTransitTabProps {
   vendors: Vendor[];
@@ -113,10 +114,10 @@ const styles = StyleSheet.create({
   },
   stateTitle: {
     fontSize: 20,
-    fontWeight: '600',
     color: '#333',
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   stateSubtitle: {
     fontSize: 16,
@@ -124,5 +125,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
 });

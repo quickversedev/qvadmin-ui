@@ -26,6 +26,7 @@ import {
   getServiceTypeFromCategory,
   resolvePricingForService,
 } from '../../utils/pricingConfigUtils';
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 type OrderDetailsModalProps = {
   visible: boolean;
@@ -142,13 +143,19 @@ const OrderDetailsModal = ({
                 <View style={styles.itemRow}>
                   <Text
                     style={
-                      styles.itemName && {fontWeight: 'bold', fontSize: 18}
+                      styles.itemName && {
+                        fontFamily: FONT_FAMILY.outfitBold,
+                        fontSize: 18,
+                      }
                     }>
                     Total Item Count
                   </Text>
                   <Text
                     style={
-                      styles.itemQuantity && {fontWeight: 'bold', fontSize: 18}
+                      styles.itemQuantity && {
+                        fontFamily: FONT_FAMILY.outfitBold,
+                        fontSize: 18,
+                      }
                     }>
                     {totalItemCount}
                   </Text>
@@ -407,7 +414,7 @@ const styles = StyleSheet.create({
   },
   orderIdText: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#000',
   },
   orderTime: {
@@ -420,7 +427,7 @@ const styles = StyleSheet.create({
   },
   restaurantName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#000',
   },
 
@@ -446,13 +453,13 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#666',
     marginBottom: 8,
   },
   customerNameText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
     color: '#000',
     marginBottom: 5,
   },
@@ -482,7 +489,7 @@ const styles = StyleSheet.create({
   doneBadgeText: {
     color: '#00796b',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   directionsButton: {
     marginTop: 10,
@@ -490,7 +497,7 @@ const styles = StyleSheet.create({
   directionsButtonText: {
     color: '#0057A0',
     fontSize: 14,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   itemsContainer: {
     marginTop: 8,
@@ -521,7 +528,7 @@ const styles = StyleSheet.create({
   timelineLabel: {
     fontSize: 14,
     color: '#333',
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   timelineTime: {
     fontSize: 13,
@@ -561,7 +568,7 @@ const styles = StyleSheet.create({
   billAmount: {
     fontSize: 14,
     color: '#333',
-    fontWeight: '500',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   billAmountRow: {
     flexDirection: 'row' as const,
@@ -576,12 +583,12 @@ const styles = StyleSheet.create({
   billTotalLabel: {
     fontSize: 16,
     color: '#000',
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   billTotalAmount: {
     fontSize: 16,
     color: '#000',
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   billDivider: {
     height: 1,

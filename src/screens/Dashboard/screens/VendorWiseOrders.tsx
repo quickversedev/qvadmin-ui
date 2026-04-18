@@ -23,6 +23,7 @@ import {ORDER_STATUS} from '../../../assets/constants/constant';
 import {useOrderStore} from '../../../store/orders/useOrdersStore';
 import {useRegionsStore} from '../../../store/regions/useRegionsStore';
 import {useAuth} from '../../../contexts/Login/AuthProvider';
+import {FONT_FAMILY} from '../../../assets/constants/fonts';
 
 type VendorWiseOrdersRouteProp = RouteProp<OrderStackParamList, 'VendorOrders'>;
 
@@ -270,38 +271,40 @@ const VendorWiseOrders: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f3f7ff',
   },
   contentContainer: {
     flex: 1,
   },
   tabWrapper: {
     borderBottomWidth: 1,
-    borderBottomColor: '#d1d1d1',
+    borderBottomColor: '#dbe4f6',
+    marginBottom: 12,
   },
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#eef3ff',
+    paddingVertical: 6,
   },
   tabButton: {
     alignItems: 'center',
     paddingHorizontal: 16,
   },
   tabText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#5c5c5c',
+    fontSize: 15,
+    color: '#475569',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   activeTabText: {
-    color: '#f04d7d',
+    color: '#0f62fe',
   },
   activeUnderline: {
-    marginTop: 10,
-    height: 5,
+    marginTop: 8,
+    height: 4,
     width: '90%',
-    backgroundColor: '#f04d7d',
-    borderRadius: 2,
+    backgroundColor: '#0f62fe',
+    borderRadius: 999,
   },
   stateContainer: {
     flex: 1,
@@ -326,10 +329,10 @@ const styles = StyleSheet.create({
   },
   stateTitle: {
     fontSize: 20,
-    fontWeight: '600',
     color: '#333',
     marginBottom: 8,
     textAlign: 'center',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   stateSubtitle: {
     fontSize: 16,
@@ -337,9 +340,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 24,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   retryButton: {
-    backgroundColor: '#f04d7d',
+    backgroundColor: '#0f62fe',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
@@ -347,15 +351,15 @@ const styles = StyleSheet.create({
   },
   retryButtonText: {
     color: 'white',
-    fontWeight: '600',
     fontSize: 16,
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   tabContent: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   countBadge: {
-    backgroundColor: '#f04d7d',
+    backgroundColor: '#0f62fe',
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
@@ -367,7 +371,7 @@ const styles = StyleSheet.create({
   countText: {
     color: 'white',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
 });
 

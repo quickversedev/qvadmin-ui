@@ -21,6 +21,7 @@ import {
 } from '../../services/apis/pricingConfigService';
 import {useAuth} from '../../contexts/Login/AuthProvider';
 import {SafeAreaView} from 'react-native-safe-area-context'; // Add this import
+import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 type Props = StackScreenProps<SettingsStackParamList, 'Configurations'>;
 
@@ -571,7 +572,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     color: '#334155',
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   scrollContent: {
     paddingBottom: 20,
@@ -596,12 +597,12 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#0F172A',
   },
   sectionLabel: {
     fontSize: 14,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#334155',
     marginBottom: 8,
     marginTop: 6,
@@ -626,7 +627,7 @@ const styles = StyleSheet.create({
   typePillText: {
     color: '#334155',
     fontSize: 13,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   typePillTextActive: {
     color: '#FFFFFF',
@@ -641,7 +642,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     color: '#0F172A',
   },
   cardTitleRow: {
@@ -692,12 +693,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#64748B',
     textDecorationLine: 'line-through',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   actualValue: {
     fontSize: 18,
     color: '#115E59',
-    fontWeight: '800',
+    fontFamily: FONT_FAMILY.outfitExtraBold,
   },
   hintText: {
     marginTop: 8,
@@ -713,7 +714,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     color: '#0F172A',
     fontSize: 14,
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   inputActive: {
     borderColor: '#2DD4BF',
@@ -728,7 +729,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     textAlign: 'right',
     color: '#0F172A',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   rowBetween: {
     flexDirection: 'row',
@@ -744,12 +745,12 @@ const styles = StyleSheet.create({
   rowLabel: {
     fontSize: 14,
     color: '#334155',
-    fontWeight: '600',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   rowValue: {
     fontSize: 15,
     color: '#0F172A',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   actionsRow: {
     flexDirection: 'row',
@@ -767,7 +768,7 @@ const styles = StyleSheet.create({
   },
   cancelBtnText: {
     color: '#334155',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     fontSize: 13,
   },
   saveBtn: {
@@ -778,7 +779,7 @@ const styles = StyleSheet.create({
   },
   saveBtnText: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontFamily: FONT_FAMILY.outfitBold,
     fontSize: 13,
   },
   disabledBtn: {
