@@ -69,7 +69,8 @@ export interface Order {
 
 interface OrderResponse {
   orders: {
-    order: Order[];
+    order: Order[] | null;
+    ordersAsList: Order[] | null;
   };
 }
 
@@ -150,12 +151,16 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
         axiosInstance.get(endpoint, withHeaders(headers)),
       );
 
-      const parsedOrders = response.orders.order.map(order => {
-        let customerAddress = order.customerAddress;
-
+      const ordersData = response?.orders;
+      const rawOrders: Order[] =
+        ordersData?.ordersAsList ??
+        ordersData?.order ??
+        (Array.isArray(ordersData) ? ordersData : []);
+      const parsedOrders = rawOrders.map(order => {
         return {
           ...order,
-          customerAddress,
+          shop: order.shop ?? (order as any).shopDetails,
+          customerAddress: order.customerAddress,
           acceptedDate: order.acceptedDate ?? '',
           completedDate: order.completedDate ?? '',
           rejectedDate: order.rejectedDate ?? '',
