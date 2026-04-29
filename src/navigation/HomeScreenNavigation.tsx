@@ -3,6 +3,7 @@ import {createStackNavigator} from '@react-navigation/stack';
 import WebViewScreen from '../screens/webview/WebView';
 import HomeScreen from '../screens/Home/HomeScreen';
 import ViewOrderScreen from '../screens/Dashboard/screens/ViewOrder';
+import {FONT_FAMILY} from '../assets/constants/fonts';
 
 export type HomeScreenStackParamList = {
   HomeScreen: undefined;
@@ -38,7 +39,15 @@ const HomeScreenNavigation = () => {
       <Stack.Screen
         name="ViewOrder"
         component={ViewOrderScreen}
-        options={{title: 'Order Details', headerShown: true}}
+        options={{
+          title: 'Order Details',
+          headerShown: true,
+          headerTitleStyle: {
+            fontFamily: FONT_FAMILY.outfitBold,
+            fontSize: 18,
+          },
+          headerTintColor: '#0F172A',
+        }}
       />
     </Stack.Navigator>
   );

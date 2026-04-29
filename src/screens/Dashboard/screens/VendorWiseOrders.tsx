@@ -191,7 +191,10 @@ const VendorWiseOrders: React.FC = () => {
               key={tabItem}
               ref={setTabRef(tabItem)}
               onPress={() => setActiveTab(tabItem)}
-              style={styles.tabButton}>
+              style={[
+                styles.tabButton,
+                activeTab === tabItem && styles.activeTabButton,
+              ]}>
               <View style={styles.tabContent}>
                 <Text
                   style={[
@@ -201,14 +204,21 @@ const VendorWiseOrders: React.FC = () => {
                   {tabItem}
                 </Text>
                 {getCountForTab(tabItem) > 0 && (
-                  <View style={styles.countBadge}>
-                    <Text style={styles.countText}>
+                  <View
+                    style={[
+                      styles.countBadge,
+                      activeTab === tabItem && styles.activeCountBadge,
+                    ]}>
+                    <Text
+                      style={[
+                        styles.countText,
+                        activeTab === tabItem && styles.activeCountText,
+                      ]}>
                       {getCountForTab(tabItem)}
                     </Text>
                   </View>
                 )}
               </View>
-              {activeTab === tabItem && <View style={styles.activeUnderline} />}
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -277,34 +287,37 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   tabWrapper: {
-    borderBottomWidth: 1,
-    borderBottomColor: '#dbe4f6',
-    marginBottom: 12,
+    marginTop: 6,
+    marginBottom: 10,
+    paddingHorizontal: 12,
   },
   tabContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#eef3ff',
+    alignItems: 'center',
     paddingVertical: 6,
+    paddingRight: 10,
   },
   tabButton: {
-    alignItems: 'center',
-    paddingHorizontal: 16,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#E2E8F0',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 8,
+  },
+  activeTabButton: {
+    backgroundColor: '#0F62FE',
+    borderColor: '#0F62FE',
   },
   tabText: {
-    fontSize: 15,
+    fontSize: 13,
     color: '#475569',
-    fontFamily: FONT_FAMILY.outfitBold,
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   activeTabText: {
-    color: '#0f62fe',
-  },
-  activeUnderline: {
-    marginTop: 8,
-    height: 4,
-    width: '90%',
-    backgroundColor: '#0f62fe',
-    borderRadius: 999,
+    color: '#FFFFFF',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   stateContainer: {
     flex: 1,
@@ -357,21 +370,27 @@ const styles = StyleSheet.create({
   tabContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 6,
   },
   countBadge: {
-    backgroundColor: '#0f62fe',
+    backgroundColor: '#64748B',
     borderRadius: 10,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    marginLeft: 4,
     minWidth: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  activeCountBadge: {
+    backgroundColor: '#DBEAFE',
+  },
   countText: {
-    color: 'white',
+    color: '#FFFFFF',
     fontSize: 12,
     fontFamily: FONT_FAMILY.outfitBold,
+  },
+  activeCountText: {
+    color: '#1D4ED8',
   },
 });
 

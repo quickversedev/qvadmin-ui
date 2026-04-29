@@ -25,6 +25,7 @@ import {
   PromotionUploadFile,
   updatePromotion,
 } from '../../services/apis/promotionService';
+import {useDevModeStore} from '../../store/app/useDevModeStore';
 
 type Props = StackScreenProps<SettingsStackParamList, 'AddPromotionBanner'>;
 
@@ -62,6 +63,7 @@ const getErrorMessage = (error: unknown) => {
 };
 
 const AddPromotionBannerScreen: React.FC<Props> = ({navigation, route}) => {
+  const isDevMode = useDevModeStore(state => state.isDevMode);
   const {authData} = useAuth();
   const vendors = useVendorStore(state => state.vendors);
   const vendorsLoading = useVendorStore(state => state.loading);
@@ -443,20 +445,22 @@ const AddPromotionBannerScreen: React.FC<Props> = ({navigation, route}) => {
             <TextInput
               value={form.size}
               onChangeText={value => updateField('size', value)}
-              style={styles.input}
+              style={[styles.input, styles.readOnlyInput]}
               placeholder="Small"
               placeholderTextColor="#94A3B8"
-              editable={!saving}
+              editable={false}
+              selectTextOnFocus={false}
             />
 
             <Text style={styles.inputLabel}>Background Color</Text>
             <TextInput
               value={form.backgroundColor}
               onChangeText={value => updateField('backgroundColor', value)}
-              style={styles.input}
+              style={[styles.input, styles.readOnlyInput]}
               placeholder="#FFFFFF"
               placeholderTextColor="#94A3B8"
-              editable={!saving}
+              editable={false}
+              selectTextOnFocus={false}
             />
 
             <Text style={styles.inputLabel}>Sequence *</Text>

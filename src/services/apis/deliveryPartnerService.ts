@@ -12,7 +12,6 @@ export interface DeliveryPartner {
   id?: string;
   dpId?: string;
   deliveryPartnerId?: string;
-  _id?: string;
   name?: string;
   fullName?: string;
   mobileNumber?: string;
@@ -26,6 +25,9 @@ export interface DeliveryPartner {
   isDeleted?: boolean;
   isOnline?: boolean;
   onlineStatus?: boolean | string;
+  latitude?: number | string | null;
+  longitude?: number | string | null;
+  lastLocationUpdatedAt?: string | null;
   createdAt?: string;
   updatedAt?: string;
   created_at?: string;
@@ -169,7 +171,7 @@ const buildFormData = (payload: DeliveryPartnerPayload) => {
 };
 
 export const getDeliveryPartnerId = (partner: DeliveryPartner) =>
-  partner.id || partner.dpId || partner.deliveryPartnerId || partner._id || '';
+  partner.id || partner.dpId || partner.deliveryPartnerId;
 
 export const getDeliveryPartnerName = (partner: DeliveryPartner) =>
   partner.name || partner.fullName || 'Unnamed Partner';

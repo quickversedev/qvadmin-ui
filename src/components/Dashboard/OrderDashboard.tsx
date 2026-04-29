@@ -97,14 +97,16 @@ const OrderListScreen = () => {
     return (
       <View style={styles.emptyStateContainer}>
         {renderFilterButtons()}
-        <Image
-          source={require('../../assets/images/task-list.png')}
-          style={styles.emptyStateImage}
-        />
-        <Text style={styles.emptyStateTitle}>No Region Selected</Text>
-        <Text style={styles.emptyStateText}>
-          Please select a Region to view order summary
-        </Text>
+        <View style={styles.emptyStateContent}>
+          <Image
+            source={require('../../assets/images/task-list.png')}
+            style={styles.emptyStateImage}
+          />
+          <Text style={styles.emptyStateTitle}>No Region Selected</Text>
+          <Text style={styles.emptyStateText}>
+            Please select a Region to view order summary
+          </Text>
+        </View>
       </View>
     );
   }
@@ -259,10 +261,15 @@ const styles = StyleSheet.create({
   },
   emptyStateContainer: {
     flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
     backgroundColor: '#f5f5f5',
+  },
+  emptyStateContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '100%',
   },
   emptyStateImage: {
     width: 50,

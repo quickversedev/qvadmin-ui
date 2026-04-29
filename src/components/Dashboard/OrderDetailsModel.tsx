@@ -28,6 +28,21 @@ import {
 } from '../../utils/pricingConfigUtils';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 
+const formatMobile = (
+  customerMobile: string | number | null | undefined,
+): string => {
+  if (!customerMobile) return '';
+
+  const mobile = String(customerMobile).trim();
+
+  // Case: starts with 91 and length is 12
+  if (mobile.length === 12 && mobile.startsWith('91')) {
+    return mobile.slice(2);
+  }
+
+  return mobile;
+};
+
 type OrderDetailsModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -111,7 +126,7 @@ const OrderDetailsModal = ({
   };
 
   const handleCallCustomer = () => {
-    const phoneNumber = `tel:${customerMobile}`;
+    const phoneNumber = `tel:${formatMobile(customerMobile)}`;
     Linking.openURL(phoneNumber);
   };
 
@@ -141,22 +156,10 @@ const OrderDetailsModal = ({
                     </View>
                   ))}
                 <View style={styles.itemRow}>
-                  <Text
-                    style={
-                      styles.itemName && {
-                        fontFamily: FONT_FAMILY.outfitBold,
-                        fontSize: 18,
-                      }
-                    }>
+                  <Text style={styles.totalItemCountLabel}>
                     Total Item Count
                   </Text>
-                  <Text
-                    style={
-                      styles.itemQuantity && {
-                        fontFamily: FONT_FAMILY.outfitBold,
-                        fontSize: 18,
-                      }
-                    }>
+                  <Text style={styles.totalItemCountValue}>
                     {totalItemCount}
                   </Text>
                 </View>
@@ -171,12 +174,14 @@ const OrderDetailsModal = ({
                   flexDirection: 'row',
                   justifyContent: 'space-between',
                 }}>
-                {/* <Text style={styles.customerNameText}>{customerName}</Text> */}
+                <Text style={styles.customerNameText}>{customerName}</Text>
                 <TouchableOpacity
                   style={styles.phoneButton}
                   onPress={handleCallCustomer}>
                   <Icon name="phone" size={16} color="#0057A0" />
-                  <Text style={styles.phoneText}>+91 {customerMobile}</Text>
+                  <Text style={styles.phoneText}>
+                    {formatMobile(customerMobile)}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -421,6 +426,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 15,
     color: '#666',
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   restaurantInfo: {
     marginBottom: 15,
@@ -472,11 +478,13 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0057A0',
     marginLeft: 5,
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   addressText: {
     fontSize: 14,
     color: '#333',
     marginBottom: 3,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   doneBadge: {
     backgroundColor: '#e0f7fa',
@@ -511,11 +519,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#333',
     flex: 1,
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   itemQuantity: {
     fontSize: 14,
     color: '#666',
     marginLeft: 10,
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  totalItemCountLabel: {
+    fontFamily: FONT_FAMILY.outfitBold,
+    fontSize: 18,
+    color: '#0F172A',
+  },
+  totalItemCountValue: {
+    fontFamily: FONT_FAMILY.outfitBold,
+    fontSize: 18,
+    color: '#0F172A',
   },
   timelineItem: {
     flexDirection: 'row',
@@ -534,6 +554,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666',
     marginTop: 2,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   addressContainer: {
     flexDirection: 'row',
@@ -564,6 +585,7 @@ const styles = StyleSheet.create({
   billLabel: {
     fontSize: 14,
     color: '#666',
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   billAmount: {
     fontSize: 14,
@@ -579,6 +601,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
     textDecorationLine: 'line-through' as const,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   billTotalLabel: {
     fontSize: 16,

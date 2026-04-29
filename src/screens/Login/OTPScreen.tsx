@@ -210,18 +210,18 @@ const styles = StyleSheet.create({
     padding: 24,
 
     borderWidth: 1,
-    borderColor: 'yellow',
-    shadowColor: '#FAE588',
+    borderColor: '#374151',
+    shadowColor: '#000',
     shadowOffset: {width: 0, height: 5},
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 5,
   },
 
   title: {
-    fontSize: 22,
+    fontSize: 28,
     color: '#F3F4F6',
-    fontFamily: FONT_FAMILY.outfitBold,
+    fontFamily: FONT_FAMILY.outfitExtraBold,
     textAlign: 'center',
   },
   subtitle: {
@@ -229,6 +229,8 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     marginTop: 5,
     marginBottom: 16,
+    fontSize: 14,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
 
   skipContainer: {
@@ -256,31 +258,35 @@ const styles = StyleSheet.create({
   // button
   otpButton: {
     backgroundColor: '#FFE885',
-    borderRadius: 8,
+    borderRadius: 10,
     paddingVertical: 14,
     // marginTop: "auto",
   },
   otpText: {
     fontSize: 16,
-    color: 'black',
+    color: '#111827',
     textAlign: 'center',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
 
   subTitle_2: {
-    color: 'grey',
+    color: '#9CA3AF',
     textAlign: 'center',
     marginTop: 12,
+    fontSize: 13,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   link: {
     color: '#FAE588',
-    // fontFamily: FONT_FAMILY.bricolageMedium,
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
 
   changeNumber: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#FAE588',
     textAlign: 'center',
     marginTop: 'auto',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
 
   // otp
@@ -296,7 +302,8 @@ const styles = StyleSheet.create({
     lineHeight: 48,
     fontSize: 24,
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#4B5563',
+    backgroundColor: '#111827',
     borderRadius: 10,
     textAlign: 'center',
     justifyContent: 'center',
@@ -304,12 +311,14 @@ const styles = StyleSheet.create({
   },
   cellText: {
     fontSize: 22,
-    color: 'white',
+    color: '#F9FAFB',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   focusCell: {
-    borderColor: '#005EB8',
+    borderColor: '#FAE588',
   },
   disabledLink: {
     color: '#6B7280',
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
 });

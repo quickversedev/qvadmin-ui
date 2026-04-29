@@ -11,6 +11,7 @@ interface OrderCardListProps {
   showAssignment?: boolean;
   onlinePartners?: DeliveryPartner[];
   assignedPartnerByOrder?: Record<string, string>;
+  partnerOrderCounts?: Record<string, number>;
   onAssignPartner?: (orderId: string, partnerId: string) => void;
 }
 
@@ -20,6 +21,7 @@ const OrderCardList: React.FC<OrderCardListProps> = ({
   showAssignment = false,
   onlinePartners = [],
   assignedPartnerByOrder = {},
+  partnerOrderCounts = {},
   onAssignPartner,
 }) => {
   const {getVendorOrdersByStatus} = useOrderStore();
@@ -52,6 +54,7 @@ const OrderCardList: React.FC<OrderCardListProps> = ({
           showAssignment={showAssignment}
           onlinePartners={onlinePartners}
           assignedPartnerId={assignedPartnerByOrder[order.orderId]}
+          partnerOrderCounts={partnerOrderCounts}
           onAssignPartner={onAssignPartner}
         />
       ))}

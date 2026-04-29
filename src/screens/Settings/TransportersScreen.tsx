@@ -4,7 +4,6 @@ import {
   Alert,
   FlatList,
   Image,
-  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -233,18 +232,6 @@ const TransportersScreen: React.FC<Props> = ({navigation}) => {
             styles.listContent,
             !partners.length && styles.emptyListContent,
           ]}
-          refreshControl={
-            <RefreshControl
-              refreshing={loading}
-              onRefresh={async () => {
-                try {
-                  await fetchPartners(defaultFilter, authData?.jwt);
-                } catch (loadError) {
-                  console.log('Failed to load delivery partners', loadError);
-                }
-              }}
-            />
-          }
           renderItem={renderItem}
           ListEmptyComponent={
             loading ? (

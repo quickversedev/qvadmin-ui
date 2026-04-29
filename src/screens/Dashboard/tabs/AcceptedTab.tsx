@@ -15,6 +15,13 @@ import OrderCardList from '../screens/OrderCardList';
 import {ORDER_STATUS} from '../../../assets/constants/constant';
 import {useAuth} from '../../../contexts/Login/AuthProvider';
 import {useDeliveryPartnerStore} from '../../../store/deliveryPartners/useDeliveryPartnerStore';
+import {orderMasterService} from '../../../services/apis/orderMasterService';
+import {useOrderMasterStore} from '../../../store/orderMaster/useOrderMasterStore';
+import {getDeliveryPartnerId} from '../../../services/apis/deliveryPartnerService';
+import {
+  partnerOrderService,
+  PartnerOrder,
+} from '../../../services/apis/partnerOrderService';
 import {FONT_FAMILY} from '../../../assets/constants/fonts';
 
 interface AcceptedTabProps {
@@ -41,6 +48,12 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
   const [assignedPartnerByOrder, setAssignedPartnerByOrder] = useState<
     Record<string, string>
   >({});
+  const [partnerOrderCounts, setPartnerOrderCounts] = useState<
+    Record<string, number>
+  >({});
+  const {assignOrderLocal} = useOrderMasterStore();
+  const [assigning, setAssigning] = useState(false);
+  const hasAcceptedOrders = vendorsWithAcceptedOrders.length > 0;
 
   useEffect(() => {
     const fetchAcceptedVendors = () => {
@@ -71,6 +84,38 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
     });
   }, [authData?.jwt, fetchOnlinePartners]);
 
+  // Fetch assigned orders for all online partners and build mapping
+  const fetchAssignedOrdersForPartners = async () => {
+    if (!authData?.jwt || !onlinePartners.length) return;
+    const orderMap: Record<string, string> = {};
+    const countMap: Record<string, number> = {};
+    await Promise.all(
+      onlinePartners.map(async partner => {
+        const partnerId = getDeliveryPartnerId(partner);
+        if (!partnerId) return;
+        try {
+          const orders = await partnerOrderService.fetchOrdersByPartner(
+            partnerId,
+            authData.jwt,
+          );
+          countMap[partnerId] = orders.length;
+          orders.forEach(order => {
+            orderMap[order.orderId] = partnerId;
+          });
+        } catch (e) {
+          // ignore error for this partner
+        }
+      }),
+    );
+    setAssignedPartnerByOrder(orderMap);
+    setPartnerOrderCounts(countMap);
+  };
+
+  useEffect(() => {
+    fetchAssignedOrdersForPartners();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authData?.jwt, onlinePartners]);
+
   const acceptedOrderCount = vendorsWithAcceptedOrders.reduce(
     (total, vendor) =>
       total +
@@ -81,20 +126,32 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
 
   const assignedOrderCount = Object.keys(assignedPartnerByOrder).length;
 
-  const handleAssignPartner = (orderId: string, partnerId: string) => {
-    if (!orderId || !partnerId) {
+  const handleAssignPartner = async (orderId: string, partnerId: string) => {
+    if (!orderId || !partnerId || !authData?.jwt) {
       return;
     }
-
-    setAssignedPartnerByOrder(prev => ({
-      ...prev,
-      [orderId]: partnerId,
-    }));
+    setAssigning(true);
+    try {
+      await orderMasterService.assignOrder(
+        {orderId, deliveryPartnerId: partnerId},
+        authData.jwt,
+      );
+      assignOrderLocal({orderId, deliveryPartnerId: partnerId});
+      await fetchAssignedOrdersForPartners(); // Refresh counts and mapping after assignment
+    } catch (err) {
+      console.log('Failed to assign order:', err);
+    } finally {
+      setAssigning(false);
+    }
   };
 
   return (
     <ScrollView
       style={styles.wrapper}
+      contentContainerStyle={[
+        styles.contentContainer,
+        !hasAcceptedOrders && styles.contentContainerCentered,
+      ]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -103,37 +160,39 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
           tintColor="#f04d7d"
         />
       }>
-      <View style={styles.heroCard}>
-        <View style={styles.heroTopRow}>
-          <Text style={styles.heroTitle}>Accepted Orders Control Desk</Text>
-          {loadingOnlinePartners ? (
-            <ActivityIndicator size="small" color="#0369A1" />
-          ) : null}
+      {hasAcceptedOrders ? (
+        <View style={styles.heroCard}>
+          <View style={styles.heroTopRow}>
+            <Text style={styles.heroTitle}>Accepted Orders Control Desk</Text>
+            {loadingOnlinePartners ? (
+              <ActivityIndicator size="small" color="#0369A1" />
+            ) : null}
+          </View>
+          <Text style={styles.heroSubtitle}>
+            Assign available delivery partners to accepted orders quickly.
+          </Text>
+          <View style={styles.heroStatsRow}>
+            <View style={styles.heroStatBox}>
+              <Text style={styles.heroStatValue}>{acceptedOrderCount}</Text>
+              <Text style={styles.heroStatLabel}>Accepted</Text>
+            </View>
+            <View style={styles.heroStatBox}>
+              <Text style={styles.heroStatValue}>{onlinePartners.length}</Text>
+              <Text style={styles.heroStatLabel}>Online Partners</Text>
+            </View>
+            <View style={styles.heroStatBox}>
+              <Text style={styles.heroStatValue}>{assignedOrderCount}</Text>
+              <Text style={styles.heroStatLabel}>Assigned</Text>
+            </View>
+          </View>
+          {!!deliveryPartnerError && (
+            <Text style={styles.heroErrorText}>{deliveryPartnerError}</Text>
+          )}
         </View>
-        <Text style={styles.heroSubtitle}>
-          Assign available delivery partners to accepted orders quickly.
-        </Text>
-        <View style={styles.heroStatsRow}>
-          <View style={styles.heroStatBox}>
-            <Text style={styles.heroStatValue}>{acceptedOrderCount}</Text>
-            <Text style={styles.heroStatLabel}>Accepted</Text>
-          </View>
-          <View style={styles.heroStatBox}>
-            <Text style={styles.heroStatValue}>{onlinePartners.length}</Text>
-            <Text style={styles.heroStatLabel}>Online Partners</Text>
-          </View>
-          <View style={styles.heroStatBox}>
-            <Text style={styles.heroStatValue}>{assignedOrderCount}</Text>
-            <Text style={styles.heroStatLabel}>Assigned</Text>
-          </View>
-        </View>
-        {!!deliveryPartnerError && (
-          <Text style={styles.heroErrorText}>{deliveryPartnerError}</Text>
-        )}
-      </View>
+      ) : null}
 
-      {vendorsWithAcceptedOrders?.length === 0 ? (
-        <View style={[styles.stateContainer, styles.emptyContainer]}>
+      {!hasAcceptedOrders ? (
+        <View style={styles.stateContainer}>
           <Image
             source={require('../../../assets/images/empty-state.png')} // Add your empty state icon
             style={styles.stateIcon}
@@ -156,6 +215,7 @@ const AcceptedTab: React.FC<AcceptedTabProps> = ({
               showAssignment
               onlinePartners={onlinePartners}
               assignedPartnerByOrder={assignedPartnerByOrder}
+              partnerOrderCounts={partnerOrderCounts}
               onAssignPartner={handleAssignPartner}
             />
           </CollapsableVendor>
@@ -170,6 +230,13 @@ export default AcceptedTab;
 const styles = StyleSheet.create({
   wrapper: {
     marginHorizontal: 16,
+  },
+  contentContainer: {
+    flexGrow: 1,
+    paddingBottom: 12,
+  },
+  contentContainerCentered: {
+    justifyContent: 'center',
   },
   heroCard: {
     borderRadius: 16,
@@ -229,19 +296,10 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.bricolageMedium,
   },
   stateContainer: {
-    flex: 1,
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-  },
-  loadingContainer: {
-    backgroundColor: '#fafafa',
-  },
-  errorContainer: {
-    backgroundColor: '#fff9f9',
-  },
-  emptyContainer: {
-    backgroundColor: '#f9f9f9',
   },
   stateIcon: {
     width: 120,

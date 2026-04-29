@@ -7,7 +7,6 @@ import {
 } from '../../hooks/notification/useNotification';
 import {useDeviceInfo} from '../../services/useDeviceInfo';
 
-
 const AppStack = () => {
   const {updateDeviceInfo} = useDeviceInfo();
 

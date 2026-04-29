@@ -29,6 +29,7 @@ import {
   updatePage,
 } from '../../services/apis/pagesService';
 import {deletePromotion} from '../../services/apis/promotionService';
+import {useDevModeStore} from '../../store/app/useDevModeStore';
 
 type Props = StackScreenProps<
   SettingsStackParamList,
@@ -36,6 +37,7 @@ type Props = StackScreenProps<
 >;
 
 const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
+  const isDevMode = useDevModeStore(state => state.isDevMode);
   const {authData} = useAuth();
   const {
     regions,
@@ -327,7 +329,11 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
 
     const handleOpenCreatePageModal = () => {
       if (!selectedRegion?.regionId) {
-        showFeedbackModal('Add Page Failed', 'Please select a region first.', 'error');
+        showFeedbackModal(
+          'Add Page Failed',
+          'Please select a region first.',
+          'error',
+        );
         return;
       }
 
@@ -338,7 +344,11 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
 
     const handleOpenEditPageModal = () => {
       if (!selectedPage || !selectedPageId) {
-        showFeedbackModal('Edit Page Failed', 'No page selected to edit.', 'error');
+        showFeedbackModal(
+          'Edit Page Failed',
+          'No page selected to edit.',
+          'error',
+        );
         return;
       }
 
@@ -352,7 +362,11 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
 
     const handleOpenDeletePageModal = () => {
       if (!selectedPage || !selectedPageId) {
-        showFeedbackModal('Delete Page Failed', 'No page selected to delete.', 'error');
+        showFeedbackModal(
+          'Delete Page Failed',
+          'No page selected to delete.',
+          'error',
+        );
         return;
       }
 
@@ -372,11 +386,13 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
                 'No region selected'}
             </Text>
           </View>
-          <TouchableOpacity
-            style={styles.outlineActionButton}
-            onPress={handleOpenCreatePageModal}>
-            <Text style={styles.outlineActionButtonText}>Add Page Type</Text>
-          </TouchableOpacity>
+          {isDevMode ? (
+            <TouchableOpacity
+              style={styles.outlineActionButton}
+              onPress={handleOpenCreatePageModal}>
+              <Text style={styles.outlineActionButtonText}>Add Page Type</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
 
         <View style={styles.managementItemRow}>
@@ -387,25 +403,29 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
             </Text>
           </View>
           <View style={styles.inlineActionsGroup}>
-            <TouchableOpacity
-              style={styles.outlineActionButton}
-              onPress={handleOpenEditPageModal}>
-              <Text style={styles.outlineActionButtonText}>Edit</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.outlineActionButton,
-                styles.outlineActionButtonDanger,
-              ]}
-              onPress={handleOpenDeletePageModal}>
-              <Text
-                style={[
-                  styles.outlineActionButtonText,
-                  styles.outlineActionButtonDangerText,
-                ]}>
-                Delete
-              </Text>
-            </TouchableOpacity>
+            {isDevMode ? (
+              <>
+                <TouchableOpacity
+                  style={styles.outlineActionButton}
+                  onPress={handleOpenEditPageModal}>
+                  <Text style={styles.outlineActionButtonText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.outlineActionButton,
+                    styles.outlineActionButtonDanger,
+                  ]}
+                  onPress={handleOpenDeletePageModal}>
+                  <Text
+                    style={[
+                      styles.outlineActionButtonText,
+                      styles.outlineActionButtonDangerText,
+                    ]}>
+                    Delete
+                  </Text>
+                </TouchableOpacity>
+              </>
+            ) : null}
           </View>
         </View>
 
@@ -418,13 +438,13 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
           </View>
           <TouchableOpacity
             style={styles.outlineActionButton}
-            onPress={() =>
+            onPress={() => {
               navigation.navigate('AddPromotionBanner', {
                 mode: 'create',
                 pageName: selectedPage?.pageName,
                 regionId: selectedRegion?.regionId,
-              })
-            }>
+              });
+            }}>
             <Text style={styles.outlineActionButtonText}>Add Banner</Text>
           </TouchableOpacity>
         </View>
@@ -433,8 +453,16 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
   };
 
   const handleSubmitPageForm = async () => {
+    if (!isDevMode) {
+      return;
+    }
+
     if (!authData?.jwt) {
-      showFeedbackModal('Save Page Failed', 'Session expired. Please login again.', 'error');
+      showFeedbackModal(
+        'Save Page Failed',
+        'Session expired. Please login again.',
+        'error',
+      );
       return;
     }
 
@@ -450,7 +478,11 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
 
     const selectedPageId = getSelectedPageId();
     if (pageFormMode === 'edit' && !selectedPageId) {
-      showFeedbackModal('Edit Page Failed', 'Page ID is missing for selected page.', 'error');
+      showFeedbackModal(
+        'Edit Page Failed',
+        'Page ID is missing for selected page.',
+        'error',
+      );
       return;
     }
 
@@ -481,12 +513,16 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
       setPageFormModalVisible(false);
       showFeedbackModal(
         'Success',
-        `Page ${pageFormMode === 'create' ? 'created' : 'updated'} successfully`,
+        `Page ${
+          pageFormMode === 'create' ? 'created' : 'updated'
+        } successfully`,
         'success',
       );
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : `Failed to ${pageFormMode} page`;
+        error instanceof Error
+          ? error.message
+          : `Failed to ${pageFormMode} page`;
       showFeedbackModal(
         pageFormMode === 'create' ? 'Create Page Failed' : 'Edit Page Failed',
         message,
@@ -498,8 +534,16 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
   };
 
   const handleConfirmDeletePage = async () => {
+    if (!isDevMode) {
+      return;
+    }
+
     if (!selectedPage) {
-      showFeedbackModal('Delete Page Failed', 'No page selected to delete.', 'error');
+      showFeedbackModal(
+        'Delete Page Failed',
+        'No page selected to delete.',
+        'error',
+      );
       return;
     }
 
@@ -513,13 +557,21 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
     }
 
     if (!authData?.jwt) {
-      showFeedbackModal('Delete Page Failed', 'Session expired. Please login again.', 'error');
+      showFeedbackModal(
+        'Delete Page Failed',
+        'Session expired. Please login again.',
+        'error',
+      );
       return;
     }
 
     const selectedPageId = getSelectedPageId();
     if (!selectedPageId) {
-      showFeedbackModal('Delete Page Failed', 'Page ID is missing for selected page.', 'error');
+      showFeedbackModal(
+        'Delete Page Failed',
+        'Page ID is missing for selected page.',
+        'error',
+      );
       return;
     }
 
@@ -532,7 +584,9 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
       showFeedbackModal('Success', 'Page deleted successfully', 'success');
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : 'Failed to delete selected page';
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete selected page';
       showFeedbackModal('Delete Page Failed', message, 'error');
     } finally {
       setPageDeleteSubmitting(false);
@@ -849,7 +903,8 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
                   style={styles.modalDeleteButton}
                   onPress={handleConfirmDeletePage}
                   disabled={
-                    pageDeleteSubmitting || (selectedPage?.promotion || []).length > 0
+                    pageDeleteSubmitting ||
+                    (selectedPage?.promotion || []).length > 0
                   }>
                   {pageDeleteSubmitting ? (
                     <ActivityIndicator size="small" color="#FFFFFF" />
@@ -1175,6 +1230,7 @@ const styles = StyleSheet.create({
   modalActionButton: {
     flex: 1,
     minHeight: 42,
+    marginTop: 0,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1183,6 +1239,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     backgroundColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modalCancelButtonText: {
     fontSize: 13,

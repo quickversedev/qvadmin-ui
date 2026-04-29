@@ -72,7 +72,7 @@ const LoginScreen: React.FC = () => {
         <Text style={styles.title}>Login</Text>
         <Text style={styles.subtitle}>Log In to your Quickverse account</Text>
 
-        <Text style={{color: '#9CA3AF', marginTop: 36}}>Phone number</Text>
+        <Text style={styles.inputLabel}>Phone number</Text>
         <View style={styles.phoneInputWrapper}>
           <CountryPicker
             withCallingCode
@@ -140,17 +140,17 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 24,
     borderWidth: 1,
-    borderColor: 'yellow',
-    shadowColor: '#FAE588',
+    borderColor: '#374151',
+    shadowColor: '#000',
     shadowOffset: {width: 0, height: 5},
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.2,
     shadowRadius: 10,
     elevation: 5,
   },
   title: {
-    fontSize: 22,
+    fontSize: 28,
     color: '#F3F4F6',
-    fontFamily: FONT_FAMILY.outfitBold,
+    fontFamily: FONT_FAMILY.outfitExtraBold,
     textAlign: 'center',
   },
   subtitle: {
@@ -158,6 +158,15 @@ const styles = StyleSheet.create({
     color: '#9CA3AF',
     marginTop: 5,
     marginBottom: 16,
+    fontSize: 14,
+    fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  inputLabel: {
+    color: '#D1D5DB',
+    marginTop: 36,
+    marginBottom: 6,
+    fontSize: 13,
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   skipContainer: {
     position: 'absolute',
@@ -178,11 +187,10 @@ const styles = StyleSheet.create({
   phoneInputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1F2937',
-    borderColor: '#ccc',
+    backgroundColor: '#111827',
+    borderColor: '#4B5563',
     borderWidth: 1,
-    borderRadius: 8,
-    marginTop: 5,
+    borderRadius: 10,
     marginBottom: '15%',
     paddingHorizontal: 10,
     height: 55,
@@ -191,25 +199,28 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   callingCode: {
-    color: 'white',
+    color: '#F9FAFB',
     fontSize: 16,
     marginRight: 6,
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   input: {
     flex: 1,
-    color: 'white',
+    color: '#F9FAFB',
     fontSize: 16,
+    fontFamily: FONT_FAMILY.outfitRegular,
   },
   otpButton: {
     backgroundColor: '#FFE885',
-    borderRadius: 8,
+    borderRadius: 10,
     paddingVertical: 14,
     marginTop: 'auto',
   },
   otpText: {
     fontSize: 16,
-    color: 'black',
+    color: '#111827',
     textAlign: 'center',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
 });
 export default LoginScreen;

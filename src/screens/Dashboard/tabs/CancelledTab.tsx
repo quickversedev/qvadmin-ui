@@ -28,6 +28,7 @@ const CancelledTab: React.FC<cancelledTabProps> = ({
   const [vendorsWithCancelledOrders, setVendorsWithCancelledOrders] = useState<
     Vendor[]
   >([]);
+  const hasCancelledOrders = vendorsWithCancelledOrders.length > 0;
 
   useEffect(() => {
     const fetchCancelledVendors = () => {
@@ -55,6 +56,10 @@ const CancelledTab: React.FC<cancelledTabProps> = ({
   return (
     <ScrollView
       style={{marginHorizontal: 16}}
+      contentContainerStyle={[
+        styles.contentContainer,
+        !hasCancelledOrders && styles.contentContainerCentered,
+      ]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -63,8 +68,8 @@ const CancelledTab: React.FC<cancelledTabProps> = ({
           tintColor="#f04d7d"
         />
       }>
-      {vendorsWithCancelledOrders?.length === 0 ? (
-        <View style={[styles.stateContainer, styles.emptyContainer]}>
+      {!hasCancelledOrders ? (
+        <View style={styles.stateContainer}>
           <Image
             source={require('../../../assets/images/empty-state.png')} // Add your empty state icon
             style={styles.stateIcon}
@@ -95,20 +100,18 @@ const CancelledTab: React.FC<cancelledTabProps> = ({
 export default CancelledTab;
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    flexGrow: 1,
+    paddingBottom: 12,
+  },
+  contentContainerCentered: {
+    justifyContent: 'center',
+  },
   stateContainer: {
-    flex: 1,
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-  },
-  loadingContainer: {
-    backgroundColor: '#fafafa',
-  },
-  errorContainer: {
-    backgroundColor: '#fff9f9',
-  },
-  emptyContainer: {
-    backgroundColor: '#f9f9f9',
   },
   stateIcon: {
     width: 120,

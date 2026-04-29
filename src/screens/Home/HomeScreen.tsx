@@ -13,7 +13,7 @@ const HomeScreen = () => {
   return (
     <SafeAreaView
       style={styles.safeArea}
-      edges={['top', 'left', 'right']} // Adjust edges for Android/iOS
+      edges={['top', 'left', 'right', 'bottom']} // Ensure bottom safe area for nav bar
     >
       <View style={styles.container}>
         <View style={styles.gradientWrapper}>

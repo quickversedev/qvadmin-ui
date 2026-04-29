@@ -27,6 +27,7 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({
   const {getVendorOrdersByStatus} = useOrderStore();
   const [vendorsWithreadyToShipOrders, setVendorsWithReadyToShipOrders] =
     useState<Vendor[]>([]);
+  const hasReadyToShipOrders = vendorsWithreadyToShipOrders.length > 0;
 
   useEffect(() => {
     const fetchReadyToShipVendors = () => {
@@ -48,6 +49,10 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({
   return (
     <ScrollView
       style={{marginHorizontal: 16}}
+      contentContainerStyle={[
+        styles.contentContainer,
+        !hasReadyToShipOrders && styles.contentContainerCentered,
+      ]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -56,8 +61,8 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({
           tintColor="#f04d7d"
         />
       }>
-      {vendorsWithreadyToShipOrders?.length === 0 ? (
-        <View style={[styles.stateContainer, styles.emptyContainer]}>
+      {!hasReadyToShipOrders ? (
+        <View style={styles.stateContainer}>
           <Image
             source={require('../../../assets/images/empty-state.png')} // Add your empty state icon
             style={styles.stateIcon}
@@ -88,20 +93,18 @@ const ReadyToShipTab: React.FC<ReadyToShipTabProps> = ({
 export default ReadyToShipTab;
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    flexGrow: 1,
+    paddingBottom: 12,
+  },
+  contentContainerCentered: {
+    justifyContent: 'center',
+  },
   stateContainer: {
-    flex: 1,
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-  },
-  loadingContainer: {
-    backgroundColor: '#fafafa',
-  },
-  errorContainer: {
-    backgroundColor: '#fff9f9',
-  },
-  emptyContainer: {
-    backgroundColor: '#f9f9f9',
   },
   stateIcon: {
     width: 120,

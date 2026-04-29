@@ -6,6 +6,7 @@ import AddTransporterScreen from '../screens/Settings/AddTransporterScreen';
 import ConfigurationsScreen from '../screens/Settings/ConfigurationsScreen';
 import PagesPromotionalBannersScreen from '../screens/Settings/PagesPromotionalBannersScreen';
 import AddPromotionBannerScreen from '../screens/Settings/AddPromotionBannerScreen';
+import BroadcastNotificationScreen from '../screens/Settings/BroadcastNotificationScreen';
 import {PromotionBanner} from '../services/apis/pagesService';
 
 export type SettingsStackParamList = {
@@ -17,6 +18,7 @@ export type SettingsStackParamList = {
       }
     | undefined;
   Configurations: undefined;
+  BroadcastNotifications: undefined;
   PagesPromotionalBanners: undefined;
   AddPromotionBanner:
     | {
@@ -43,6 +45,10 @@ const SettingsNavigation = () => {
       <Stack.Screen name="Transporters" component={TransportersScreen} />
       <Stack.Screen name="AddTransporter" component={AddTransporterScreen} />
       <Stack.Screen name="Configurations" component={ConfigurationsScreen} />
+      <Stack.Screen
+        name="BroadcastNotifications"
+        component={BroadcastNotificationScreen}
+      />
       <Stack.Screen
         name="PagesPromotionalBanners"
         component={PagesPromotionalBannersScreen}

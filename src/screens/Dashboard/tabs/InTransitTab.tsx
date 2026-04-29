@@ -28,6 +28,7 @@ const InTransitTab: React.FC<InTransitTabProps> = ({
   const [vendorsWithInTransitOrders, setVendorsWithInTransitOrders] = useState<
     Vendor[]
   >([]);
+  const hasInTransitOrders = vendorsWithInTransitOrders.length > 0;
 
   useEffect(() => {
     const fetchInTransitVendors = () => {
@@ -51,6 +52,10 @@ const InTransitTab: React.FC<InTransitTabProps> = ({
   return (
     <ScrollView
       style={{marginHorizontal: 16}}
+      contentContainerStyle={[
+        styles.contentContainer,
+        !hasInTransitOrders && styles.contentContainerCentered,
+      ]}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
@@ -59,8 +64,8 @@ const InTransitTab: React.FC<InTransitTabProps> = ({
           tintColor="#f04d7d"
         />
       }>
-      {vendorsWithInTransitOrders?.length === 0 ? (
-        <View style={[styles.stateContainer, styles.emptyContainer]}>
+      {!hasInTransitOrders ? (
+        <View style={styles.stateContainer}>
           <Image
             source={require('../../../assets/images/empty-state.png')} // Add your empty state icon
             style={styles.stateIcon}
@@ -91,20 +96,18 @@ const InTransitTab: React.FC<InTransitTabProps> = ({
 export default InTransitTab;
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    flexGrow: 1,
+    paddingBottom: 12,
+  },
+  contentContainerCentered: {
+    justifyContent: 'center',
+  },
   stateContainer: {
-    flex: 1,
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
-  },
-  loadingContainer: {
-    backgroundColor: '#fafafa',
-  },
-  errorContainer: {
-    backgroundColor: '#fff9f9',
-  },
-  emptyContainer: {
-    backgroundColor: '#f9f9f9',
   },
   stateIcon: {
     width: 120,

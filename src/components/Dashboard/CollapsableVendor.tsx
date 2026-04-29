@@ -21,6 +21,21 @@ type OrderCardProps = {
   children?: React.ReactNode;
 };
 
+const formatMobile = (
+  customerMobile: string | number | null | undefined,
+): string => {
+  if (!customerMobile) return '';
+
+  const mobile = String(customerMobile).trim();
+
+  // Case: starts with 91 and length is 12
+  if (mobile.length === 12 && mobile.startsWith('91')) {
+    return mobile.slice(2);
+  }
+
+  return mobile;
+};
+
 const CollapsableVendor: React.FC<OrderCardProps> = ({
   status,
   vendor,
@@ -33,7 +48,7 @@ const CollapsableVendor: React.FC<OrderCardProps> = ({
     setExpanded(prev => !prev);
   };
   const handleCallCustomer = () => {
-    const phoneNumber = `tel:${phone}`;
+    const phoneNumber = `tel:${formatMobile(phone)}`;
     Linking.openURL(phoneNumber);
   };
   const statusStyles = getStatusStyles(status);

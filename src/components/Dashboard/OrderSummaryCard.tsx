@@ -1,5 +1,6 @@
 // src/components/OrderSummaryCard.tsx
-import React, {useState} from 'react';
+import React, {useMemo, useState} from 'react';
+import {useOrderMasterStore} from '../../store/orderMaster/useOrderMasterStore';
 import {
   FlatList,
   Linking,
@@ -24,13 +25,64 @@ import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 import {ORDER_STATUS} from '../../assets/constants/constant';
 
+const formatMobile = (
+  customerMobile: string | number | null | undefined,
+): string => {
+  if (!customerMobile) return '';
+
+  const mobile = String(customerMobile).trim();
+
+  // Case: starts with 91 and length is 12
+  if (mobile.length === 12 && mobile.startsWith('91')) {
+    return mobile.slice(2);
+  }
+
+  return mobile;
+};
+
 type OrderSummaryCardProps = Order & {
   key?: string;
   vendor: Vendor;
   showAssignment?: boolean;
   onlinePartners?: DeliveryPartner[];
   assignedPartnerId?: string;
+  partnerOrderCounts?: Record<string, number>;
   onAssignPartner?: (orderId: string, partnerId: string) => void;
+};
+
+const toCoordinate = (value: unknown): number | null => {
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? value : null;
+  }
+
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  return null;
+};
+
+const distanceInKm = (
+  sourceLat: number,
+  sourceLng: number,
+  targetLat: number,
+  targetLng: number,
+) => {
+  const toRadians = (degree: number) => (degree * Math.PI) / 180;
+  const earthRadiusKm = 6371;
+
+  const dLat = toRadians(targetLat - sourceLat);
+  const dLng = toRadians(targetLng - sourceLng);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRadians(sourceLat)) *
+      Math.cos(toRadians(targetLat)) *
+      Math.sin(dLng / 2) *
+      Math.sin(dLng / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusKm * c;
 };
 
 const OrderSummaryCard = (props: OrderSummaryCardProps) => {
@@ -50,11 +102,59 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
     onlinePartners = [],
     assignedPartnerId,
     onAssignPartner,
+    partnerOrderCounts = {},
   } = props;
 
   const statusStyles = getStatusStyles(state);
   const assignedPartner = onlinePartners.find(
     partner => getDeliveryPartnerId(partner) === assignedPartnerId,
+  );
+  const shopLatitude = toCoordinate(vendor?.coordinates?.latitude);
+  const shopLongitude = toCoordinate(vendor?.coordinates?.longitude);
+  const {getAssignedOrderCount} = useOrderMasterStore();
+
+  const partnersWithDistance = useMemo(
+    () =>
+      onlinePartners
+        .map(partner => {
+          const partnerLatitude = toCoordinate(partner.latitude);
+          const partnerLongitude = toCoordinate(partner.longitude);
+
+          if (
+            shopLatitude === null ||
+            shopLongitude === null ||
+            partnerLatitude === null ||
+            partnerLongitude === null
+          ) {
+            return {partner, distanceKm: null as number | null};
+          }
+
+          return {
+            partner,
+            distanceKm: distanceInKm(
+              shopLatitude,
+              shopLongitude,
+              partnerLatitude,
+              partnerLongitude,
+            ),
+          };
+        })
+        .sort((a, b) => {
+          if (a.distanceKm === null && b.distanceKm === null) {
+            return 0;
+          }
+
+          if (a.distanceKm === null) {
+            return 1;
+          }
+
+          if (b.distanceKm === null) {
+            return -1;
+          }
+
+          return a.distanceKm - b.distanceKm;
+        }),
+    [onlinePartners, shopLatitude, shopLongitude],
   );
 
   const getTime = () => {
@@ -78,8 +178,20 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
     }
   };
   const handleCallCustomer = () => {
-    const phoneNumber = `tel:${customerMobile}`;
+    const phoneNumber = `tel:${formatMobile(customerMobile)}`;
     Linking.openURL(phoneNumber);
+  };
+
+  const transporterMobile = assignedPartner?.mobileNumber
+    ? String(assignedPartner.mobileNumber)
+    : '';
+
+  const handleCallTransporter = () => {
+    if (!transporterMobile) {
+      return;
+    }
+
+    Linking.openURL(`tel:${transporterMobile}`);
   };
 
   const handleSelectPartner = (partnerId: string) => {
@@ -91,11 +203,13 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
     setAssignModalVisible(false);
   };
 
+  // Disable assign button if already assigned
   const canAssignPartner =
     showAssignment &&
     state === ORDER_STATUS.ACCEPTED &&
     orderId &&
-    typeof onAssignPartner === 'function';
+    typeof onAssignPartner === 'function' &&
+    !assignedPartnerId;
 
   return (
     <View style={styles.card}>
@@ -176,6 +290,31 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
         </View>
       </View>
 
+      {!!assignedPartner && (
+        <View style={styles.transporterCard}>
+          <View style={styles.transporterInfoBlock}>
+            <Text style={styles.transporterLabel}>Assigned Transporter</Text>
+            <Text style={styles.transporterName} numberOfLines={1}>
+              {getDeliveryPartnerName(assignedPartner)}
+            </Text>
+            <Text style={styles.transporterMeta} numberOfLines={1}>
+              {transporterMobile || 'Mobile not available'}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.callTransporterButton,
+              !transporterMobile && styles.callTransporterButtonDisabled,
+            ]}
+            disabled={!transporterMobile}
+            onPress={handleCallTransporter}>
+            <Icon name="phone" size={14} color="#ffffff" />
+            <Text style={styles.callTransporterButtonText}>Call</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.actions}>
         <TouchableOpacity
           style={[styles.button, styles.viewButton]}
@@ -197,9 +336,7 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
           style={styles.assignButton}
           onPress={() => setAssignModalVisible(true)}>
           <Icon name="account-switch" size={16} color="#fff" />
-          <Text style={styles.assignButtonText}>
-            {assignedPartner ? 'Reassign Partner' : 'Assign Delivery Partner'}
-          </Text>
+          <Text style={styles.assignButtonText}>Assign Delivery Partner</Text>
         </TouchableOpacity>
       )}
 
@@ -228,6 +365,11 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
             <Text style={styles.assignModalSubTitle}>
               Online partners available for order #{orderId}
             </Text>
+            {!!partnersWithDistance.length && (
+              <Text style={styles.assignHintText}>
+                Showing nearest partners first based on shop location.
+              </Text>
+            )}
 
             {onlinePartners.length === 0 ? (
               <View style={styles.emptyPartnerState}>
@@ -238,15 +380,20 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
               </View>
             ) : (
               <FlatList
-                data={onlinePartners}
+                data={partnersWithDistance}
                 keyExtractor={(item, index) =>
-                  getDeliveryPartnerId(item) || `${index}`
+                  getDeliveryPartnerId(item.partner) || `${index}`
                 }
                 contentContainerStyle={styles.partnerList}
                 renderItem={({item}) => {
-                  const partnerId = getDeliveryPartnerId(item);
+                  const partner = item.partner;
+                  const partnerId = getDeliveryPartnerId(partner) || '';
                   const isSelected = partnerId === assignedPartnerId;
-
+                  const assignedCount = partnerOrderCounts[partnerId] || 0;
+                  const distanceText =
+                    item.distanceKm === null
+                      ? 'Distance unavailable'
+                      : `${item.distanceKm.toFixed(2)} km from shop`;
                   return (
                     <TouchableOpacity
                       style={[
@@ -264,15 +411,28 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
                       </View>
                       <View style={styles.partnerInfoBlock}>
                         <Text style={styles.partnerName} numberOfLines={1}>
-                          {getDeliveryPartnerName(item)}
+                          {getDeliveryPartnerName(partner)}
                         </Text>
                         <Text style={styles.partnerMeta} numberOfLines={1}>
-                          {item.mobileNumber || 'Mobile not available'}
+                          {partner.mobileNumber || 'Mobile not available'}
+                        </Text>
+                        <Text style={styles.partnerDistance} numberOfLines={1}>
+                          {distanceText}
                         </Text>
                       </View>
-                      {isSelected ? (
-                        <Icon name="check-circle" size={18} color="#0B6B4A" />
-                      ) : null}
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          gap: 4,
+                        }}>
+                        <Text style={{fontSize: 12, color: '#0B6B4A'}}>
+                          {assignedCount} assigned
+                        </Text>
+                        {isSelected ? (
+                          <Icon name="check-circle" size={18} color="#0B6B4A" />
+                        ) : null}
+                      </View>
                     </TouchableOpacity>
                   );
                 }}
@@ -383,6 +543,56 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontFamily: FONT_FAMILY.bricolageRegular,
   },
+  transporterCard: {
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  transporterInfoBlock: {
+    flex: 1,
+  },
+  transporterLabel: {
+    color: '#1D4ED8',
+    fontSize: 11,
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  transporterName: {
+    marginTop: 2,
+    color: '#0F172A',
+    fontSize: 13,
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  transporterMeta: {
+    marginTop: 1,
+    color: '#334155',
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  callTransporterButton: {
+    borderRadius: 999,
+    backgroundColor: '#0284C7',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  callTransporterButtonDisabled: {
+    backgroundColor: '#94A3B8',
+  },
+  callTransporterButtonText: {
+    color: '#ffffff',
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
   actions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -457,6 +667,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: FONT_FAMILY.bricolageRegular,
   },
+  assignHintText: {
+    marginBottom: 8,
+    color: '#0B6B4A',
+    fontSize: 11,
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
   partnerList: {
     gap: 8,
     paddingBottom: 8,
@@ -497,6 +713,12 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 12,
     fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  partnerDistance: {
+    marginTop: 2,
+    color: '#0B6B4A',
+    fontSize: 11,
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   emptyPartnerState: {
     flexDirection: 'row',

@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -36,9 +36,25 @@ import {FONT_FAMILY} from '../../../assets/constants/fonts';
 
 type ViewOrderRouteProp = RouteProp<HomeScreenStackParamList, 'ViewOrder'>;
 
+const formatMobile = (
+  customerMobile: string | number | null | undefined,
+): string => {
+  if (!customerMobile) return '';
+
+  const mobile = String(customerMobile).trim();
+
+  // Case: starts with 91 and length is 12
+  if (mobile.length === 12 && mobile.startsWith('91')) {
+    return mobile.slice(2);
+  }
+
+  return mobile;
+};
+
 const ViewOrderScreen = () => {
   const route = useRoute<ViewOrderRouteProp>();
   const {orderId} = route.params;
+  const normalizedOrderId = String(orderId || '').trim();
   const {authData} = useAuth();
   const selectedRegion = useRegionsStore(state => state.selectedRegion);
   const {getOrderById, fetchOrders, lastTimeFilter} = useOrderStore();
@@ -48,9 +64,23 @@ const ViewOrderScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pricingConfigs, setPricingConfigs] = useState<PricingConfig[]>([]);
+  const autoRetryTriggeredRef = useRef(false);
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    autoRetryTriggeredRef.current = false;
+  }, [normalizedOrderId]);
+
+  useEffect(() => {
+    return () => {
+      if (retryTimeoutRef.current) {
+        clearTimeout(retryTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const loadOrder = useCallback(async () => {
-    if (!orderId) {
+    if (!normalizedOrderId) {
       setError('Missing order ID in notification payload.');
       setLoading(false);
       return;
@@ -60,11 +90,11 @@ const ViewOrderScreen = () => {
     setError(null);
 
     try {
-      const orderFromApi = await fetchOrderDetails(orderId);
+      const orderFromApi = await fetchOrderDetails(normalizedOrderId);
       setOrder(orderFromApi);
       return;
     } catch (apiError) {
-      const localOrder = getOrderById(orderId);
+      const localOrder = getOrderById(normalizedOrderId);
       if (localOrder) {
         setOrder(localOrder);
         return;
@@ -77,7 +107,7 @@ const ViewOrderScreen = () => {
             lastTimeFilter,
             authData.jwt,
           );
-          const refreshedOrder = getOrderById(orderId);
+          const refreshedOrder = getOrderById(normalizedOrderId);
           if (refreshedOrder) {
             setOrder(refreshedOrder);
             return;
@@ -85,6 +115,14 @@ const ViewOrderScreen = () => {
         } catch (refreshError) {
           console.error('Failed to refresh orders for fallback:', refreshError);
         }
+      }
+
+      if (!autoRetryTriggeredRef.current) {
+        autoRetryTriggeredRef.current = true;
+        retryTimeoutRef.current = setTimeout(() => {
+          loadOrder();
+        }, 900);
+        return;
       }
 
       const message =
@@ -100,7 +138,7 @@ const ViewOrderScreen = () => {
     fetchOrders,
     getOrderById,
     lastTimeFilter,
-    orderId,
+    normalizedOrderId,
     selectedRegion?.regionId,
   ]);
 
@@ -176,7 +214,7 @@ const ViewOrderScreen = () => {
       return;
     }
 
-    Linking.openURL(`tel:${order.customerMobile}`).catch(err => {
+    Linking.openURL(`tel:${formatMobile(order.customerMobile)}`).catch(err => {
       console.error('Failed to open dialer:', err);
     });
   };
@@ -202,7 +240,7 @@ const ViewOrderScreen = () => {
       return;
     }
 
-    Linking.openURL(`tel:${shopPhone}`).catch(err => {
+    Linking.openURL(`tel:${formatMobile(shopPhone)}`).catch(err => {
       console.error('Failed to open shop dialer:', err);
     });
   };
@@ -274,7 +312,7 @@ const ViewOrderScreen = () => {
       <View style={styles.sectionCard}>
         <Text style={styles.sectionTitle}>Customer</Text>
         <View style={styles.customerHeaderRow}>
-          {/* <Text style={styles.customerName}>{order.customerName || 'N/A'}</Text> */}
+          <Text style={styles.customerName}>{order.customerName || 'N/A'}</Text>
           <TouchableOpacity
             style={styles.inlineButton}
             onPress={handleCallCustomer}>
@@ -282,7 +320,9 @@ const ViewOrderScreen = () => {
             <Text style={styles.inlineButtonText}>Call</Text>
           </TouchableOpacity>
         </View>
-        <Text style={styles.subtleText}>+91 {order.customerMobile}</Text>
+        <Text style={styles.subtleText}>
+          {formatMobile(order.customerMobile)}
+        </Text>
       </View>
 
       {!!order.shop && (
@@ -301,7 +341,9 @@ const ViewOrderScreen = () => {
             <Text style={styles.subtleText}>Owner: {order.shop.owner}</Text>
           )}
           {!!order.shop.phone && (
-            <Text style={styles.subtleText}>Phone: +91 {order.shop.phone}</Text>
+            <Text style={styles.subtleText}>
+              Phone: {formatMobile(order.shop.phone)}
+            </Text>
           )}
 
           <View style={styles.shopMetaRow}>
@@ -534,6 +576,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
     color: '#E3F2FD',
     fontSize: 13,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   statusChip: {
     backgroundColor: '#ffffff',
@@ -576,6 +619,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     flex: 1,
     marginRight: 8,
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   itemQty: {
     color: '#5a5a5a',
@@ -584,6 +628,7 @@ const styles = StyleSheet.create({
   emptyText: {
     color: '#757575',
     fontSize: 14,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   customerHeaderRow: {
     flexDirection: 'row',
@@ -613,6 +658,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#4a4a4a',
     fontSize: 14,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   shopImage: {
     width: '100%',
@@ -652,6 +698,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#303030',
     marginBottom: 4,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   linkButton: {
     marginTop: 10,
@@ -671,6 +718,7 @@ const styles = StyleSheet.create({
   billLabel: {
     color: '#5e5e5e',
     fontSize: 14,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   billValue: {
     color: '#2d2d2d',
@@ -686,6 +734,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#999',
     textDecorationLine: 'line-through' as const,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   billDivider: {
     height: 1,
@@ -734,6 +783,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#222',
     marginTop: 2,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   errorTitle: {
     fontSize: 18,
@@ -746,6 +796,7 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginBottom: 16,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
   retryButton: {
     backgroundColor: '#f04d7d',
@@ -761,6 +812,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     color: '#4d4d4d',
     fontSize: 14,
+    fontFamily: FONT_FAMILY.bricolageRegular,
   },
 });
 
