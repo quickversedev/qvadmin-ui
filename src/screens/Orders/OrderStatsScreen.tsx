@@ -142,6 +142,7 @@ type FinanceServiceBreakdown = {
   serviceType?: string;
   totalOrders?: number;
   totalOrderSales?: number;
+  averageOrderTimeMinutes?: number;
   platformFeeCollected?: number;
   deliveryFeeCollected?: number;
   packagingChargeCollected?: number;
@@ -189,6 +190,21 @@ const FinanceServiceCard = ({item}: {item: FinanceServiceBreakdown}) => (
           icon: (
             <MaterialCommunityIcons
               name="package-variant"
+              size={32}
+              color="#0284C7"
+            />
+          ),
+        },
+        {
+          id: `${item.serviceType}-time`,
+          label: 'Average Order Delivery Time',
+          value: `${String(
+            item?.averageOrderTimeMinutes?.toFixed(0) ?? 0,
+          )} mins`,
+          color: '#E0F2FE',
+          icon: (
+            <MaterialCommunityIcons
+              name="clock-outline"
               size={32}
               color="#0284C7"
             />
@@ -477,7 +493,6 @@ const OrderStatsScreen = () => {
   const {
     pendingOrders,
     acceptedOrders,
-    readyToShipOrders,
     inTransitOrders,
     completedOrders,
     cancelledOrders,
@@ -528,29 +543,9 @@ const OrderStatsScreen = () => {
             });
           }}
         />
-
         <OrderStatCard
           size="m"
-          label="Ready to Ship"
-          value={isOrderLoading ? '—' : readyToShipOrders}
-          color="#E0F2FE"
-          icon={
-            <MaterialCommunityIcons
-              name="package-variant-closed"
-              size={32}
-              color="#0369A1"
-            />
-          }
-          onPress={() => {
-            navigation.navigate('OrdersScreen', {
-              orderStatus: 'READY_TO_SHIP',
-            });
-          }}
-        />
-
-        <OrderStatCard
-          size="m"
-          label="In Transit"
+          label="Shipped"
           value={isOrderLoading ? '—' : inTransitOrders}
           color="#EDE9FE"
           icon={
@@ -562,7 +557,7 @@ const OrderStatsScreen = () => {
           }
           onPress={() => {
             navigation.navigate('OrdersScreen', {
-              orderStatus: 'ON_THE_WAY',
+              orderStatus: 'SHIPPED',
             });
           }}
         />
@@ -633,9 +628,19 @@ const OrderStatsScreen = () => {
             />
           }
         />
+        <OrderStatCard
+          size="m"
+          label="Order History"
+          value="View"
+          color="#EFF6FF"
+          icon={
+            <MaterialCommunityIcons name="history" size={32} color="#0f62fe" />
+          }
+          onPress={() => navigation.navigate('OrderHistoryScreen')}
+        />
       </View>
       {completedOrders > 0 && (
-        <View style={styles.motivationBanner}>
+        <View style={{...styles.motivationBanner, marginBottom: 5}}>
           <MaterialCommunityIcons
             name="trophy-outline"
             size={40}
@@ -734,6 +739,23 @@ const OrderStatsScreen = () => {
             icon: (
               <MaterialCommunityIcons
                 name="package-variant"
+                size={32}
+                color="#0284C7"
+              />
+            ),
+          },
+          {
+            id: 'combined-aod',
+            label: 'Average Order Delivery Time',
+            value: isFinanceBusy
+              ? '—'
+              : `${String(
+                  financeData?.averageOrderTimeMinutes?.toFixed(0),
+                )} mins`,
+            color: '#E0F2FE',
+            icon: (
+              <MaterialCommunityIcons
+                name="clock-outline"
                 size={32}
                 color="#0284C7"
               />

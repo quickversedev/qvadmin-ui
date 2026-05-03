@@ -19,9 +19,9 @@ import {
   ServiceType,
   updatePricingConfiguration,
 } from '../../services/apis/pricingConfigService';
-import {useAuth} from '../../contexts/Login/AuthProvider';
 import {SafeAreaView} from 'react-native-safe-area-context'; // Add this import
 import {FONT_FAMILY} from '../../assets/constants/fonts';
+import {useAuthStore} from '../../store';
 
 type Props = StackScreenProps<
   SettingsNavigationStackParamList,
@@ -134,7 +134,7 @@ const mapApiToModel = (
 };
 
 const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
-  const {authData} = useAuth();
+  const {authData} = useAuthStore(state => state);
   const [serviceType, setServiceType] = useState<ServiceType>('FOOD');
   const [apiConfigsByType, setApiConfigsByType] = useState<
     Record<ServiceType, PricingConfig[]>
@@ -171,7 +171,6 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
     setIsLoading(true);
     try {
       const configs = await fetchPricingConfigurations(type);
-      console.log(configs);
       setApiConfigsByType(prev => ({...prev, [type]: configs || []}));
     } catch (error: any) {
       Alert.alert(

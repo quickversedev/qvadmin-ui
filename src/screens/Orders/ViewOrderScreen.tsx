@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React from 'react';
 import {
   ActivityIndicator,
   Image,
@@ -10,26 +10,14 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import {RouteProp, useFocusEffect, useRoute} from '@react-navigation/native';
+import {RouteProp, useRoute} from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useAuth} from '../../contexts/Login/AuthProvider';
-import {useOrderStore, Order} from '../../store/orders/useOrdersStore';
-import {useRegionsStore} from '../../store/regions/useRegionsStore';
-import {useVendorStore} from '../../store/vendors/useVendorStore';
-import {
-  fetchPricingConfigurations,
-  PricingConfig,
-} from '../../services/apis/pricingConfigService';
 import {
   convertUTCToIST,
   formatTime,
   openMap,
   parseAddress,
 } from '../../utils/orderUtils';
-import {
-  getServiceTypeFromCategory,
-  resolvePricingForService,
-} from '../../utils/pricingConfigUtils';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 import {OrdersNavigationStackParamList} from '../../navigation/OrdersNavigation';
 import {useGetOrderByIdQuery} from '../../apis/order';

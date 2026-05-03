@@ -1,9 +1,9 @@
-import {useCallback} from 'react';
-import {useAuth} from '../contexts/Login/AuthProvider';
 import deviceInfoService from '../services/deviceInfoService';
+import {useAuthStore} from '../store';
+import {useCallback} from 'react';
 
 export const useDeviceInfo = () => {
-  const {authData} = useAuth();
+  const {authData} = useAuthStore(state => state);
 
   /**
    * Update device information to backend

@@ -10,12 +10,21 @@ import {
   Linking,
   Alert,
 } from 'react-native';
-import {RouteProp, useFocusEffect, useRoute} from '@react-navigation/native';
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 import {OrdersNavigationStackParamList} from '../../navigation/OrdersNavigation';
 import {useGetPricingConfigQuery} from '../../apis/pricingConfig';
-import {useGetActiveDeliveryPartnersQuery} from '../../apis/deliveryPartner';
+import {
+  useGetActiveDeliveryPartnersQuery,
+  useGetDeliveryPartnersWithOrdersQuery,
+} from '../../apis/deliveryPartner';
+import {useAssignOrderMutation} from '../../apis/order';
 
 type AssignTransporterScreenProp = RouteProp<
   OrdersNavigationStackParamList,
@@ -24,13 +33,17 @@ type AssignTransporterScreenProp = RouteProp<
 
 const AssignTransporterScreen = () => {
   const route = useRoute<AssignTransporterScreenProp>();
+  const navigation = useNavigation();
   const {order} = route.params;
 
   const {data: pricingConfigData} = useGetPricingConfigQuery(
     order?.shopDetails?.category.toString().toUpperCase(),
     {skip: !order?.shopDetails?.category},
   );
-  const {data: deliveryPartnersData} = useGetActiveDeliveryPartnersQuery({});
+  const {data: deliveryPartnersData} = useGetDeliveryPartnersWithOrdersQuery(
+    {},
+  );
+  const [assignOrder, {isLoading: isAssigningOrder}] = useAssignOrderMutation();
 
   const pricingKeyMap: Record<string, string> = {
     DELIVERY_FEE: 'deliveryFee',
@@ -141,10 +154,10 @@ const AssignTransporterScreen = () => {
     const filtered = (
       Array.isArray(deliveryPartnersData) ? deliveryPartnersData : []
     )
-      .filter((p: any) => p.isOnline)
+      .filter((p: any) => p?.deliveryPartner?.isOnline)
       .map((p: any) => {
-        const partnerLat = Number(p.latitude) || 0;
-        const partnerLng = Number(p.longitude) || 0;
+        const partnerLat = Number(p?.deliveryPartner?.latitude) || 0;
+        const partnerLng = Number(p?.deliveryPartner?.longitude) || 0;
         const distance = shopCoords
           ? haversineDistance(
               shopCoords.latitude,
@@ -153,7 +166,14 @@ const AssignTransporterScreen = () => {
               partnerLng,
             )
           : 999;
-        return {...p, distance};
+        const currentOrdersArray = Array.isArray(p?.currentOrders)
+          ? p.currentOrders
+          : [];
+        return {
+          ...p?.deliveryPartner,
+          distance,
+          currentOrdersCount: currentOrdersArray.length,
+        };
       })
       .sort((a: any, b: any) => {
         const aTest = String(a.name || '')
@@ -162,16 +182,32 @@ const AssignTransporterScreen = () => {
         const bTest = String(b.name || '')
           .toLowerCase()
           .includes('test');
-        if (aTest !== bTest) return aTest ? 1 : -1; // push Test partners to bottom
+        if (aTest !== bTest) return aTest ? 1 : -1;
         return a.distance - b.distance;
       });
 
     return filtered;
   }, [deliveryPartnersData, shopCoords]);
 
-  const handleAssignOrder = (partnerId: string) => {
-    console.log('Assigning order to partner:', partnerId);
-    // TODO: Implement assignment logic
+  const handleAssignOrder = async (partnerId: string) => {
+    if (!order?.orderId || !partnerId) {
+      Alert.alert('Unable to assign', 'Order or partner information missing');
+      return;
+    }
+
+    try {
+      await assignOrder({
+        orderId: String(order.orderId),
+        deliveryPartnerId: partnerId,
+      }).unwrap();
+
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert(
+        'Assign order failed',
+        error instanceof Error ? error.message : 'Please try again',
+      );
+    }
   };
 
   const formatMobileNumber = (input?: string | number) => {
@@ -248,7 +284,8 @@ const AssignTransporterScreen = () => {
 
       <View style={styles.partnerMetaRow}>
         <Text style={styles.metaLabel}>
-          Orders: <Text style={styles.metaValue}>{item.orderSuccess ?? 0}</Text>
+          Orders:{' '}
+          <Text style={styles.metaValue}>{item?.currentOrdersCount ?? 0}</Text>
         </Text>
         <View style={styles.bottomActions}>
           <TouchableOpacity
@@ -264,7 +301,9 @@ const AssignTransporterScreen = () => {
               size={16}
               color="#fff"
             />
-            <Text style={styles.assignButtonText}>Assign Order</Text>
+            <Text style={styles.assignButtonText}>
+              {isAssigningOrder ? 'Assigning...' : 'Assign Order'}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

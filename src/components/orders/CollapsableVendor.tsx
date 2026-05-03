@@ -10,7 +10,7 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import {getStatusStyles} from './DashBoardUtil';
-import {Shop} from '../../store/vendors/useVendorStore';
+import {Shop} from '../../types';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 type OrderCardProps = {
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     backgroundColor: '#f8f8f8',
     borderRadius: 8,
-    padding: 12,
+    paddingHorizontal: 8,
   },
   logoContainer: {
     position: 'relative',

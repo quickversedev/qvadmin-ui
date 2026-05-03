@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     color: '#374151',
     fontFamily: FONT_FAMILY.bricolageMedium,
     flexShrink: 1,
-    paddingRight: 28, // prevent text overlapping the icon
+    paddingRight: 28,
   },
   iconWrap: {
     position: 'absolute',

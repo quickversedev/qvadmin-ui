@@ -51,6 +51,23 @@ const orderApi = api.injectEndpoints({
       }),
       invalidatesTags: ['Orders'],
     }),
+    // To Get Orders History (supports pagination)
+    getOrderHistory: builder.query({
+      query: (params: {
+        regionId: string;
+        period: string;
+        page?: number;
+        size?: number;
+      }) => {
+        const page = params.page ?? 0;
+        const size = params.size ?? 20;
+        console.log(page, size);
+        return {
+          url: `/quickVerse/v2/order/history?regionId=${params.regionId}&period=${params.period}&page=${page}&size=${size}`,
+          method: 'GET',
+        };
+      },
+    }),
   }),
 });
 
@@ -59,4 +76,6 @@ export const {
   useGetOrdersQuery,
   useGetOrdersFinanceQuery,
   useGetOrderByIdQuery,
+  useAssignOrderMutation,
+  useGetOrderHistoryQuery,
 } = orderApi;

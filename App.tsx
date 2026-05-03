@@ -1,9 +1,8 @@
 import {SafeAreaProvider} from 'react-native-safe-area-context';
-import {AuthProvider} from './src/contexts/Login/AuthProvider';
 import RootNavigation from './src/navigation/RootNavigation';
-import React from 'react';
-import {Text, TextInput} from 'react-native';
 import {FONT_FAMILY} from './src/assets/constants/fonts';
+import {Text, TextInput} from 'react-native';
+import React from 'react';
 
 const textDefaults = {
   fontFamily: FONT_FAMILY.bricolageRegular,
@@ -23,9 +22,7 @@ const textDefaults = {
 function App(): React.JSX.Element {
   return (
     <SafeAreaProvider>
-      <AuthProvider>
-        <RootNavigation />
-      </AuthProvider>
+      <RootNavigation />
     </SafeAreaProvider>
   );
 }

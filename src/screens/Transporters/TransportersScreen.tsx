@@ -14,13 +14,14 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import {useGetDeliveryPartnersQuery} from '../../apis/deliveryPartner';
+import {useGetDeliveryPartnersWithOrdersQuery} from '../../apis/deliveryPartner';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 import {
   DeliveryPartner,
   getDeliveryPartnerId,
   getDeliveryPartnerName,
 } from '../../services/apis/deliveryPartnerService';
+import {navigationRef} from '../../navigation/NavigationHelper';
 
 type FilterKey = 'ALL' | 'ONLINE' | 'OFFLINE';
 
@@ -29,6 +30,39 @@ type TransporterItem = DeliveryPartner & {
   orderSuccess?: number;
   orderFailed?: number;
   lastLocationUpdatedAt?: string | null;
+};
+
+type PartnerOrder = {
+  id?: string;
+  orderId?: string;
+  orderStatus?: string;
+  createdAt?: string;
+  updatedAt?: string | null;
+  shopDetails?: {
+    name?: string;
+    logo?: string;
+  };
+  orderDetails?: {
+    orderId?: string;
+    customerName?: string;
+    customerMobile?: string | number;
+    orderDescription?: string;
+    totalAmount?: number;
+    totalItemCount?: number;
+    creationTime?: string;
+    state?: string;
+    orderLink?: string;
+    shopDetails?: {
+      name?: string;
+      logo?: string;
+    };
+  };
+};
+
+type TransporterBucket = TransporterItem & {
+  deliveryPartner?: DeliveryPartner;
+  currentOrders?: PartnerOrder[];
+  currentOrderCount?: number;
 };
 
 const filterButtons: {id: FilterKey; label: string}[] = [
@@ -86,8 +120,19 @@ const formatLastLocation = (value?: string | null) => {
   return `${Math.max(1, Math.round(elapsedHours / 24))}d ago`;
 };
 
-const extractPartnerList = (response: unknown): TransporterItem[] => {
-  if (Array.isArray(response)) return response as TransporterItem[];
+const getPartnerSource = (item: TransporterBucket): TransporterItem =>
+  item.deliveryPartner || item;
+
+const getPartnerOrders = (item: TransporterBucket): PartnerOrder[] => {
+  if (Array.isArray(item.currentOrders)) {
+    return item.currentOrders;
+  }
+
+  return [];
+};
+
+const extractPartnerList = (response: unknown): TransporterBucket[] => {
+  if (Array.isArray(response)) return response as TransporterBucket[];
 
   if (!response || typeof response !== 'object') return [];
 
@@ -102,7 +147,7 @@ const extractPartnerList = (response: unknown): TransporterItem[] => {
 
   for (const candidate of directCandidates) {
     if (Array.isArray(candidate)) {
-      return candidate as TransporterItem[];
+      return candidate as TransporterBucket[];
     }
   }
 
@@ -126,7 +171,7 @@ const extractPartnerList = (response: unknown): TransporterItem[] => {
 
     for (const nestedCandidate of nestedCandidates) {
       if (Array.isArray(nestedCandidate)) {
-        return nestedCandidate as TransporterItem[];
+        return nestedCandidate as TransporterBucket[];
       }
     }
   }
@@ -134,10 +179,34 @@ const extractPartnerList = (response: unknown): TransporterItem[] => {
   return [];
 };
 
+const formatOrderStatus = (value?: string | null) => {
+  if (!value) return 'Unknown';
+
+  return value
+    .replace(/_/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, char => char.toUpperCase());
+};
+
+const getOrderStatusColor = (value?: string | null) => {
+  const normalized = String(value || '').toUpperCase();
+
+  if (normalized.includes('COMPLETED')) return '#059669';
+  if (normalized.includes('CANCEL')) return '#dc2626';
+  if (normalized.includes('ASSIGNED')) return '#2563eb';
+  if (normalized.includes('PACK') || normalized.includes('PICK'))
+    return '#d97706';
+
+  return '#475569';
+};
+
 const TransportersScreen = () => {
   const [refreshing, setRefreshing] = React.useState(false);
   const [activeFilter, setActiveFilter] = React.useState<FilterKey>('ALL');
   const [expandedMaps, setExpandedMaps] = React.useState<
+    Record<string, boolean>
+  >({});
+  const [expandedOrders, setExpandedOrders] = React.useState<
     Record<string, boolean>
   >({});
 
@@ -147,7 +216,7 @@ const TransportersScreen = () => {
     error,
     isLoading,
     isFetching,
-  } = useGetDeliveryPartnersQuery({isDeleted: false});
+  } = useGetDeliveryPartnersWithOrdersQuery({});
 
   const deliveryPartners = React.useMemo(
     () => extractPartnerList(deliveryPartnersData),
@@ -158,16 +227,20 @@ const TransportersScreen = () => {
     let result = deliveryPartners;
 
     if (activeFilter === 'ONLINE') {
-      result = deliveryPartners.filter(p => Boolean(p.isOnline));
+      result = deliveryPartners.filter(p =>
+        Boolean(getPartnerSource(p).isOnline),
+      );
     } else if (activeFilter !== 'ALL') {
-      result = deliveryPartners.filter(p => !p.isOnline);
+      result = deliveryPartners.filter(p => !getPartnerSource(p).isOnline);
     }
 
     return [...result].sort((a, b) => {
-      const aTest = String(getDeliveryPartnerName(a) || '')
+      const partnerA = getPartnerSource(a);
+      const partnerB = getPartnerSource(b);
+      const aTest = String(getDeliveryPartnerName(partnerA) || '')
         .toLowerCase()
         .includes('test');
-      const bTest = String(getDeliveryPartnerName(b) || '')
+      const bTest = String(getDeliveryPartnerName(partnerB) || '')
         .toLowerCase()
         .includes('test');
 
@@ -175,19 +248,21 @@ const TransportersScreen = () => {
         return aTest ? 1 : -1;
       }
 
-      const aOnline = Boolean(a.isOnline);
-      const bOnline = Boolean(b.isOnline);
+      const aOnline = Boolean(partnerA.isOnline);
+      const bOnline = Boolean(partnerB.isOnline);
       return aOnline === bOnline ? 0 : aOnline ? -1 : 1;
     });
   }, [activeFilter, deliveryPartners]);
 
   const onlineCount = React.useMemo(
-    () => deliveryPartners.filter(p => Boolean(p.isOnline)).length,
+    () =>
+      deliveryPartners.filter(p => Boolean(getPartnerSource(p).isOnline))
+        .length,
     [deliveryPartners],
   );
 
   const offlineCount = React.useMemo(
-    () => deliveryPartners.filter(p => !p.isOnline).length,
+    () => deliveryPartners.filter(p => !getPartnerSource(p).isOnline).length,
     [deliveryPartners],
   );
 
@@ -261,16 +336,27 @@ const TransportersScreen = () => {
     </View>
   );
 
-  const renderTransporterItem: ListRenderItem<TransporterItem> = ({item}) => {
-    const transporterName = getDeliveryPartnerName(item);
+  const renderTransporterItem: ListRenderItem<TransporterBucket> = ({item}) => {
+    const transporter = getPartnerSource(item);
+    const transporterName = getDeliveryPartnerName(transporter);
     const transporterId =
-      getDeliveryPartnerId(item) ||
+      getDeliveryPartnerId(transporter) ||
       transporterName ||
-      String(item?.mobileNumber || '');
+      String(transporter?.mobileNumber || '');
     const isMapExpanded = Boolean(expandedMaps[transporterId]);
+    const isOrdersExpanded = Boolean(expandedOrders[transporterId]);
+    const currentOrders = getPartnerOrders(item);
+    const currentOrderCount = item.currentOrderCount ?? currentOrders.length;
 
     const toggleMapExpand = () => {
       setExpandedMaps(prev => ({
+        ...prev,
+        [transporterId]: !prev[transporterId],
+      }));
+    };
+
+    const toggleOrdersExpand = () => {
+      setExpandedOrders(prev => ({
         ...prev,
         [transporterId]: !prev[transporterId],
       }));
@@ -281,9 +367,9 @@ const TransportersScreen = () => {
         <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
           <View style={styles.cardLeft}>
             <View style={styles.avatarWrap}>
-              {item?.profilePicture ? (
+              {transporter?.profilePicture ? (
                 <Image
-                  source={{uri: item?.profilePicture}}
+                  source={{uri: transporter?.profilePicture}}
                   style={styles.avatar}
                 />
               ) : (
@@ -295,7 +381,9 @@ const TransportersScreen = () => {
               <View
                 style={[
                   styles.avatarStatusDot,
-                  item?.isOnline ? styles.statusOnline : styles.statusOffline,
+                  transporter?.isOnline
+                    ? styles.statusOnline
+                    : styles.statusOffline,
                 ]}
               />
             </View>
@@ -306,26 +394,26 @@ const TransportersScreen = () => {
               </Text>
 
               <Text style={styles.partnerMeta} numberOfLines={1}>
-                {formatMobileNumber(item?.mobileNumber)}
+                {formatMobileNumber(transporter?.mobileNumber)}
               </Text>
 
               <Text style={styles.partnerMeta} numberOfLines={1}>
-                {item?.address || 'No address available'}
+                {transporter?.address || 'No address available'}
               </Text>
 
               <Text style={styles.updatedTextInline}>
-                Updated {formatLastLocation(item?.lastLocationUpdatedAt)}
+                Updated {formatLastLocation(transporter?.lastLocationUpdatedAt)}
               </Text>
             </View>
           </View>
 
           <View style={styles.cardRight}>
-            <Text style={styles.orderCountValue}>{item?.totalOrders ?? 0}</Text>
+            <Text style={styles.orderCountValue}>{currentOrderCount}</Text>
             <Text style={styles.orderCountLabel}>Orders</Text>
             <View style={{flexDirection: 'row', alignItems: 'center', gap: 12}}>
               <TouchableOpacity
                 style={styles.callButton}
-                onPress={() => handleCall(item?.mobileNumber)}
+                onPress={() => handleCall(transporter?.mobileNumber)}
                 activeOpacity={0.8}>
                 <MaterialCommunityIcons
                   name="phone"
@@ -333,13 +421,13 @@ const TransportersScreen = () => {
                   color="#065f46"
                 />
               </TouchableOpacity>
-              {item?.latitude && item?.longitude && (
+              {transporter?.latitude && transporter?.longitude && (
                 <TouchableOpacity
                   style={styles.mapToggleButton}
                   onPress={toggleMapExpand}
                   activeOpacity={0.7}>
                   <MaterialCommunityIcons
-                    name={'map-marker'}
+                    name="map-marker"
                     size={20}
                     color="#0f62fe"
                   />
@@ -362,6 +450,105 @@ const TransportersScreen = () => {
           </View>
         </View>
 
+        <View style={styles.ordersSection}>
+          {currentOrderCount && (
+            <TouchableOpacity
+              style={styles.ordersToggleButton}
+              activeOpacity={0.75}
+              onPress={toggleOrdersExpand}>
+              <View style={styles.ordersToggleLeft}>
+                <MaterialCommunityIcons
+                  name="clipboard-text-outline"
+                  size={18}
+                  color="#0f62fe"
+                />
+                <Text style={styles.ordersToggleText}>
+                  Current Orders ({currentOrderCount})
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name={isOrdersExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#0f62fe"
+              />
+            </TouchableOpacity>
+          )}
+
+          {isOrdersExpanded && (
+            <View style={styles.ordersList}>
+              {currentOrders.length === 0 ? (
+                <View style={styles.ordersEmptyState}>
+                  <Text style={styles.ordersEmptyText}>
+                    No active orders for this partner.
+                  </Text>
+                </View>
+              ) : (
+                currentOrders.map((order, index) => {
+                  const orderDetails = order.orderDetails || {};
+                  const orderId =
+                    order.orderId || orderDetails.orderId || `order-${index}`;
+                  const orderStatus = order.orderStatus || orderDetails.state;
+                  const orderShopName =
+                    orderDetails.shopDetails?.name ||
+                    order.shopDetails?.name ||
+                    'Shop';
+                  const orderTitle =
+                    orderDetails.orderDescription ||
+                    orderDetails.customerName ||
+                    'Order details';
+
+                  return (
+                    <View key={orderId} style={styles.orderCard}>
+                      <View style={styles.orderCardHeader}>
+                        <View style={{flex: 1}}>
+                          <Text style={styles.orderCardTitle} numberOfLines={1}>
+                            #{orderId}
+                          </Text>
+                          <Text
+                            style={styles.orderCardSubtitle}
+                            numberOfLines={1}>
+                            {orderTitle}
+                          </Text>
+                        </View>
+                      </View>
+
+                      <Text style={styles.orderCardMeta} numberOfLines={1}>
+                        {orderShopName}
+                      </Text>
+
+                      <View style={styles.orderStatsRow}>
+                        <Text style={styles.orderStatText}>
+                          {orderDetails.totalItemCount ?? 0} items
+                        </Text>
+                        <Text style={styles.orderStatText}>
+                          ₹{orderDetails.totalAmount ?? 0}
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.orderActionButton}
+                        onPress={() => {
+                          navigationRef.current?.navigate('Orders', {
+                            screen: 'ViewOrderScreen',
+                            params: {orderId: order?.orderId},
+                          });
+                        }}
+                        activeOpacity={0.8}>
+                        <Text style={styles.orderActionText}>View Order</Text>
+                        <MaterialCommunityIcons
+                          name="open-in-new"
+                          size={14}
+                          color="#0f62fe"
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })
+              )}
+            </View>
+          )}
+        </View>
+
         {transporterName?.includes('Test') && (
           <View style={styles.testWarningContainer}>
             <MaterialCommunityIcons
@@ -376,16 +563,19 @@ const TransportersScreen = () => {
           </View>
         )}
 
-        {item?.latitude && item?.longitude && isMapExpanded && (
+        {transporter?.latitude && transporter?.longitude && isMapExpanded && (
           <TouchableOpacity
             activeOpacity={0.9}
             onPress={() =>
-              openMap(item?.latitude as string, item?.longitude as string)
+              openMap(
+                transporter?.latitude as string,
+                transporter?.longitude as string,
+              )
             }
             style={styles.mapExpandedContainer}>
             <Image
               source={{
-                uri: `https://maps.googleapis.com/maps/api/staticmap?center=${item?.latitude},${item?.longitude}&zoom=15&size=800x300&markers=color:red%7C${item?.latitude},${item?.longitude}&key=AIzaSyAIIjpfah1Kbsl38kyy8yqGtfzh33XSXzY`,
+                uri: `https://maps.googleapis.com/maps/api/staticmap?center=${transporter?.latitude},${transporter?.longitude}&zoom=15&size=800x300&markers=color:red%7C${transporter?.latitude},${transporter?.longitude}&key=AIzaSyAIIjpfah1Kbsl38kyy8yqGtfzh33XSXzY`,
               }}
               style={styles.mapExpandedPreview}
             />
@@ -459,7 +649,7 @@ const TransportersScreen = () => {
           <FlatList
             data={filteredPartners}
             keyExtractor={(item, index) =>
-              getDeliveryPartnerId(item) || String(index)
+              getDeliveryPartnerId(getPartnerSource(item)) || String(index)
             }
             renderItem={renderTransporterItem}
             contentContainerStyle={[
@@ -658,6 +848,115 @@ const styles = StyleSheet.create({
   },
   cardRight: {
     alignItems: 'flex-end',
+  },
+  ordersSection: {
+    marginTop: 10,
+  },
+  ordersToggleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  ordersToggleLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ordersToggleText: {
+    color: '#0f172a',
+    fontSize: 13,
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  ordersList: {
+    marginTop: 8,
+    gap: 8,
+  },
+  ordersEmptyState: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: '#f8fafc',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  ordersEmptyText: {
+    color: '#64748b',
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  orderCard: {
+    padding: 12,
+    borderRadius: 12,
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  orderCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  orderCardTitle: {
+    color: '#0f172a',
+    fontSize: 14,
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  orderCardSubtitle: {
+    marginTop: 2,
+    color: '#475569',
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  orderStatusBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
+  },
+  orderStatusText: {
+    fontSize: 11,
+    fontFamily: FONT_FAMILY.bricolageBold,
+    textTransform: 'capitalize',
+  },
+  orderCardMeta: {
+    marginTop: 8,
+    color: '#64748b',
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  orderStatsRow: {
+    marginTop: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  orderStatText: {
+    color: '#0f172a',
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  orderActionButton: {
+    marginTop: 10,
+    alignSelf: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  orderActionText: {
+    color: '#0f62fe',
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   testWarningContainer: {
     flexDirection: 'row',

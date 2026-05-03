@@ -11,8 +11,6 @@ import {
   ImageBackground,
   Image,
 } from 'react-native';
-
-import {useAuth} from '../../contexts/Login/AuthProvider';
 import CountryPicker, {
   Country,
   CountryCode,
@@ -21,6 +19,7 @@ import {AuthNavigationStackParamList} from '../../navigation/AuthStack';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {useNavigation} from '@react-navigation/native';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
+import {useRequestOtpMutation} from '../../apis/authentication';
 
 const {height} = Dimensions.get('window');
 type LoginScreenNavigationProp = StackNavigationProp<
@@ -34,22 +33,27 @@ const LoginScreen: React.FC = () => {
   const [callingCode, setCallingCode] = useState('91');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [loading, setLoading] = useState(false);
+  const [requestOtp] = useRequestOtpMutation();
 
   const onSelect = (country: Country) => {
     setCountryCode(country.cca2);
     setCallingCode(country.callingCode[0]);
   };
-  const auth = useAuth();
+
   const handleLogin = async () => {
     setLoading(true);
     try {
-      const verificationId = await auth.sendOtp(phoneNumber);
+      const response = await requestOtp(phoneNumber).unwrap();
+      console.log(response?.response?.verificationId);
       navigation.navigate({
         name: 'OTPScreen',
-        params: {phoneNumber, verificationId: verificationId},
+        params: {
+          phoneNumber,
+          verificationId: response?.response?.verificationId,
+        },
       });
-    } catch (err) {
-      Alert.alert('Error', 'Login failed');
+    } catch (err: any) {
+      Alert.alert('Error', err?.data?.error?.message || 'Login failed');
     } finally {
       setLoading(false);
     }

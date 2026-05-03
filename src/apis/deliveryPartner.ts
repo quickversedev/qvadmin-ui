@@ -39,6 +39,9 @@ const deliveryPartnerApi = api.injectEndpoints({
     getActiveDeliveryPartners: builder.query({
       query: () => `/v1/delivery-partner/getPartnersByOnlineStatus`,
     }),
+    getDeliveryPartnersWithOrders: builder.query({
+      query: () => `/v1/delivery-partner/with-current-orders`,
+    }),
   }),
 });
 
@@ -49,4 +52,5 @@ export const {
   useUpdateDeliveryPartnerMutation,
   useDeleteDeliveryPartnerMutation,
   useGetActiveDeliveryPartnersQuery,
+  useGetDeliveryPartnersWithOrdersQuery,
 } = deliveryPartnerApi;

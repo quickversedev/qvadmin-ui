@@ -69,7 +69,7 @@ export const convertUTCToIST = (utcTime: string): string => {
   try {
     const date = new Date(utcTime);
     const istOffset = 5.5 * 60 * 60 * 1000;
-    const istTime = new Date(date.getTime() + istOffset);
+    const istTime = new Date(date.getTime());
 
     return istTime.toLocaleString('en-IN', {
       day: '2-digit',

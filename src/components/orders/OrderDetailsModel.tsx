@@ -17,7 +17,7 @@ import {
   openMap,
   parseAddress,
 } from '../../utils/orderUtils';
-import {Shop} from '../../store/vendors/useVendorStore';
+import {Shop} from '../../types';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 import {useGetPricingConfigQuery} from '../../apis/pricingConfig';
 

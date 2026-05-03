@@ -14,8 +14,6 @@ import {StackScreenProps} from '@react-navigation/stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {launchImageLibrary} from 'react-native-image-picker';
-
-import {useAuth} from '../../contexts/Login/AuthProvider';
 import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {
   DeliveryPartner,
@@ -25,6 +23,7 @@ import {
 } from '../../services/apis/deliveryPartnerService';
 import {useDeliveryPartnerStore} from '../../store/deliveryPartners/useDeliveryPartnerStore';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
+import {useAuthStore} from '../../store';
 
 type Props = StackScreenProps<
   SettingsNavigationStackParamList,
@@ -254,7 +253,7 @@ const getSubmitErrorMessage = (error: unknown) => {
 };
 
 const AddTransporterScreen: React.FC<Props> = ({navigation, route}) => {
-  const {authData} = useAuth();
+  const {authData} = useAuthStore(state => state);
   const transporterId = route.params?.transporterId;
   const isEditMode = Boolean(transporterId);
 

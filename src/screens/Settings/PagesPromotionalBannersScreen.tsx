@@ -16,8 +16,6 @@ import {StackScreenProps} from '@react-navigation/stack';
 import {useFocusEffect} from '@react-navigation/native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
-
-import {useAuth} from '../../contexts/Login/AuthProvider';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {Region, useRegionsStore} from '../../store/regions/useRegionsStore';
@@ -30,6 +28,7 @@ import {
 } from '../../services/apis/pagesService';
 import {deletePromotion} from '../../services/apis/promotionService';
 import {useDevModeStore} from '../../store/app/useDevModeStore';
+import {useAuthStore} from '../../store';
 
 type Props = StackScreenProps<
   SettingsNavigationStackParamList,
@@ -38,7 +37,7 @@ type Props = StackScreenProps<
 
 const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
   const isDevMode = useDevModeStore(state => state.isDevMode);
-  const {authData} = useAuth();
+  const {authData} = useAuthStore();
   const {
     regions,
     selectedRegion,

@@ -12,8 +12,6 @@ import {
 import {StackScreenProps} from '@react-navigation/stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
-
-import {useAuth} from '../../contexts/Login/AuthProvider';
 import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {
   DeliveryPartner,
@@ -22,6 +20,7 @@ import {
 } from '../../services/apis/deliveryPartnerService';
 import {useDeliveryPartnerStore} from '../../store/deliveryPartners/useDeliveryPartnerStore';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
+import {useAuthStore} from '../../store';
 
 type Props = StackScreenProps<SettingsNavigationStackParamList, 'Transporters'>;
 
@@ -56,7 +55,7 @@ const getDisplayMobileNumber = (value?: string) => {
 };
 
 const TransportersScreen: React.FC<Props> = ({navigation}) => {
-  const {authData} = useAuth();
+  const {authData} = useAuthStore(state => state);
   const {partners, loading, error, fetchPartners, removePartner} =
     useDeliveryPartnerStore();
 

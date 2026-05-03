@@ -208,8 +208,6 @@ export const fetchOnlineDeliveryPartners = async (
       },
     ),
   );
-  console.log(response, 'Online Delivery Partners Response');
-
   return normalizeDeliveryPartnersResponse(response);
 };
 

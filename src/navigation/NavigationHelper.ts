@@ -21,15 +21,15 @@ const navigateToOrderInternal = (orderId: string) => {
       return;
     }
 
-    // navigationRef.dispatch(
-    //   CommonActions.navigate({
-    //     name: 'Orders',
-    //     params: {
-    //       screen: 'ViewOrderScreen',
-    //       params: {orderId},
-    //     },
-    //   }),
-    // );
+    navigationRef.dispatch(
+      CommonActions.navigate({
+        name: 'Orders',
+        params: {
+          screen: 'ViewOrderScreen',
+          params: {orderId},
+        },
+      }),
+    );
   }, 50);
 };
 

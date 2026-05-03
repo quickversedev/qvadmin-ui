@@ -15,8 +15,6 @@ import {StackScreenProps} from '@react-navigation/stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {launchImageLibrary} from 'react-native-image-picker';
-
-import {useAuth} from '../../contexts/Login/AuthProvider';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {useVendorStore} from '../../store/vendors/useVendorStore';
@@ -26,6 +24,7 @@ import {
   updatePromotion,
 } from '../../services/apis/promotionService';
 import {useDevModeStore} from '../../store/app/useDevModeStore';
+import {useAuthStore} from '../../store';
 
 type Props = StackScreenProps<
   SettingsNavigationStackParamList,
@@ -67,7 +66,7 @@ const getErrorMessage = (error: unknown) => {
 
 const AddPromotionBannerScreen: React.FC<Props> = ({navigation, route}) => {
   const isDevMode = useDevModeStore(state => state.isDevMode);
-  const {authData} = useAuth();
+  const {authData} = useAuthStore(state => state);
   const vendors = useVendorStore(state => state.vendors);
   const vendorsLoading = useVendorStore(state => state.loading);
   const fetchVendors = useVendorStore(state => state.fetchVendors);

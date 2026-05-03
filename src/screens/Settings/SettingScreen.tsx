@@ -10,11 +10,11 @@ import {
 } from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useAuth} from '../../contexts/Login/AuthProvider';
 import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 import {useDevModeStore} from '../../store/app/useDevModeStore';
+import {useAuthStore} from '../../store';
 
 type Props = StackScreenProps<SettingsNavigationStackParamList, 'SettingsHome'>;
 
@@ -22,7 +22,7 @@ const DEV_MODE_SECRET = 'Devmode';
 const SECRET_TAP_WINDOW_MS = 1000;
 
 const SettingsScreen: React.FC<Props> = ({navigation}) => {
-  const auth = useAuth();
+  const {clearAuthData} = useAuthStore(state => state);
   const isDevMode = useDevModeStore(state => state.isDevMode);
   const enableDevMode = useDevModeStore(state => state.enableDevMode);
   const disableDevMode = useDevModeStore(state => state.disableDevMode);
@@ -41,7 +41,7 @@ const SettingsScreen: React.FC<Props> = ({navigation}) => {
 
   const handleConfirmSignOut = () => {
     setLogoutModalVisible(false);
-    auth.signOut();
+    clearAuthData();
   };
 
   const handleHeaderTap = () => {

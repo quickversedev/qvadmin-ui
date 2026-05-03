@@ -1,6 +1,7 @@
 import {createStackNavigator} from '@react-navigation/stack';
 import {
   AssignTransporterScreen,
+  OrderHistoryScreen,
   OrderStatsScreen,
   OrdersScreen,
   ViewOrderScreen,
@@ -17,13 +18,13 @@ export type OrdersNavigationStackParamList = {
       | 'REJECTED'
       | 'PENDING'
       | 'ACCEPTED'
-      | 'READY_TO_SHIP'
-      | 'ON_THE_WAY'
+      | 'SHIPPED'
       | 'COMPLETED';
   };
   ViewOrderScreen: {orderId: string};
   WebViewScreen: undefined;
   AssignTransporterScreen: {order: any};
+  OrderHistoryScreen: undefined;
 };
 
 const Stack = createStackNavigator<OrdersNavigationStackParamList>();
@@ -52,6 +53,20 @@ const OrdersNavigation = () => {
         component={ViewOrderScreen}
         options={{
           title: 'Order Details',
+          headerShown: true,
+          headerTitleStyle: {
+            fontSize: 22,
+            color: '#0f172a',
+            fontFamily: FONT_FAMILY.bricolageBold,
+          },
+          headerTintColor: '#0F172A',
+        }}
+      />
+      <Stack.Screen
+        name="OrderHistoryScreen"
+        component={OrderHistoryScreen}
+        options={{
+          title: 'Order History',
           headerShown: true,
           headerTitleStyle: {
             fontSize: 22,

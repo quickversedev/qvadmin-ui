@@ -1,5 +1,4 @@
 import axios, {AxiosError, AxiosResponse} from 'axios';
-import {logApi} from './apiLogger';
 import {Alert, Platform, ToastAndroid} from 'react-native';
 import {ApiError} from './axios.types';
 
@@ -191,23 +190,9 @@ export const apiCall = async <T>(
     const response = await promise;
     // Log API request and response
     const config = response.config || {};
-    logApi({
-      url: config.url || '',
-      method: config.method || '',
-      body: config.data,
-      response: response.data,
-    });
     return response.data;
   } catch (error) {
     // Try to log error details if possible
-    if (axios.isAxiosError(error) && error.config) {
-      logApi({
-        url: error.config.url || '',
-        method: error.config.method || '',
-        body: error.config.data,
-        response: error.response?.data,
-      });
-    }
     console.log(error);
     console.error('error caught in Axios Config', error);
     throw handleAxiosError(error as AxiosError);

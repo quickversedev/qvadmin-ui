@@ -15,7 +15,7 @@ import {RouteProp, useRoute} from '@react-navigation/native';
 import {OrdersNavigationStackParamList} from '../../navigation/OrdersNavigation';
 import {useGetOrdersQuery, useGetOrderStatsQuery} from '../../apis/order';
 import {useRegionsStore} from '../../store/regions/useRegionsStore';
-import {Shop} from '../../store/vendors/useVendorStore';
+import {Shop} from '../../types';
 import {OrderSummaryCard, CollapsableVendor} from '../../components/orders';
 
 type OrdersScreenRouteProp = RouteProp<
@@ -79,14 +79,9 @@ const OrdersScreen = () => {
       value: 'ACCEPTED',
       count: orderStatsData?.response?.acceptedOrders || 0,
     },
-    READY_TO_SHIP: {
-      label: 'Ready to Ship',
-      value: 'READY_TO_SHIP',
-      count: orderStatsData?.response?.readyToShipOrders || 0,
-    },
-    ON_THE_WAY: {
-      label: 'In Transit',
-      value: 'ON_THE_WAY',
+    SHIPPED: {
+      label: 'Shipped',
+      value: 'SHIPPED',
       count: orderStatsData?.response?.inTransitOrders || 0,
     },
     COMPLETED: {

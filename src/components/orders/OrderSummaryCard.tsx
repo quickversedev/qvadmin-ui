@@ -13,7 +13,7 @@ import {Order} from '../../store/orders/useOrdersStore';
 import {getStatusStyles} from './DashBoardUtil';
 import OrderDetailsModal from './OrderDetailsModel';
 import {convertUTCToIST, getTimeElapsed} from '../../utils/orderUtils';
-import {Shop} from '../../store/vendors/useVendorStore';
+import {Shop} from '../../types';
 import {
   DeliveryPartner,
   getDeliveryPartnerId,
@@ -46,6 +46,7 @@ type OrderSummaryCardProps = Order & {
   assignedPartnerId?: string;
   partnerOrderCounts?: Record<string, number>;
   onAssignPartner?: (orderId: string, partnerId: string) => void;
+  deliveryPartnerDetails: any;
 };
 
 const toCoordinate = (value: unknown): number | null => {
@@ -96,19 +97,17 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
     completedDate,
     state,
     vendor,
-    showAssignment,
     onlinePartners = [],
     assignedPartnerId,
     onAssignPartner,
     partnerOrderCounts = {},
     customerName,
     orderLink,
+    deliveryPartnerDetails,
   } = props;
 
   const statusStyles = getStatusStyles(state);
-  const assignedPartner = onlinePartners.find(
-    partner => getDeliveryPartnerId(partner) === assignedPartnerId,
-  );
+  const assignedPartner = deliveryPartnerDetails;
   const shopLatitude = toCoordinate(vendor?.shopDetails?.coordinates?.latitude);
   const shopLongitude = toCoordinate(
     vendor?.shopDetails?.coordinates?.longitude,
@@ -203,7 +202,8 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
     setAssignModalVisible(false);
   };
 
-  const canAssignPartner = state === ORDER_STATUS.ACCEPTED && orderId;
+  const canAssignPartner =
+    state === ORDER_STATUS.ACCEPTED && orderId && !deliveryPartnerDetails;
 
   return (
     <View style={styles.card}>

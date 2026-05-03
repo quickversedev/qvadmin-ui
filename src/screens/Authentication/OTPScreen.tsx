@@ -11,7 +11,6 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-
 import {
   CodeField,
   Cursor,
@@ -19,8 +18,12 @@ import {
   useClearByFocusCell,
 } from 'react-native-confirmation-code-field';
 import {AuthNavigationStackParamList} from '../../navigation/AuthStack';
-import {useAuth} from '../../contexts/Login/AuthProvider';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
+import {
+  useLoginMutation,
+  useRequestOtpMutation,
+} from '../../apis/authentication';
+import {useAuthStore} from '../../store';
 
 const {height} = Dimensions.get('window');
 
@@ -35,6 +38,9 @@ const OTPScreen: React.FC = () => {
   const navigation = useNavigation();
   const [value, setValue] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [login] = useLoginMutation();
+  const [requestOtp] = useRequestOtpMutation();
+  const {setAuthData} = useAuthStore(state => state);
 
   // Resend OTP Timer
   const [resendTimeout, setResendTimeout] = useState(60);
@@ -47,7 +53,6 @@ const OTPScreen: React.FC = () => {
     value,
     setValue,
   });
-  const auth = useAuth();
 
   // Timer effect
   useEffect(() => {
@@ -76,9 +81,15 @@ const OTPScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      await auth.verifyOtp(phoneNumber, value, currentVerificationId);
-    } catch (err) {
-      Alert.alert('Error', 'Login failed');
+      const response = await login({
+        phone: '91' + phoneNumber,
+        otp: value,
+        verificationId: currentVerificationId,
+      })?.unwrap();
+      setAuthData(response);
+    } catch (err: any) {
+      console.log(err);
+      Alert.alert('Error', err?.data?.error?.message || 'Login failed');
     } finally {
       setLoading(false);
     }
@@ -91,8 +102,8 @@ const OTPScreen: React.FC = () => {
 
     try {
       setLoading(true);
-      const newVerificationId = await auth.sendOtp(phoneNumber);
-      setCurrentVerificationId(newVerificationId);
+      const response = await requestOtp(phoneNumber)?.unwrap();
+      setCurrentVerificationId(response?.response?.verificationId);
       setResendTimeout(60);
       setCanResend(false);
     } catch (error) {
