@@ -19,7 +19,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {useAuth} from '../../contexts/Login/AuthProvider';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
-import {SettingsStackParamList} from '../../navigation/SettingsNavigation';
+import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {Region, useRegionsStore} from '../../store/regions/useRegionsStore';
 import {usePagesStore} from '../../store/pages/usePagesStore';
 import {
@@ -32,7 +32,7 @@ import {deletePromotion} from '../../services/apis/promotionService';
 import {useDevModeStore} from '../../store/app/useDevModeStore';
 
 type Props = StackScreenProps<
-  SettingsStackParamList,
+  SettingsNavigationStackParamList,
   'PagesPromotionalBanners'
 >;
 
@@ -644,22 +644,6 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconButton}
-            accessibilityRole="button"
-            accessibilityLabel="Back">
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={22}
-              color="#1F2937"
-            />
-          </TouchableOpacity>
-          <Text style={styles.title}>Pages / Promotional Banners</Text>
-          <View style={styles.iconButtonPlaceholder} />
-        </View>
-
         <View style={styles.filterSection}>
           <Text style={styles.filterTitle}>Regions</Text>
           <ScrollView
@@ -818,7 +802,7 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
                 {pageFormMode === 'create' ? 'Add Page Type' : 'Edit Page Type'}
               </Text>
 
-              <Text style={styles.modalFieldLabel}>pageName *</Text>
+              <Text style={styles.modalFieldLabel}>Page Name *</Text>
               <TextInput
                 style={styles.modalInput}
                 value={pageForm.pageName}
@@ -830,7 +814,7 @@ const PagesPromotionalBannersScreen: React.FC<Props> = ({navigation}) => {
                 editable={!pageFormSubmitting}
               />
 
-              <Text style={styles.modalFieldLabel}>posterLink</Text>
+              <Text style={styles.modalFieldLabel}>Poster Link</Text>
               <TextInput
                 style={styles.modalInput}
                 value={pageForm.posterLink}
@@ -930,31 +914,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 10,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconButtonPlaceholder: {
-    width: 36,
-    height: 36,
-  },
-  title: {
-    flex: 1,
-    marginHorizontal: 10,
-    fontSize: 18,
-    fontFamily: FONT_FAMILY.outfitExtraBold,
-    color: '#0F172A',
   },
   filterSection: {
     marginBottom: 10,

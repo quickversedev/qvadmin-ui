@@ -11,12 +11,12 @@ import {
 import {StackScreenProps} from '@react-navigation/stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {useAuth} from '../../contexts/Login/AuthProvider';
-import {SettingsStackParamList} from '../../navigation/SettingsNavigation';
+import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 import {useDevModeStore} from '../../store/app/useDevModeStore';
 
-type Props = StackScreenProps<SettingsStackParamList, 'SettingsHome'>;
+type Props = StackScreenProps<SettingsNavigationStackParamList, 'SettingsHome'>;
 
 const DEV_MODE_SECRET = 'Devmode';
 const SECRET_TAP_WINDOW_MS = 1000;
@@ -33,24 +33,15 @@ const SettingsScreen: React.FC<Props> = ({navigation}) => {
   const [secretInput, setSecretInput] = useState('');
   const [secretError, setSecretError] = useState('');
   const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [logoutModalVisible, setLogoutModalVisible] = useState(false);
 
   const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        {
-          text: 'Cancel',
-          style: 'cancel',
-        },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => auth.signOut(),
-        },
-      ],
-      {cancelable: false},
-    );
+    setLogoutModalVisible(true);
+  };
+
+  const handleConfirmSignOut = () => {
+    setLogoutModalVisible(false);
+    auth.signOut();
   };
 
   const handleHeaderTap = () => {
@@ -93,7 +84,7 @@ const SettingsScreen: React.FC<Props> = ({navigation}) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
-        <View style={styles.headerRow}>
+        <View style={styles.header}>
           <TouchableOpacity activeOpacity={1} onPress={handleHeaderTap}>
             <Text style={styles.headerTitle}>Settings</Text>
           </TouchableOpacity>
@@ -106,63 +97,21 @@ const SettingsScreen: React.FC<Props> = ({navigation}) => {
           )}
         </View>
 
-        <View style={styles.optionsContainer}>
-          <TouchableOpacity
-            style={styles.optionRow}
-            onPress={() => navigation.navigate('Transporters')}
-            activeOpacity={0.8}>
-            <View style={styles.optionLeft}>
-              <View style={styles.iconWrap}>
-                <MaterialCommunityIcons
-                  name="truck-fast-outline"
-                  size={20}
-                  color="#0F766E"
-                />
-              </View>
-              <Text style={styles.optionLabel}>Transporters</Text>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={22}
-              color="#64748B"
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.optionRow}
-            onPress={() => navigation.navigate('Configurations')}
-            activeOpacity={0.8}>
-            <View style={styles.optionLeft}>
-              <View style={styles.iconWrap}>
-                <MaterialCommunityIcons
-                  name="tune-variant"
-                  size={20}
-                  color="#0F766E"
-                />
-              </View>
-              <Text style={styles.optionLabel}>Configurations</Text>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={22}
-              color="#64748B"
-            />
-          </TouchableOpacity>
-
-          {isDevMode ? (
+        <View style={{padding: 16, flex: 1}}>
+          <View style={styles.optionsContainer}>
             <TouchableOpacity
               style={styles.optionRow}
-              onPress={handleBroadcastPress}
+              onPress={() => navigation.navigate('Transporters')}
               activeOpacity={0.8}>
               <View style={styles.optionLeft}>
                 <View style={styles.iconWrap}>
                   <MaterialCommunityIcons
-                    name="bullhorn-variant-outline"
+                    name="truck-fast-outline"
                     size={20}
                     color="#0F766E"
                   />
                 </View>
-                <Text style={styles.optionLabel}>Broadcast Notifications</Text>
+                <Text style={styles.optionLabel}>Transporters</Text>
               </View>
               <MaterialCommunityIcons
                 name="chevron-right"
@@ -170,35 +119,119 @@ const SettingsScreen: React.FC<Props> = ({navigation}) => {
                 color="#64748B"
               />
             </TouchableOpacity>
-          ) : null}
+
+            <TouchableOpacity
+              style={styles.optionRow}
+              onPress={() => navigation.navigate('Configurations')}
+              activeOpacity={0.8}>
+              <View style={styles.optionLeft}>
+                <View style={styles.iconWrap}>
+                  <MaterialCommunityIcons
+                    name="tune-variant"
+                    size={20}
+                    color="#0F766E"
+                  />
+                </View>
+                <Text style={styles.optionLabel}>Configurations</Text>
+              </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={22}
+                color="#64748B"
+              />
+            </TouchableOpacity>
+
+            {isDevMode ? (
+              <TouchableOpacity
+                style={styles.optionRow}
+                onPress={handleBroadcastPress}
+                activeOpacity={0.8}>
+                <View style={styles.optionLeft}>
+                  <View style={styles.iconWrap}>
+                    <MaterialCommunityIcons
+                      name="bullhorn-variant-outline"
+                      size={20}
+                      color="#0F766E"
+                    />
+                  </View>
+                  <Text style={styles.optionLabel}>
+                    Broadcast Notifications
+                  </Text>
+                </View>
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={22}
+                  color="#64748B"
+                />
+              </TouchableOpacity>
+            ) : null}
+
+            <TouchableOpacity
+              style={styles.optionRow}
+              onPress={() => navigation.navigate('PagesPromotionalBanners')}
+              activeOpacity={0.8}>
+              <View style={styles.optionLeft}>
+                <View style={styles.iconWrap}>
+                  <MaterialCommunityIcons
+                    name="image-multiple-outline"
+                    size={20}
+                    color="#0F766E"
+                  />
+                </View>
+                <Text style={styles.optionLabel}>
+                  Pages / Promotional Banners
+                </Text>
+              </View>
+              <MaterialCommunityIcons
+                name="chevron-right"
+                size={22}
+                color="#64748B"
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
-            style={styles.optionRow}
-            onPress={() => navigation.navigate('PagesPromotionalBanners')}
-            activeOpacity={0.8}>
-            <View style={styles.optionLeft}>
-              <View style={styles.iconWrap}>
-                <MaterialCommunityIcons
-                  name="image-multiple-outline"
-                  size={20}
-                  color="#0F766E"
-                />
-              </View>
-              <Text style={styles.optionLabel}>
-                Pages / Promotional Banners
-              </Text>
-            </View>
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={22}
-              color="#64748B"
-            />
+            style={styles.signOutButton}
+            onPress={handleSignOut}>
+            <Text style={styles.signOutButtonText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-          <Text style={styles.signOutButtonText}>Sign Out</Text>
-        </TouchableOpacity>
+        <Modal
+          visible={logoutModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setLogoutModalVisible(false)}>
+          <View style={styles.modalBackdrop}>
+            <View style={styles.modalCard}>
+              <View style={styles.logoutIconWrap}>
+                <MaterialCommunityIcons
+                  name="logout-variant"
+                  size={24}
+                  color="#FFFFFF"
+                />
+              </View>
+              <Text style={styles.modalTitle}>Sign Out</Text>
+              <Text style={styles.modalDescription}>
+                Are you sure you want to sign out of this account?
+              </Text>
+
+              <View style={styles.modalActionsRow}>
+                <TouchableOpacity
+                  style={styles.modalCancelButton}
+                  onPress={() => setLogoutModalVisible(false)}>
+                  <Text style={styles.modalCancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.logoutConfirmButton}
+                  onPress={handleConfirmSignOut}>
+                  <Text style={styles.modalPrimaryButtonText}>Sign Out</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
 
         <Modal
           visible={secretModalVisible}
@@ -301,23 +334,23 @@ const SettingsScreen: React.FC<Props> = ({navigation}) => {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#F8FAFC',
+    backgroundColor: '#f8fafc',
   },
   container: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 12,
   },
-  headerRow: {
+  header: {
+    paddingHorizontal: 16,
+    marginTop: 14,
+    backgroundColor: '#f5f5f5',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 18,
   },
   headerTitle: {
-    fontSize: 28,
-    fontFamily: FONT_FAMILY.outfitExtraBold,
-    color: '#0F172A',
+    fontSize: 24,
+    color: '#0f172a',
+    fontFamily: FONT_FAMILY.bricolageBold,
   },
   devChip: {
     borderWidth: 1,
@@ -449,6 +482,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 14,
   },
+  logoutConfirmButton: {
+    borderRadius: 10,
+    backgroundColor: '#DC2626',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
   modalDisableButton: {
     borderRadius: 10,
     backgroundColor: '#B91C1C',
@@ -472,6 +511,15 @@ const styles = StyleSheet.create({
   },
   successModalButton: {
     alignSelf: 'stretch',
+  },
+  logoutIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: '#DC2626',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
   },
 });
 

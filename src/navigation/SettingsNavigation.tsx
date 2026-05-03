@@ -1,15 +1,18 @@
 import React from 'react';
 import {createStackNavigator} from '@react-navigation/stack';
-import SettingsScreen from '../screens/Settings/SettingScreen';
-import TransportersScreen from '../screens/Settings/TransportersScreen';
-import AddTransporterScreen from '../screens/Settings/AddTransporterScreen';
-import ConfigurationsScreen from '../screens/Settings/ConfigurationsScreen';
-import PagesPromotionalBannersScreen from '../screens/Settings/PagesPromotionalBannersScreen';
-import AddPromotionBannerScreen from '../screens/Settings/AddPromotionBannerScreen';
-import BroadcastNotificationScreen from '../screens/Settings/BroadcastNotificationScreen';
+import {
+  SettingsScreen,
+  TransportersScreen,
+  AddTransporterScreen,
+  AddPromotionBannerScreen,
+  ConfigurationsScreen,
+  BroadcastNotificationScreen,
+  PagesPromotionalBannersScreen,
+} from '../screens/Settings';
 import {PromotionBanner} from '../services/apis/pagesService';
+import {FONT_FAMILY} from '../assets/constants/fonts';
 
-export type SettingsStackParamList = {
+export type SettingsNavigationStackParamList = {
   SettingsHome: undefined;
   Transporters: undefined;
   AddTransporter:
@@ -31,8 +34,8 @@ export type SettingsStackParamList = {
     | undefined;
 };
 
-const Stack = createStackNavigator<SettingsStackParamList>();
-const initialRouteName: keyof SettingsStackParamList = 'SettingsHome';
+const Stack = createStackNavigator<SettingsNavigationStackParamList>();
+const initialRouteName: keyof SettingsNavigationStackParamList = 'SettingsHome';
 
 const SettingsNavigation = () => {
   return (
@@ -42,19 +45,88 @@ const SettingsNavigation = () => {
         headerShown: false,
       }}>
       <Stack.Screen name="SettingsHome" component={SettingsScreen} />
-      <Stack.Screen name="Transporters" component={TransportersScreen} />
-      <Stack.Screen name="AddTransporter" component={AddTransporterScreen} />
-      <Stack.Screen name="Configurations" component={ConfigurationsScreen} />
+      <Stack.Screen
+        name="Transporters"
+        component={TransportersScreen}
+        options={{
+          title: 'Transporters Management',
+          headerShown: true,
+          headerTitleStyle: {
+            fontSize: 22,
+            color: '#0f172a',
+            fontFamily: FONT_FAMILY.bricolageBold,
+          },
+          headerTintColor: '#0F172A',
+        }}
+      />
+      <Stack.Screen
+        name="AddTransporter"
+        component={AddTransporterScreen}
+        options={{
+          title: 'Add Transporter',
+          headerShown: true,
+          headerTitleStyle: {
+            fontSize: 22,
+            color: '#0f172a',
+            fontFamily: FONT_FAMILY.bricolageBold,
+          },
+          headerTintColor: '#0F172A',
+        }}
+      />
+      <Stack.Screen
+        name="Configurations"
+        options={{
+          title: 'Pricing Configurations',
+          headerShown: true,
+          headerTitleStyle: {
+            fontSize: 22,
+            color: '#0f172a',
+            fontFamily: FONT_FAMILY.bricolageBold,
+          },
+          headerTintColor: '#0F172A',
+        }}
+        component={ConfigurationsScreen}
+      />
       <Stack.Screen
         name="BroadcastNotifications"
+        options={{
+          title: 'Broadcast Notifications',
+          headerShown: true,
+          headerTitleStyle: {
+            fontSize: 22,
+            color: '#0f172a',
+            fontFamily: FONT_FAMILY.bricolageBold,
+          },
+          headerTintColor: '#0F172A',
+        }}
         component={BroadcastNotificationScreen}
       />
       <Stack.Screen
         name="PagesPromotionalBanners"
+        options={{
+          title: 'Pages Promotional Banners',
+          headerShown: true,
+          headerTitleStyle: {
+            fontSize: 22,
+            color: '#0f172a',
+            fontFamily: FONT_FAMILY.bricolageBold,
+          },
+          headerTintColor: '#0F172A',
+        }}
         component={PagesPromotionalBannersScreen}
       />
       <Stack.Screen
         name="AddPromotionBanner"
+        options={{
+          title: 'Add Promotion Banner',
+          headerShown: true,
+          headerTitleStyle: {
+            fontSize: 22,
+            color: '#0f172a',
+            fontFamily: FONT_FAMILY.bricolageBold,
+          },
+          headerTintColor: '#0F172A',
+        }}
         component={AddPromotionBannerScreen}
       />
     </Stack.Navigator>

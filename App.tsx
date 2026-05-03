@@ -1,6 +1,6 @@
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {AuthProvider} from './src/contexts/Login/AuthProvider';
-import {Router} from './src/components/route/Route';
+import RootNavigation from './src/navigation/RootNavigation';
 import React from 'react';
 import {Text, TextInput} from 'react-native';
 import {FONT_FAMILY} from './src/assets/constants/fonts';
@@ -24,7 +24,7 @@ function App(): React.JSX.Element {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <Router />
+        <RootNavigation />
       </AuthProvider>
     </SafeAreaProvider>
   );

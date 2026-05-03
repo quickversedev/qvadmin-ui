@@ -14,11 +14,14 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {FONT_FAMILY} from '../../assets/constants/fonts';
-import {SettingsStackParamList} from '../../navigation/SettingsNavigation';
+import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {sendCustomerBroadcastNotification} from '../../services/apis/broadcastNotificationService';
 import {useDevModeStore} from '../../store/app/useDevModeStore';
 
-type Props = StackScreenProps<SettingsStackParamList, 'BroadcastNotifications'>;
+type Props = StackScreenProps<
+  SettingsNavigationStackParamList,
+  'BroadcastNotifications'
+>;
 
 type BroadcastAudience = 'CUSTOMERS' | 'CAPTAINS' | 'TRANSPORTERS';
 
@@ -138,22 +141,6 @@ const BroadcastNotificationScreen: React.FC<Props> = ({navigation}) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconButton}
-            accessibilityRole="button"
-            accessibilityLabel="Back">
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={22}
-              color="#1F2937"
-            />
-          </TouchableOpacity>
-          <Text style={styles.title}>Broadcast Notifications</Text>
-          <View style={styles.iconButtonPlaceholder} />
-        </View>
-
         <ScrollView
           contentContainerStyle={styles.content}
           keyboardShouldPersistTaps="handled"
@@ -285,31 +272,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
     paddingTop: 10,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 14,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: '#CBD5E1',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconButtonPlaceholder: {
-    width: 36,
-    height: 36,
-  },
-  title: {
-    flex: 1,
-    marginHorizontal: 10,
-    fontSize: 18,
-    color: '#0F172A',
-    fontFamily: FONT_FAMILY.outfitExtraBold,
   },
   content: {
     paddingBottom: 24,

@@ -100,7 +100,7 @@ On every app launch, before any screen is shown, the app:
 
 ## 4. Dashboard — Order Overview
 
-**Files:** `src/components/Dashboard/OrderDashboard.tsx`, `src/components/Dashboard/DashboardTile.tsx`
+**Files:** `src/components/Dashboard/OrderDashboard.tsx`, `src/components/Dashboard/OrderStatCard.tsx`
 
 The main home screen after login. Displays a summary of all orders grouped by status.
 

@@ -1,7 +1,7 @@
 import messaging from '@react-native-firebase/messaging';
 import notifee, {AndroidImportance, EventType} from '@notifee/react-native';
 import {AppState, PermissionsAndroid, Platform} from 'react-native';
-import {openViewOrderFromNotification} from '../../navigation/RootNavigation';
+import {openViewOrderFromNotification} from '../../navigation/NavigationHelper';
 import {
   consumePendingOrderId,
   extractOrderIdFromNotificationPayload,
@@ -77,7 +77,7 @@ export const getToken = getFcmToken;
 // ✅ Display local notification
 async function displayNotification(remoteMessage: any): Promise<void> {
   try {
-    const { title, body } = remoteMessage?.notification ?? {};
+    const {title, body} = remoteMessage?.notification ?? {};
 
     // Handle data-only payloads if needed
     const dataTitle = remoteMessage?.data?.title;
@@ -106,14 +106,13 @@ async function displayNotification(remoteMessage: any): Promise<void> {
       data: remoteMessage?.data,
       android: {
         channelId,
-        pressAction: { id: 'default' },
+        pressAction: {id: 'default'},
       },
     });
   } catch (error) {
     console.error('Error displaying notification:', error);
   }
 }
-
 
 // ✅ Register notification listeners
 // ✅ Register notification listeners
@@ -122,7 +121,10 @@ export function registerNotificationListeners() {
     const openPersistedOrderIfAny = () => {
       const pendingOrderId = consumePendingOrderId();
       if (pendingOrderId) {
-        console.log('[notification] consuming persisted orderId:', pendingOrderId);
+        console.log(
+          '[notification] consuming persisted orderId:',
+          pendingOrderId,
+        );
         openViewOrderFromNotification(pendingOrderId);
       }
     };
@@ -162,7 +164,10 @@ export function registerNotificationListeners() {
     // Background / when app opened via notification
     messaging().onNotificationOpenedApp(remoteMessage => {
       try {
-        console.log('App opened from background by notification:', remoteMessage);
+        console.log(
+          'App opened from background by notification:',
+          remoteMessage,
+        );
         handleNotificationPayload(remoteMessage);
       } catch (err) {
         console.error('Background notification handler error:', err);
@@ -174,7 +179,10 @@ export function registerNotificationListeners() {
       .getInitialNotification()
       .then(remoteMessage => {
         if (remoteMessage) {
-          console.log('App opened from quit state by notification:', remoteMessage);
+          console.log(
+            'App opened from quit state by notification:',
+            remoteMessage,
+          );
           handleNotificationPayload(remoteMessage);
         }
       })
@@ -185,7 +193,9 @@ export function registerNotificationListeners() {
     const unsubscribeNotifee = notifee.onForegroundEvent(({type, detail}) => {
       if (type === EventType.PRESS || type === EventType.ACTION_PRESS) {
         const orderId = extractOrderIdFromNotificationPayload({
-          data: detail?.notification?.data as Record<string, unknown> | undefined,
+          data: detail?.notification?.data as
+            | Record<string, unknown>
+            | undefined,
           body: detail?.notification?.body,
         });
 
@@ -243,4 +253,3 @@ export function registerNotificationListeners() {
     return () => {};
   }
 }
-

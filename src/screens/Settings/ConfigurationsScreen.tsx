@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import {StackScreenProps} from '@react-navigation/stack';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {SettingsStackParamList} from '../../navigation/SettingsNavigation';
+import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {
   createPricingConfiguration,
   fetchPricingConfigurations,
@@ -23,7 +23,10 @@ import {useAuth} from '../../contexts/Login/AuthProvider';
 import {SafeAreaView} from 'react-native-safe-area-context'; // Add this import
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 
-type Props = StackScreenProps<SettingsStackParamList, 'Configurations'>;
+type Props = StackScreenProps<
+  SettingsNavigationStackParamList,
+  'Configurations'
+>;
 
 type ConfigModel = {
   serviceType: ServiceType;
@@ -340,22 +343,6 @@ const ConfigurationsScreen: React.FC<Props> = ({navigation}) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconButton}
-            accessibilityRole="button"
-            accessibilityLabel="Back">
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={22}
-              color="#1F2937"
-            />
-          </TouchableOpacity>
-          <Text style={styles.title}>Configurations</Text>
-          <View style={styles.iconButtonPlaceholder} />
-        </View>
-
         {isLoading ? (
           <View style={styles.loaderWrap}>
             <ActivityIndicator size="large" color="#0F766E" />
@@ -576,29 +563,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingBottom: 20,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E2E8F0',
-  },
-  iconButtonPlaceholder: {
-    width: 36,
-    height: 36,
-  },
-  title: {
-    fontSize: 20,
-    fontFamily: FONT_FAMILY.outfitBold,
-    color: '#0F172A',
   },
   sectionLabel: {
     fontSize: 14,

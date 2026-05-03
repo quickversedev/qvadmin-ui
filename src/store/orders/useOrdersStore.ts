@@ -95,7 +95,6 @@ interface OrderStore {
 }
 export type TimeFilter = '1h' | '3h' | '1d' | '7d' | '30d' | 'all';
 const getStartDate = (filter: TimeFilter): string | undefined => {
-  const now = new Date();
   let date: Date;
   let timeRange: string;
 
@@ -115,6 +114,9 @@ const getStartDate = (filter: TimeFilter): string | undefined => {
     case '30d':
       timeRange = 'LAST_1_MONTH';
       break;
+
+    case 'all':
+      return undefined;
 
     default:
       return 'LAST_1_HOUR';
@@ -137,7 +139,9 @@ export const useOrderStore = create<OrderStore>((set, get) => ({
     set({loading: true, error: null, lastTimeFilter: timeFilter});
     try {
       const timeRange = getStartDate(timeFilter);
-      const endpoint = `/quickVerse/v2/order/region-orders?regionId=${regionId}&timeRange=${timeRange}`;
+      const endpoint = timeRange
+        ? `/quickVerse/v2/order/region-orders?regionId=${regionId}&timeRange=${timeRange}`
+        : `/quickVerse/v2/order/region-orders?regionId=${regionId}`;
 
       if (!authToken) {
         throw new Error('No authentication token available');

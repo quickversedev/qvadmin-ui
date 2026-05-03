@@ -16,7 +16,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {launchImageLibrary} from 'react-native-image-picker';
 
 import {useAuth} from '../../contexts/Login/AuthProvider';
-import {SettingsStackParamList} from '../../navigation/SettingsNavigation';
+import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {
   DeliveryPartner,
   DeliveryPartnerGender,
@@ -26,7 +26,10 @@ import {
 import {useDeliveryPartnerStore} from '../../store/deliveryPartners/useDeliveryPartnerStore';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 
-type Props = StackScreenProps<SettingsStackParamList, 'AddTransporter'>;
+type Props = StackScreenProps<
+  SettingsNavigationStackParamList,
+  'AddTransporter'
+>;
 
 type FormGender = '' | DeliveryPartnerGender;
 
@@ -272,10 +275,11 @@ const AddTransporterScreen: React.FC<Props> = ({navigation, route}) => {
     null,
   );
 
-  const title = useMemo(
-    () => (isEditMode ? 'Edit Delivery Partner' : 'Add Delivery Partner'),
-    [isEditMode],
-  );
+  React.useLayoutEffect(() => {
+    navigation.setOptions({
+      title: isEditMode ? 'Edit Transporter' : 'Add Transporter',
+    });
+  }, [navigation, isEditMode]);
 
   const submitLabel = isEditMode ? 'Save Changes' : 'Save Partner';
 
@@ -516,22 +520,6 @@ const AddTransporterScreen: React.FC<Props> = ({navigation, route}) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
       <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconButton}
-            accessibilityRole="button"
-            accessibilityLabel="Back">
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={22}
-              color="#1F2937"
-            />
-          </TouchableOpacity>
-          <Text style={styles.title}>{title}</Text>
-          <View style={styles.iconButtonPlaceholder} />
-        </View>
-
         {loadingPartner ? (
           <View style={styles.loadingState}>
             <ActivityIndicator size="large" color="#0F766E" />
@@ -824,29 +812,6 @@ const styles = StyleSheet.create({
   formContent: {
     paddingBottom: 24,
   },
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 16,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E2E8F0',
-  },
-  iconButtonPlaceholder: {
-    width: 36,
-    height: 36,
-  },
-  title: {
-    fontSize: 20,
-    fontFamily: FONT_FAMILY.outfitBold,
-    color: '#0F172A',
-  },
   loadingState: {
     flex: 1,
     alignItems: 'center',
@@ -882,6 +847,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#0F172A',
     marginBottom: 6,
+    fontFamily: FONT_FAMILY.outfitRegular,
   },
   inputError: {
     borderColor: '#DC2626',

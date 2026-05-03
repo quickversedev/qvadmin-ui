@@ -14,7 +14,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {SafeAreaView} from 'react-native-safe-area-context';
 
 import {useAuth} from '../../contexts/Login/AuthProvider';
-import {SettingsStackParamList} from '../../navigation/SettingsNavigation';
+import {SettingsNavigationStackParamList} from '../../navigation/SettingsNavigation';
 import {
   DeliveryPartner,
   getDeliveryPartnerId,
@@ -23,7 +23,7 @@ import {
 import {useDeliveryPartnerStore} from '../../store/deliveryPartners/useDeliveryPartnerStore';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 
-type Props = StackScreenProps<SettingsStackParamList, 'Transporters'>;
+type Props = StackScreenProps<SettingsNavigationStackParamList, 'Transporters'>;
 
 const defaultFilter = {
   isDeleted: false,
@@ -193,22 +193,10 @@ const TransportersScreen: React.FC<Props> = ({navigation}) => {
       <View style={styles.container}>
         <View style={styles.headerRow}>
           <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconButton}
-            accessibilityRole="button"
-            accessibilityLabel="Back">
-            <MaterialCommunityIcons
-              name="arrow-left"
-              size={22}
-              color="#1F2937"
-            />
-          </TouchableOpacity>
-          <Text style={styles.title}>Delivery Partners</Text>
-          <TouchableOpacity
             style={styles.addButton}
             onPress={() => navigation.navigate('AddTransporter')}>
             <MaterialCommunityIcons name="plus" size={18} color="#FFFFFF" />
-            <Text style={styles.addText}>Add</Text>
+            <Text style={styles.addText}>Add Transporter</Text>
           </TouchableOpacity>
         </View>
 
@@ -275,34 +263,21 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
   headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
     marginBottom: 16,
-  },
-  iconButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#E2E8F0',
-  },
-  title: {
-    fontSize: 20,
-    fontFamily: FONT_FAMILY.outfitBold,
-    color: '#0F172A',
+    marginTop: 8,
+    paddingHorizontal: 16,
   },
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#0F766E',
     borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 12,
+    width: '100%',
   },
   addText: {
-    marginLeft: 4,
+    marginLeft: 6,
     color: '#FFFFFF',
     fontFamily: FONT_FAMILY.outfitBold,
     fontSize: 14,
@@ -380,6 +355,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     marginBottom: 2,
+    fontFamily: FONT_FAMILY.outfitRegular,
   },
   cardActions: {
     flexDirection: 'row',
@@ -450,6 +426,7 @@ const styles = StyleSheet.create({
     color: '#475569',
     fontSize: 14,
     lineHeight: 20,
+    fontFamily: FONT_FAMILY.outfitRegular,
   },
   emptyButton: {
     marginTop: 16,

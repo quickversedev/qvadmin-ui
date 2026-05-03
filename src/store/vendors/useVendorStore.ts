@@ -18,10 +18,25 @@ export interface Coordinates {
   latitude: number;
 }
 
+export interface Order {
+  orderId: string;
+  customerName: string;
+  state: string;
+  totalAmount: number;
+  creationTime: string;
+}
+
+export interface Shop {
+  shopId: string;
+  shopName: string;
+  shopDetails: Vendor;
+  orders: Order[];
+}
+
 export interface Vendor {
   shopId: string;
   name: string;
-  shopAddress: ShopAddress;
+  address: ShopAddress;
   logo: string;
   banner: string;
   owner: string;
