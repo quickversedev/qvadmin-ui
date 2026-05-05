@@ -5,7 +5,6 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  RefreshControl,
   ActivityIndicator,
   TouchableOpacity,
   Animated,
@@ -21,14 +20,13 @@ const OrderHistoryScreen = () => {
   );
   const [page, setPage] = React.useState(0);
   const [size] = React.useState(20);
-  const [refreshing, setRefreshing] = React.useState(false);
   const [displayBuckets, setDisplayBuckets] = React.useState<any[]>([]);
 
   const displayPeriodRef = React.useRef<string>(period);
   const resolvedPageRef = React.useRef<number>(-1);
   const isLoadingMoreRef = React.useRef(false);
 
-  const {data, isFetching, refetch, isLoading} = useGetOrderHistoryQuery({
+  const {data, isFetching} = useGetOrderHistoryQuery({
     regionId: selectedRegion?.regionId as string,
     period,
     page,
@@ -38,17 +36,6 @@ const OrderHistoryScreen = () => {
   const buckets = data?.response?.buckets;
   const total = data?.response?.totalBuckets ?? 0;
   const serverPage = data?.response?.page ?? page;
-
-  const handlePeriodChange = (newPeriod: 'DAILY' | 'WEEKLY' | 'MONTHLY') => {
-    if (newPeriod === period) return;
-    displayPeriodRef.current = newPeriod;
-    resolvedPageRef.current = -1;
-    animatedValues.current = [];
-    prevLengthRef.current = 0;
-    setDisplayBuckets([]);
-    setPage(0);
-    setPeriod(newPeriod);
-  };
 
   React.useEffect(() => {
     if (!Array.isArray(buckets)) return;
@@ -61,11 +48,9 @@ const OrderHistoryScreen = () => {
         resolvedPageRef.current = 0;
         return buckets;
       }
-
       if (serverPage <= resolvedPageRef.current) return current;
 
       resolvedPageRef.current = serverPage;
-
       const merged = [...current];
       buckets.forEach(bucket => {
         if (!merged.some(existing => existing.bucket === bucket.bucket)) {
@@ -74,7 +59,7 @@ const OrderHistoryScreen = () => {
       });
       return merged;
     });
-  }, [data]);
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const animatedValues = React.useRef<Animated.Value[]>([]);
   const prevLengthRef = React.useRef(0);
@@ -108,23 +93,23 @@ const OrderHistoryScreen = () => {
     prevLengthRef.current = newCount;
   }, [displayBuckets.length]);
 
-  const handleRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    displayPeriodRef.current = period;
+  const handlePeriodChange = (newPeriod: 'DAILY' | 'WEEKLY' | 'MONTHLY') => {
+    if (newPeriod === period) return;
+
+    displayPeriodRef.current = newPeriod;
     resolvedPageRef.current = -1;
     animatedValues.current = [];
     prevLengthRef.current = 0;
     setDisplayBuckets([]);
     setPage(0);
-    refetch()?.finally(() => setRefreshing(false));
-  }, [refetch, period]);
+    setPeriod(newPeriod);
+  };
 
   const handleLoadMore = () => {
-    if (isLoadingMoreRef.current) return;
+    if (isLoadingMoreRef.current || isFetching) return;
 
     const loaded = (serverPage + 1) * size;
-
-    if (loaded < total && !isFetching) {
+    if (loaded < total) {
       isLoadingMoreRef.current = true;
       setPage(prev => prev + 1);
     }
@@ -157,6 +142,8 @@ const OrderHistoryScreen = () => {
     (item.cancelledOrders ?? 0);
 
   const hasMore = (serverPage + 1) * size < total;
+  const isInitialLoading = isFetching && displayBuckets.length === 0;
+  const isLoadingMore = isFetching && displayBuckets.length > 0 && hasMore;
 
   const renderBucket = ({item, index}: {item: any; index: number}) => {
     const av = animatedValues.current[index] ?? new Animated.Value(1);
@@ -274,7 +261,7 @@ const OrderHistoryScreen = () => {
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.4}
         ListFooterComponent={
-          isFetching && hasMore ? (
+          isLoadingMore ? (
             <ActivityIndicator
               size="small"
               color="#0f62fe"
@@ -282,9 +269,9 @@ const OrderHistoryScreen = () => {
             />
           ) : null
         }
-        ListEmptyComponent={() => (
+        ListEmptyComponent={
           <View style={styles.emptyState}>
-            {isFetching ? (
+            {isInitialLoading ? (
               <>
                 <ActivityIndicator
                   size="large"
@@ -303,13 +290,6 @@ const OrderHistoryScreen = () => {
               </>
             )}
           </View>
-        )}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            tintColor="#0f62fe"
-          />
         }
       />
     </View>
@@ -459,24 +439,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#64748b',
     fontFamily: FONT_FAMILY.bricolageMedium,
-  },
-
-  loadMoreBtn: {
-    marginVertical: 10,
-    alignSelf: 'center',
-    backgroundColor: '#e8eeff',
-    paddingHorizontal: 22,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#c7d7fd',
-    minWidth: 120,
-    alignItems: 'center',
-  },
-  loadMoreText: {
-    color: '#0f62fe',
-    fontFamily: FONT_FAMILY.outfitBold,
-    fontSize: 13,
   },
 });
 

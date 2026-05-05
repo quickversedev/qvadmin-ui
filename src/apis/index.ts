@@ -7,44 +7,67 @@ import {
 } from '@reduxjs/toolkit/query/react';
 import {storage} from '../services/storage/MMKV/zustandMmkvStorage';
 
-const rawBaseQuery = fetchBaseQuery({
-  baseUrl: 'https://superscientifically-revengeless-ronald.ngrok-free.dev',
-  prepareHeaders: (headers, {endpoint}) => {
-    const authStorage = storage.getString('auth-storage');
-    const authData = authStorage
-      ? JSON.parse(authStorage)?.state?.authData
-      : null;
+/**
+ * 🔹 Build Headers (Reusable)
+ */
+const buildHeaders = (endpoint: string) => {
+  const headers = new Headers();
 
-    const noAuthEndpoints = [
-      'requestOtp',
-      'login',
-      'getRegions',
-      'getOrderStats',
-      'getOrders',
-      'getOrdersFinance',
-      'getOrderById',
-      'getPricingConfig',
-      'getPages',
-      'createPromotion',
-      'getOrderHistory',
-    ];
+  const authStorage = storage.getString('auth-storage');
+  const authData = authStorage
+    ? JSON.parse(authStorage)?.state?.authData
+    : null;
 
-    if (!noAuthEndpoints.includes(endpoint)) {
-      if (authData?.jwt) {
-        headers.set('SessionKey', `Bearer ${authData.jwt}`);
-      }
+  const noAuthEndpoints = [
+    'requestOtp',
+    'login',
+    'getRegions',
+    'getOrderStats',
+    'getOrders',
+    'getOrdersFinance',
+    'getOrderById',
+    'getPricingConfig',
+    'getPages',
+    'createPromotion',
+    'getOrderHistory',
+  ];
+
+  // 🔐 Conditional JWT
+  if (!noAuthEndpoints.includes(endpoint)) {
+    if (authData?.jwt) {
+      headers.set('SessionKey', `Bearer ${authData.jwt}`);
     }
+  }
 
-    headers.set(
-      'Authorization',
-      'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
-    );
-    headers.set('Request-Origin', 'CAPTAIN');
+  // 🔒 Static Headers
+  headers.set(
+    'Authorization',
+    'Basic cXZDYXN0bGVFbnRyeTpjYSR0bGVfUGVybWl0QDAx',
+  );
+  headers.set('Request-Origin', 'CAPTAIN');
+
+  return headers;
+};
+
+/**
+ * 🔹 Raw Base Query
+ */
+const rawBaseQuery = fetchBaseQuery({
+  baseUrl: 'http://prd.quickverse.in',
+  prepareHeaders: (headers, {endpoint}) => {
+    const builtHeaders = buildHeaders(endpoint);
+
+    builtHeaders.forEach((value, key) => {
+      headers.set(key, value);
+    });
 
     return headers;
   },
 });
 
+/**
+ * 🔹 Logger Wrapper
+ */
 const baseQueryWithLogger: BaseQueryFn<
   string | FetchArgs,
   unknown,
@@ -54,16 +77,50 @@ const baseQueryWithLogger: BaseQueryFn<
 
   const request = typeof args === 'string' ? {url: args, method: 'GET'} : args;
 
+  /**
+   * ✅ Build full URL with params
+   */
+  let fullUrl = request.url;
+
+  if (request.params) {
+    const queryString = new URLSearchParams(
+      Object.entries(request.params).reduce((acc, [key, value]) => {
+        acc[key] = String(value);
+        return acc;
+      }, {} as Record<string, string>),
+    ).toString();
+
+    if (queryString) {
+      fullUrl += fullUrl.includes('?') ? `&${queryString}` : `?${queryString}`;
+    }
+  }
+
+  /**
+   * ✅ Build headers for logging (same as API)
+   */
+  const headersObj: Record<string, string> = {};
+  const builtHeaders = buildHeaders(api.endpoint);
+
+  builtHeaders.forEach((value, key) => {
+    headersObj[key] = value;
+  });
+
+  /**
+   * 🔥 API Call
+   */
   const result = await rawBaseQuery(args, api, extraOptions);
 
   const end = Date.now();
 
+  /**
+   * 🧾 Logging
+   */
   if (__DEV__) {
     const logObject = {
       type: result.error ? 'ERROR' : 'SUCCESS',
-      url: request.url,
+      url: fullUrl,
       method: request.method || 'GET',
-      params: request.params || null,
+      headers: headersObj,
       body: request.body || null,
       status: result.error ? result.error.status : 'OK',
       response: result.error ? result.error.data : result.data,
@@ -71,12 +128,15 @@ const baseQueryWithLogger: BaseQueryFn<
       timestamp: new Date().toISOString(),
     };
 
-    console.log(`${request.url} : `, logObject);
+    console.log(`[API LOG] ${request.method || 'GET'} ${fullUrl}`, logObject);
   }
 
   return result;
 };
 
+/**
+ * 🔹 API Setup
+ */
 const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithLogger,
