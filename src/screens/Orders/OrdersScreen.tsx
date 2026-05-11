@@ -1,14 +1,16 @@
 import {
   ActivityIndicator,
   Image,
+  Modal,
   RefreshControl,
+  Pressable,
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
 } from 'react-native';
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 import {RouteProp, useRoute} from '@react-navigation/native';
@@ -17,11 +19,18 @@ import {useGetOrdersQuery, useGetOrderStatsQuery} from '../../apis/order';
 import {useRegionsStore} from '../../store/regions/useRegionsStore';
 import {Shop} from '../../types';
 import {OrderSummaryCard, CollapsableVendor} from '../../components/orders';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 type OrdersScreenRouteProp = RouteProp<
   OrdersNavigationStackParamList,
   'OrdersScreen'
 >;
+
+const TIME_RANGE_OPTIONS = [
+  {label: 'Last 1 Hours', value: 'LAST_1_HOUR'},
+  {label: 'Last 3 Hours', value: 'LAST_3_HOUR'},
+  {label: 'Today', value: 'TODAY'},
+] as const;
 
 const OrdersScreen = () => {
   const route = useRoute<OrdersScreenRouteProp>();
@@ -29,7 +38,12 @@ const OrdersScreen = () => {
   const {orderStatus} = route.params;
 
   const [activeTab, setActiveTab] = useState<string>(orderStatus);
+  const [timeRange, setTimeRange] =
+    useState<(typeof TIME_RANGE_OPTIONS)[number]['value']>('LAST_3_HOUR');
+  const [isTimeRangeMenuVisible, setIsTimeRangeMenuVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const tabScrollRef = useRef<ScrollView | null>(null);
+  const tabLayoutsRef = useRef<Record<string, {x: number; width: number}>>({});
 
   const regionId = selectedRegion?.regionId || 'BEED-431122';
 
@@ -41,7 +55,7 @@ const OrdersScreen = () => {
   } = useGetOrderStatsQuery(
     {
       regionId,
-      timeRange: 'LAST_3_HOUR',
+      timeRange,
     },
     {pollingInterval: 180000},
   );
@@ -54,7 +68,7 @@ const OrdersScreen = () => {
     isFetching: isOrdersFetching,
   } = useGetOrdersQuery({
     regionId,
-    timeRange: 'LAST_3_HOUR',
+    timeRange,
     orderStatus: activeTab,
   });
 
@@ -67,6 +81,25 @@ const OrdersScreen = () => {
       setRefreshing(false);
     }
   }, [refetchOrderStats, refetchOrders]);
+
+  const scrollActiveTabIntoView = useCallback(() => {
+    const activeLayout = tabLayoutsRef.current[activeTab];
+
+    if (!activeLayout) {
+      return;
+    }
+
+    tabScrollRef.current?.scrollTo({
+      x: Math.max(0, activeLayout.x - 24),
+      animated: false,
+    });
+  }, [activeTab]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(scrollActiveTabIntoView);
+
+    return () => cancelAnimationFrame(frame);
+  }, [scrollActiveTabIntoView]);
 
   const TABS = {
     PENDING: {
@@ -111,8 +144,18 @@ const OrdersScreen = () => {
   const showError = hasOrdersError || hasStatsError;
   const activeTabLabel =
     TABS[activeTab as keyof typeof TABS]?.label || 'orders';
+  const selectedTimeRangeLabel =
+    TIME_RANGE_OPTIONS.find(option => option.value === timeRange)?.label ||
+    'Last 3 Hours';
   const showEmptyState =
     !isInitialLoading && !showError && !isQueryRefreshing && shops.length === 0;
+
+  const handleSelectTimeRange = (
+    selectedTimeRange: (typeof TIME_RANGE_OPTIONS)[number]['value'],
+  ) => {
+    setTimeRange(selectedTimeRange);
+    setIsTimeRangeMenuVisible(false);
+  };
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'left', 'right']}>
@@ -121,15 +164,27 @@ const OrdersScreen = () => {
           <Text style={styles.headerTitle}>Vendor Orders</Text>
 
           <TouchableOpacity
-            style={[styles.filterButton, styles.activeFilterButton]}>
-            <Text
-              style={[styles.filterButtonText, styles.activeFilterButtonText]}>
-              Last 3 Hours
-            </Text>
+            style={[styles.filterButton, styles.activeFilterButton]}
+            onPress={() => setIsTimeRangeMenuVisible(true)}>
+            <View style={styles.filterButtonContent}>
+              <Text
+                style={[
+                  styles.filterButtonText,
+                  styles.activeFilterButtonText,
+                ]}>
+                {selectedTimeRangeLabel}
+              </Text>
+              <MaterialCommunityIcons
+                name="chevron-down"
+                size={18}
+                color="#FFFFFF"
+              />
+            </View>
           </TouchableOpacity>
         </View>
 
         <ScrollView
+          ref={tabScrollRef}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabContainer}
@@ -137,6 +192,16 @@ const OrdersScreen = () => {
           {Object.values(TABS).map(tabItem => (
             <TouchableOpacity
               key={tabItem.value}
+              onLayout={event => {
+                tabLayoutsRef.current[tabItem.value] = {
+                  x: event.nativeEvent.layout.x,
+                  width: event.nativeEvent.layout.width,
+                };
+
+                if (tabItem.value === activeTab) {
+                  requestAnimationFrame(scrollActiveTabIntoView);
+                }
+              }}
               onPress={() => setActiveTab(tabItem?.value)}
               style={[
                 styles.tabButton,
@@ -168,6 +233,48 @@ const OrdersScreen = () => {
           ))}
         </ScrollView>
       </View>
+
+      <Modal
+        transparent
+        visible={isTimeRangeMenuVisible}
+        animationType="fade"
+        onRequestClose={() => setIsTimeRangeMenuVisible(false)}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setIsTimeRangeMenuVisible(false)}>
+          <Pressable style={styles.dropdownCard} onPress={() => null}>
+            <Text style={styles.dropdownTitle}>Select time range</Text>
+            {TIME_RANGE_OPTIONS.map(option => {
+              const isSelected = option.value === timeRange;
+
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  onPress={() => handleSelectTimeRange(option.value)}
+                  style={[
+                    styles.dropdownOption,
+                    isSelected && styles.dropdownOptionSelected,
+                  ]}>
+                  <Text
+                    style={[
+                      styles.dropdownOptionText,
+                      isSelected && styles.dropdownOptionTextSelected,
+                    ]}>
+                    {option.label}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.dropdownOptionValue,
+                      isSelected && styles.dropdownOptionValueSelected,
+                    ]}>
+                    {option.value}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
 
       {isInitialLoading ? (
         <View style={styles.loadingState}>
@@ -430,5 +537,61 @@ const styles = StyleSheet.create({
   activeFilterButtonText: {
     color: 'white',
     fontFamily: FONT_FAMILY.outfitBold,
+  },
+  filterButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.35)',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 16,
+    paddingTop: 88,
+  },
+  dropdownCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    shadowOffset: {width: 0, height: 8},
+    elevation: 8,
+  },
+  dropdownTitle: {
+    color: '#0f172a',
+    fontSize: 14,
+    fontFamily: FONT_FAMILY.outfitBold,
+    marginBottom: 8,
+  },
+  dropdownOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+  },
+  dropdownOptionSelected: {
+    backgroundColor: '#DBEAFE',
+  },
+  dropdownOptionText: {
+    color: '#334155',
+    fontSize: 14,
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  dropdownOptionTextSelected: {
+    color: '#1D4ED8',
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  dropdownOptionValue: {
+    color: '#64748B',
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  dropdownOptionValueSelected: {
+    color: '#1D4ED8',
   },
 });
