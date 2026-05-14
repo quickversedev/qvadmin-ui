@@ -4,7 +4,7 @@ import {create} from 'zustand';
 
 type AuthData = {
   jwt: string;
-  phone: string;
+  phone: string | number;
   empId: string;
   newUser: boolean;
 };

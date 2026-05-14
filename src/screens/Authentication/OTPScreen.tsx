@@ -23,6 +23,7 @@ import {
   useLoginMutation,
   useRequestOtpMutation,
 } from '../../apis/authentication';
+import deviceInfoService from '../../services/deviceInfoService';
 import {useAuthStore} from '../../store';
 
 const {height} = Dimensions.get('window');
@@ -87,6 +88,9 @@ const OTPScreen: React.FC = () => {
         verificationId: currentVerificationId,
       })?.unwrap();
       setAuthData(response);
+      if (response?.jwt) {
+        await deviceInfoService.updateDeviceInfo(response.jwt, response.phone);
+      }
     } catch (err: any) {
       console.log(err);
       Alert.alert('Error', err?.data?.error?.message || 'Login failed');

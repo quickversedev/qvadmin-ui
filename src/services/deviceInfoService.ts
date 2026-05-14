@@ -5,21 +5,24 @@ import {
   getFcmToken,
   requestNotificationPermission,
 } from '../hooks/notification/useNotification';
+import {useAuthStore} from '../store';
 
 export interface DeviceInfoRequest {
+  phone: string | number;
+  role: 'USER' | 'TRANSPORTER' | 'CAPTAIN';
   deviceId: string;
   deviceType: string;
   deviceModel: string;
+  deviceBrand: string;
   osVersion: string;
   appVersion: string;
   fcmToken: string;
   tokenType: string;
   lastActiveTimestamp: string;
-  notificationEnabled: string;
+  notificationEnabled: boolean;
   longitude?: number;
   latitude?: number;
   loginTimestamp: string;
-  empId: string;
 }
 
 export interface DeviceInfoResponse {
@@ -28,14 +31,10 @@ export interface DeviceInfoResponse {
 }
 
 class DeviceInfoService {
-  /**
-   * Get device information using react-native-device-info
-   */
   private async getDeviceInfo(): Promise<Partial<DeviceInfoRequest>> {
     try {
       const [
         notificationEnabled,
-        deviceId,
         uniqueId,
         brand,
         model,
@@ -44,7 +43,6 @@ class DeviceInfoService {
         fcmToken,
       ] = await Promise.all([
         requestNotificationPermission(),
-        DeviceInfo.getDeviceId(),
         DeviceInfo.getUniqueId(),
         DeviceInfo.getBrand(),
         DeviceInfo.getModel(),
@@ -54,57 +52,64 @@ class DeviceInfoService {
       ]);
 
       return {
-        deviceId: uniqueId || deviceId,
+        deviceId: uniqueId,
         deviceType: Platform.OS.toUpperCase(),
-        deviceModel: `${brand} ${model}`.trim(),
+        deviceBrand: brand,
+        deviceModel: model,
         osVersion: systemVersion,
-        appVersion: `${version}`,
-        tokenType: 'FCM',
-        lastActiveTimestamp: new Date().toISOString(),
-        notificationEnabled: notificationEnabled.toString(),
-        loginTimestamp: new Date().toISOString(),
+        appVersion: version,
         fcmToken: fcmToken || '',
+        tokenType: 'FCM',
+        notificationEnabled: notificationEnabled,
+        lastActiveTimestamp: new Date().toISOString(),
+        loginTimestamp: new Date().toISOString(),
       };
     } catch (error) {
       console.error('Error getting device info:', error);
+
       return {};
     }
   }
 
-  /**
-   * Update device information to backend
-   */
   async updateDeviceInfo(
     sessionKey: string,
-    empId: string,
+    phone: string,
+    longitude?: number,
+    latitude?: number,
   ): Promise<DeviceInfoResponse> {
     try {
       const deviceInfo = await this.getDeviceInfo();
+      const authPhone = useAuthStore.getState().authData?.phone || phone;
 
       const requestData: DeviceInfoRequest = {
+        phone: authPhone,
+        role: 'CAPTAIN',
         deviceId: deviceInfo.deviceId || '',
-        deviceType: Platform.OS.toUpperCase(),
+        deviceType: deviceInfo.deviceType || Platform.OS.toUpperCase(),
         deviceModel: deviceInfo.deviceModel || '',
+        deviceBrand: deviceInfo.deviceBrand || '',
         osVersion: deviceInfo.osVersion || '',
         appVersion: deviceInfo.appVersion || '',
         fcmToken: deviceInfo.fcmToken || '',
-        tokenType: deviceInfo.tokenType || Platform.OS.toUpperCase(),
+        tokenType: deviceInfo.tokenType || 'FCM',
         lastActiveTimestamp:
           deviceInfo.lastActiveTimestamp || new Date().toISOString(),
-        notificationEnabled: deviceInfo.notificationEnabled || 'true',
-        longitude: undefined,
-        latitude: undefined,
+        notificationEnabled: deviceInfo.notificationEnabled ?? true,
+        longitude,
+        latitude,
         loginTimestamp: deviceInfo.loginTimestamp || new Date().toISOString(),
-        empId: empId,
       };
+
+      console.log(requestData);
 
       const response = await apiCall(
         axiosInstance.post<DeviceInfoResponse>(
-          '/quickVerse/v1/updateCaptainDevice',
+          '/quickVerse/v1/updateDeviceRegistry',
           requestData,
           {
             headers: {
               SessionKey: sessionKey,
+              phone: authPhone,
             },
           },
         ),
@@ -113,13 +118,11 @@ class DeviceInfoService {
       return response;
     } catch (error) {
       console.error('Error updating device info:', error);
+
       throw error;
     }
   }
 
-  /**
-   * Get device info for debugging/logging purposes
-   */
   async getDeviceInfoForLogging(): Promise<Record<string, any>> {
     try {
       const [
@@ -179,6 +182,7 @@ class DeviceInfoService {
       };
     } catch (error) {
       console.error('Error getting device info for logging:', error);
+
       return {};
     }
   }

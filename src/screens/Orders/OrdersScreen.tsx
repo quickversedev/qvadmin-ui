@@ -57,7 +57,7 @@ const OrdersScreen = () => {
       regionId,
       timeRange,
     },
-    {pollingInterval: 180000},
+    {pollingInterval: 3000},
   );
 
   const {
@@ -66,11 +66,14 @@ const OrdersScreen = () => {
     refetch: refetchOrders,
     isLoading: isOrdersLoading,
     isFetching: isOrdersFetching,
-  } = useGetOrdersQuery({
-    regionId,
-    timeRange,
-    orderStatus: activeTab,
-  });
+  } = useGetOrdersQuery(
+    {
+      regionId,
+      timeRange,
+      orderStatus: activeTab,
+    },
+    {pollingInterval: 3000},
+  );
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -299,14 +302,6 @@ const OrdersScreen = () => {
           <TouchableOpacity style={styles.retryButton} onPress={handleRefresh}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
-        </View>
-      ) : isQueryRefreshing ? (
-        <View style={styles.loadingState}>
-          <ActivityIndicator size="large" color="#0F62FE" />
-          <Text style={styles.loadingTitle}>Refreshing orders</Text>
-          <Text style={styles.loadingSubtitle}>
-            Please wait while we fetch the latest vendor orders.
-          </Text>
         </View>
       ) : showEmptyState ? (
         <View style={styles.stateContainer}>

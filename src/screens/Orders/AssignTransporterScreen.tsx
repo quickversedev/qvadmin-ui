@@ -5,6 +5,7 @@ import {
   View,
   Text,
   Image,
+  ActivityIndicator,
   FlatList,
   TouchableOpacity,
   Linking,
@@ -35,15 +36,15 @@ const AssignTransporterScreen = () => {
   const route = useRoute<AssignTransporterScreenProp>();
   const navigation = useNavigation();
   const {order} = route.params;
+  const [assigningPartnerId, setAssigningPartnerId] = React.useState('');
 
   const {data: pricingConfigData} = useGetPricingConfigQuery(
     order?.shopDetails?.category.toString().toUpperCase(),
     {skip: !order?.shopDetails?.category},
   );
-  const {data: deliveryPartnersData} = useGetDeliveryPartnersWithOrdersQuery(
-    {},
-  );
-  const [assignOrder, {isLoading: isAssigningOrder}] = useAssignOrderMutation();
+  const {data: deliveryPartnersData, isLoading} =
+    useGetDeliveryPartnersWithOrdersQuery({});
+  const [assignOrder] = useAssignOrderMutation();
 
   const pricingKeyMap: Record<string, string> = {
     DELIVERY_FEE: 'deliveryFee',
@@ -195,6 +196,7 @@ const AssignTransporterScreen = () => {
       return;
     }
 
+    setAssigningPartnerId(partnerId);
     try {
       await assignOrder({
         orderId: String(order.orderId),
@@ -207,6 +209,8 @@ const AssignTransporterScreen = () => {
         'Assign order failed',
         error instanceof Error ? error.message : 'Please try again',
       );
+    } finally {
+      setAssigningPartnerId('');
     }
   };
 
@@ -302,7 +306,7 @@ const AssignTransporterScreen = () => {
               color="#fff"
             />
             <Text style={styles.assignButtonText}>
-              {isAssigningOrder ? 'Assigning...' : 'Assign Order'}
+              {assigningPartnerId === item.id ? 'Assigning...' : 'Assign Order'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -360,18 +364,25 @@ const AssignTransporterScreen = () => {
         </View>
       </View>
 
-      {partnersWithDistance.length > 0 && (
-        <View>
-          <Text style={styles.partnersHeading}>
-            Available Delivery Partners
-          </Text>
-          <FlatList
-            data={partnersWithDistance}
-            keyExtractor={(item: any) => item.id}
-            renderItem={renderPartnerCard}
-            scrollEnabled={false}
-          />
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color="#0f62fe" />
+          <Text style={styles.loadingText}>Loading delivery partners...</Text>
         </View>
+      ) : (
+        partnersWithDistance.length > 0 && (
+          <View>
+            <Text style={styles.partnersHeading}>
+              Available Delivery Partners
+            </Text>
+            <FlatList
+              data={partnersWithDistance}
+              keyExtractor={(item: any) => item.id}
+              renderItem={renderPartnerCard}
+              scrollEnabled={false}
+            />
+          </View>
+        )
       )}
     </ScrollView>
   );
@@ -539,6 +550,22 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     marginBottom: 12,
     marginTop: 8,
+  },
+  loadingContainer: {
+    marginTop: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e6edf6',
+  },
+  loadingText: {
+    marginTop: 8,
+    fontSize: 12,
+    color: '#64748b',
+    fontFamily: FONT_FAMILY.bricolageMedium,
   },
   partnerCard: {
     backgroundColor: '#fff',

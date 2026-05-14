@@ -24,7 +24,7 @@ export const useDeviceInfo = () => {
       console.error('Failed to update device info:', error);
       throw error;
     }
-  }, [authData?.jwt]);
+  }, [authData?.empId, authData?.jwt]);
 
   /**
    * Get device info for logging/debugging
