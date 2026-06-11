@@ -10,7 +10,12 @@ import {
   Image,
   RefreshControl,
   Pressable,
+  Modal,
+  Platform,
 } from 'react-native';
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import {OrderStatCard} from '../../components/orders';
 import {FONT_FAMILY} from '../../assets/constants/fonts';
@@ -23,115 +28,19 @@ import {useNavigation} from '@react-navigation/native';
 import {StackNavigationProp} from '@react-navigation/stack';
 import {OrdersNavigationStackParamList} from '../../navigation/OrdersNavigation';
 
-const filterButtons: {id: string; label: string}[] = [
-  {id: 'LAST_30_MIN', label: 'Last 30 Min'},
-  {id: 'LAST_1_HOUR', label: 'Last Hour'},
-  {id: 'LAST_3_HOUR', label: 'Last 3 Hours'},
-  {id: 'TODAY', label: 'Today'},
-  {id: 'LAST_WEEK', label: 'Last Week'},
-  {id: 'LAST_1_MONTH', label: 'Last 30 Days'},
-  {id: 'THIS_MONTH', label: 'This Month'},
-  {id: 'THIS_YEAR', label: 'This Year'},
-  {id: 'ALL', label: 'All Time'},
-];
-const dashboardTabs: {id: 'ORDERS' | 'EARNINGS'; label: string}[] = [
-  {id: 'ORDERS', label: 'Orders'},
-  {id: 'EARNINGS', label: 'Earnings'},
-];
+// ─── Types ────────────────────────────────────────────────────────────────────
 
-const roundToTwo = (value?: number | null) => {
-  if (value === undefined || value === null || Number.isNaN(value)) {
-    return 0;
-  }
-
-  return Number(value.toFixed(2));
-};
-
-const formatCurrency = (value?: number | null) => {
-  const normalizedValue = roundToTwo(value);
-  const hasDecimals = normalizedValue % 1 !== 0;
-
-  return `₹${normalizedValue.toLocaleString('en-IN', {
-    minimumFractionDigits: hasDecimals ? 2 : 0,
-    maximumFractionDigits: 2,
-  })}`;
-};
-
-const formatPercent = (value?: number | null) => {
-  if (value === undefined || value === null) {
-    return '0%';
-  }
-
-  return `${value}%`;
-};
-
-const formatRatePerOrder = (value?: number | null) =>
-  `${formatCurrency(value)}/order`;
-
-type FinanceCardConfig = {
-  id: string;
-  label: string;
-  value: string;
-  color: string;
-  icon: React.ReactNode;
-};
-
-const FinanceCardGrid = ({items}: {items: FinanceCardConfig[]}) => (
-  <View style={styles.financeCardsGrid}>
-    {items.map(item => (
-      <OrderStatCard
-        key={item.id}
-        size="m"
-        label={item.label}
-        value={item.value}
-        color={item.color}
-        icon={item.icon}
-      />
-    ))}
-  </View>
-);
-
-type ServiceMetricCardConfig = {
-  id: string;
-  label: string;
-  value: string;
-  color: string;
-  icon: React.ReactNode;
-  rateLabel?: string;
-  rateValue?: string;
-};
-
-const ServiceMetricGrid = ({items}: {items: ServiceMetricCardConfig[]}) => (
-  <View style={styles.serviceMetricGrid}>
-    {items.map(item => (
-      <View
-        key={item.id}
-        style={[styles.serviceMetricCard, {backgroundColor: item.color}]}>
-        <View style={styles.serviceMetricTopRow}>
-          <Text style={styles.serviceMetricLabel} numberOfLines={2}>
-            {item.label}
-          </Text>
-          <View style={styles.serviceMetricIcon}>{item.icon}</View>
-        </View>
-
-        <Text style={styles.serviceMetricValue} numberOfLines={1}>
-          {item.value}
-        </Text>
-
-        {item.rateValue ? (
-          <View style={styles.serviceMetricRateRow}>
-            <Text style={styles.serviceMetricRateLabel}>
-              {item.rateLabel || 'Rate'}
-            </Text>
-            <Text style={styles.serviceMetricRateValue} numberOfLines={1}>
-              {item.rateValue}
-            </Text>
-          </View>
-        ) : null}
-      </View>
-    ))}
-  </View>
-);
+type TimeFilterId =
+  | 'LAST_30_MIN'
+  | 'LAST_1_HOUR'
+  | 'LAST_3_HOUR'
+  | 'TODAY'
+  | 'LAST_WEEK'
+  | 'LAST_1_MONTH'
+  | 'THIS_MONTH'
+  | 'THIS_YEAR'
+  | 'ALL'
+  | 'CUSTOM';
 
 type OrdersNavigationStackProp = StackNavigationProp<
   OrdersNavigationStackParamList,
@@ -157,6 +66,126 @@ type FinanceServiceBreakdown = {
   commissionPercent?: number;
   gstPercent?: number;
 };
+
+type FinanceCardConfig = {
+  id: string;
+  label: string;
+  value: string;
+  color: string;
+  icon: React.ReactNode;
+};
+
+type ServiceMetricCardConfig = {
+  id: string;
+  label: string;
+  value: string;
+  color: string;
+  icon: React.ReactNode;
+  rateLabel?: string;
+  rateValue?: string;
+};
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const filterButtons: {id: TimeFilterId; label: string}[] = [
+  {id: 'LAST_30_MIN', label: 'Last 30 Min'},
+  {id: 'LAST_1_HOUR', label: 'Last Hour'},
+  {id: 'LAST_3_HOUR', label: 'Last 3 Hours'},
+  {id: 'TODAY', label: 'Today'},
+  {id: 'LAST_WEEK', label: 'Last Week'},
+  {id: 'LAST_1_MONTH', label: 'Last 30 Days'},
+  {id: 'THIS_MONTH', label: 'This Month'},
+  {id: 'THIS_YEAR', label: 'This Year'},
+  {id: 'ALL', label: 'All Time'},
+  {id: 'CUSTOM', label: 'Custom'},
+];
+
+const dashboardTabs: {id: 'ORDERS' | 'EARNINGS'; label: string}[] = [
+  {id: 'ORDERS', label: 'Orders'},
+  {id: 'EARNINGS', label: 'Earnings'},
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const roundToTwo = (value?: number | null) => {
+  if (value === undefined || value === null || Number.isNaN(value)) return 0;
+  return Number(value.toFixed(2));
+};
+
+const formatCurrency = (value?: number | null) => {
+  const normalizedValue = roundToTwo(value);
+  const hasDecimals = normalizedValue % 1 !== 0;
+  return `₹${normalizedValue.toLocaleString('en-IN', {
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: 2,
+  })}`;
+};
+
+const formatPercent = (value?: number | null) => {
+  if (value === undefined || value === null) return '0%';
+  return `${value}%`;
+};
+
+const formatRatePerOrder = (value?: number | null) =>
+  `${formatCurrency(value)}/order`;
+
+/** Format a Date as "DD MMM YYYY" for display */
+const formatDateLabel = (date: Date) =>
+  date.toLocaleDateString('en-IN', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  });
+
+/** Convert Date → "YYYY-MM-DD" for the API */
+const toISODate = (date: Date) => date.toISOString().split('T')[0];
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+const FinanceCardGrid = ({items}: {items: FinanceCardConfig[]}) => (
+  <View style={styles.financeCardsGrid}>
+    {items.map(item => (
+      <OrderStatCard
+        key={item.id}
+        size="m"
+        label={item.label}
+        value={item.value}
+        color={item.color}
+        icon={item.icon}
+      />
+    ))}
+  </View>
+);
+
+const ServiceMetricGrid = ({items}: {items: ServiceMetricCardConfig[]}) => (
+  <View style={styles.serviceMetricGrid}>
+    {items.map(item => (
+      <View
+        key={item.id}
+        style={[styles.serviceMetricCard, {backgroundColor: item.color}]}>
+        <View style={styles.serviceMetricTopRow}>
+          <Text style={styles.serviceMetricLabel} numberOfLines={2}>
+            {item.label}
+          </Text>
+          <View style={styles.serviceMetricIcon}>{item.icon}</View>
+        </View>
+        <Text style={styles.serviceMetricValue} numberOfLines={1}>
+          {item.value}
+        </Text>
+        {item.rateValue ? (
+          <View style={styles.serviceMetricRateRow}>
+            <Text style={styles.serviceMetricRateLabel}>
+              {item.rateLabel || 'Rate'}
+            </Text>
+            <Text style={styles.serviceMetricRateValue} numberOfLines={1}>
+              {item.rateValue}
+            </Text>
+          </View>
+        ) : null}
+      </View>
+    ))}
+  </View>
+);
 
 const FinanceServiceCard = ({item}: {item: FinanceServiceBreakdown}) => (
   <View style={styles.financeBreakdownCard}>
@@ -278,7 +307,6 @@ const FinanceServiceCard = ({item}: {item: FinanceServiceBreakdown}) => (
     />
 
     <View style={styles.financeSectionDivider} />
-
     <Text style={styles.financeBreakdownSectionTitle}>Service Metrics</Text>
     <Text style={styles.financeBreakdownSectionSubtitle}>
       Value and rate are shown together in each card.
@@ -379,15 +407,48 @@ const FinanceServiceCard = ({item}: {item: FinanceServiceBreakdown}) => (
   </View>
 );
 
+// ─── Main Screen ──────────────────────────────────────────────────────────────
+
 const OrderStatsScreen = () => {
   const navigation = useNavigation<OrdersNavigationStackProp>();
   const {selectedRegion} = useRegionsStore(state => state);
-  const [timeFilter, setTimeFilter] = React.useState<string>('LAST_1_HOUR');
+
+  const [timeFilter, setTimeFilter] =
+    React.useState<TimeFilterId>('LAST_1_HOUR');
   const [activeTab, setActiveTab] = React.useState<'ORDERS' | 'EARNINGS'>(
     'ORDERS',
   );
   const [showFormulaHint, setShowFormulaHint] = React.useState(false);
   const [refreshing, setRefreshing] = React.useState(false);
+
+  // ── Custom date range state ──
+  const [isCustomModalVisible, setIsCustomModalVisible] = React.useState(false);
+  // Drafts shown inside the modal before confirming
+  const [draftStart, setDraftStart] = React.useState<Date>(new Date());
+  const [draftEnd, setDraftEnd] = React.useState<Date>(new Date());
+  // Confirmed custom range sent to the API
+  const [customStart, setCustomStart] = React.useState<Date | null>(null);
+  const [customEnd, setCustomEnd] = React.useState<Date | null>(null);
+  // Which picker is currently shown on Android (one at a time)
+  const [androidPicker, setAndroidPicker] = React.useState<
+    'start' | 'end' | null
+  >(null);
+
+  // ── Build query params ──
+  // When CUSTOM is active, pass fromDate/toDate and timeRange=CUSTOM.
+  // For all other filters, pass timeRange and no dates.
+  const queryParams = React.useMemo(() => {
+    const base = {regionId: selectedRegion?.regionId || ''};
+    if (timeFilter === 'CUSTOM' && customStart && customEnd) {
+      return {
+        ...base,
+        timeRange: 'CUSTOM' as const,
+        fromDate: toISODate(customStart),
+        toDate: toISODate(customEnd),
+      };
+    }
+    return {...base, timeRange: timeFilter};
+  }, [timeFilter, customStart, customEnd, selectedRegion?.regionId]);
 
   const {
     data: orderStatsData,
@@ -395,13 +456,7 @@ const OrderStatsScreen = () => {
     refetch: refetchOrderStats,
     isLoading: isOrderStatsLoading,
     isFetching: isOrderStatsFetching,
-  } = useGetOrderStatsQuery(
-    {
-      regionId: selectedRegion?.regionId || '',
-      timeRange: timeFilter,
-    },
-    {pollingInterval: 180000},
-  );
+  } = useGetOrderStatsQuery(queryParams, {pollingInterval: 180000});
 
   const {
     data: orderFinanceData,
@@ -409,10 +464,7 @@ const OrderStatsScreen = () => {
     refetch: refetchFinance,
     isLoading: isFinanceLoading,
     isFetching: isFinanceFetching,
-  } = useGetOrdersFinanceQuery({
-    regionId: selectedRegion?.regionId || '',
-    timeRange: timeFilter,
-  });
+  } = useGetOrdersFinanceQuery(queryParams);
 
   const financeData = orderFinanceData?.result;
   const serviceBreakdown: FinanceServiceBreakdown[] =
@@ -439,29 +491,108 @@ const OrderStatsScreen = () => {
       .catch(() => setRefreshing(false));
   }, [refetchFinance, refetchOrderStats]);
 
+  // ── Custom date modal handlers ──
+
+  const openCustomModal = () => {
+    // Pre-fill drafts with last confirmed range or today
+    setDraftStart(customStart ?? new Date());
+    setDraftEnd(customEnd ?? new Date());
+    setIsCustomModalVisible(true);
+  };
+
+  const confirmCustomRange = () => {
+    setCustomStart(draftStart);
+    setCustomEnd(draftEnd);
+    setTimeFilter('CUSTOM');
+    setIsCustomModalVisible(false);
+  };
+
+  const handleFilterPress = (id: TimeFilterId) => {
+    if (id === 'CUSTOM') {
+      openCustomModal();
+    } else {
+      setTimeFilter(id);
+      // Clear custom range so stale dates don't persist if user switches back
+      setCustomStart(null);
+      setCustomEnd(null);
+    }
+  };
+
+  // Android: show pickers sequentially (start → end)
+  const handleAndroidDateChange = (
+    event: DateTimePickerEvent,
+    selected?: Date,
+  ) => {
+    if (event.type === 'dismissed') {
+      setAndroidPicker(null);
+      return;
+    }
+    if (androidPicker === 'start') {
+      setDraftStart(selected ?? draftStart);
+      setAndroidPicker('end'); // immediately open end picker
+    } else if (androidPicker === 'end') {
+      setDraftEnd(selected ?? draftEnd);
+      setAndroidPicker(null);
+    }
+  };
+
+  // ── Active filter label (shows date range when CUSTOM is active) ──
+  const customLabel =
+    timeFilter === 'CUSTOM' && customStart && customEnd
+      ? `${formatDateLabel(customStart)} – ${formatDateLabel(customEnd)}`
+      : null;
+
+  // ── Render helpers ──
+
   const renderFilterButtons = () => (
     <View style={styles.filterWrapper}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.filterContainer}>
-        {filterButtons.map(filter => (
-          <TouchableOpacity
-            key={filter.id}
-            style={[
-              styles.filterButton,
-              timeFilter === filter.id && styles.activeFilterButton,
-            ]}
-            onPress={() => setTimeFilter(filter.id)}>
-            <Text
+        {filterButtons.map(filter => {
+          const isActive = timeFilter === filter.id;
+          return (
+            <TouchableOpacity
+              key={filter.id}
               style={[
-                styles.filterButtonText,
-                timeFilter === filter.id && styles.activeFilterButtonText,
-              ]}>
-              {filter.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
+                styles.filterButton,
+                isActive && styles.activeFilterButton,
+                filter.id === 'CUSTOM' && styles.customFilterButton,
+                filter.id === 'CUSTOM' &&
+                  isActive &&
+                  styles.customFilterButtonActive,
+              ]}
+              onPress={() => handleFilterPress(filter.id)}>
+              {filter.id === 'CUSTOM' ? (
+                <View style={styles.customFilterContent}>
+                  <MaterialCommunityIcons
+                    name="calendar-range"
+                    size={14}
+                    color={isActive ? '#ffffff' : '#0f62fe'}
+                    style={{marginRight: 4}}
+                  />
+                  <Text
+                    style={[
+                      styles.filterButtonText,
+                      isActive && styles.activeFilterButtonText,
+                      !isActive && {color: '#0f62fe'},
+                    ]}>
+                    {isActive && customLabel ? customLabel : 'Custom'}
+                  </Text>
+                </View>
+              ) : (
+                <Text
+                  style={[
+                    styles.filterButtonText,
+                    isActive && styles.activeFilterButtonText,
+                  ]}>
+                  {filter.label}
+                </Text>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
     </View>
   );
@@ -518,13 +649,10 @@ const OrderStatsScreen = () => {
               color="#D97706"
             />
           }
-          onPress={() => {
-            navigation.navigate('OrdersScreen', {
-              orderStatus: 'PENDING',
-            });
-          }}
+          onPress={() =>
+            navigation.navigate('OrdersScreen', {orderStatus: 'PENDING'})
+          }
         />
-
         <OrderStatCard
           size="m"
           label="Accepted"
@@ -537,11 +665,9 @@ const OrderStatsScreen = () => {
               color="#2563EB"
             />
           }
-          onPress={() => {
-            navigation.navigate('OrdersScreen', {
-              orderStatus: 'ACCEPTED',
-            });
-          }}
+          onPress={() =>
+            navigation.navigate('OrdersScreen', {orderStatus: 'ACCEPTED'})
+          }
         />
         <OrderStatCard
           size="m"
@@ -555,13 +681,10 @@ const OrderStatsScreen = () => {
               color="#7C3AED"
             />
           }
-          onPress={() => {
-            navigation.navigate('OrdersScreen', {
-              orderStatus: 'SHIPPED',
-            });
-          }}
+          onPress={() =>
+            navigation.navigate('OrdersScreen', {orderStatus: 'SHIPPED'})
+          }
         />
-
         <OrderStatCard
           size="m"
           label="Completed"
@@ -574,13 +697,10 @@ const OrderStatsScreen = () => {
               color="#16A34A"
             />
           }
-          onPress={() => {
-            navigation.navigate('OrdersScreen', {
-              orderStatus: 'COMPLETED',
-            });
-          }}
+          onPress={() =>
+            navigation.navigate('OrdersScreen', {orderStatus: 'COMPLETED'})
+          }
         />
-
         <OrderStatCard
           size="m"
           label="Cancelled"
@@ -589,13 +709,10 @@ const OrderStatsScreen = () => {
           icon={
             <MaterialCommunityIcons name="cancel" size={32} color="#DC2626" />
           }
-          onPress={() => {
-            navigation.navigate('OrdersScreen', {
-              orderStatus: 'CANCELLED',
-            });
-          }}
+          onPress={() =>
+            navigation.navigate('OrdersScreen', {orderStatus: 'CANCELLED'})
+          }
         />
-
         <OrderStatCard
           size="m"
           label="Rejected"
@@ -608,13 +725,10 @@ const OrderStatsScreen = () => {
               color="#EA580C"
             />
           }
-          onPress={() => {
-            navigation.navigate('OrdersScreen', {
-              orderStatus: 'REJECTED',
-            });
-          }}
+          onPress={() =>
+            navigation.navigate('OrdersScreen', {orderStatus: 'REJECTED'})
+          }
         />
-
         <OrderStatCard
           size="m"
           label="Total Orders"
@@ -655,7 +769,11 @@ const OrderStatsScreen = () => {
                 {isOrderLoading ? '—' : completedOrders}
               </Text>{' '}
               orders{' '}
-              {timeFilter === 'LAST_30_MIN'
+              {timeFilter === 'CUSTOM' && customStart && customEnd
+                ? `from ${formatDateLabel(customStart)} to ${formatDateLabel(
+                    customEnd,
+                  )}`
+                : timeFilter === 'LAST_30_MIN'
                 ? 'in the last 30 minutes'
                 : timeFilter === 'LAST_1_HOUR'
                 ? 'in the last hour'
@@ -694,7 +812,11 @@ const OrderStatsScreen = () => {
           <View>
             <Text style={styles.financeHeroTitle}>Finance Snapshot</Text>
             <Text style={styles.financeHeroSubtitle}>
-              Combined totals for {timeFilter}
+              {timeFilter === 'CUSTOM' && customStart && customEnd
+                ? `${formatDateLabel(customStart)} – ${formatDateLabel(
+                    customEnd,
+                  )}`
+                : timeFilter}
             </Text>
           </View>
           <View style={styles.financeHeroBadge}>
@@ -704,11 +826,9 @@ const OrderStatsScreen = () => {
             </Text>
           </View>
         </View>
-
         <Text style={styles.financeHeroDescription}>
           Tap to see the formulas used for the combined finance summary.
         </Text>
-
         {showFormulaHint ? (
           <View style={styles.financeFormulaBox}>
             <Text style={styles.financeFormulaText}>
@@ -945,6 +1065,199 @@ const OrderStatsScreen = () => {
     </>
   );
 
+  // ── Custom date range modal ──
+  const renderCustomDateModal = () => {
+    const isValidRange = draftStart <= draftEnd;
+
+    return (
+      <Modal
+        visible={isCustomModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsCustomModalVisible(false)}>
+        <Pressable
+          style={styles.modalBackdrop}
+          onPress={() => setIsCustomModalVisible(false)}>
+          <Pressable style={styles.customModalCard} onPress={() => null}>
+            {/* Header */}
+            <View style={styles.customModalHeader}>
+              <MaterialCommunityIcons
+                name="calendar-range"
+                size={20}
+                color="#0f62fe"
+              />
+              <Text style={styles.customModalTitle}>Select Date Range</Text>
+              <TouchableOpacity
+                onPress={() => setIsCustomModalVisible(false)}
+                hitSlop={8}>
+                <MaterialCommunityIcons
+                  name="close"
+                  size={20}
+                  color="#64748b"
+                />
+              </TouchableOpacity>
+            </View>
+
+            {/* Date rows */}
+            {Platform.OS === 'ios' ? (
+              // iOS: show both pickers inline
+              <>
+                <View style={styles.datePickerRow}>
+                  <View style={styles.datePickerLabelCol}>
+                    <MaterialCommunityIcons
+                      name="calendar-start"
+                      size={16}
+                      color="#0f62fe"
+                    />
+                    <Text style={styles.datePickerLabel}>Start Date</Text>
+                  </View>
+                  <DateTimePicker
+                    value={draftStart}
+                    mode="date"
+                    display="compact"
+                    maximumDate={draftEnd}
+                    onChange={(_e, date) => date && setDraftStart(date)}
+                    style={styles.datePickerIOS}
+                  />
+                </View>
+
+                <View style={styles.datePickerDivider} />
+
+                <View style={styles.datePickerRow}>
+                  <View style={styles.datePickerLabelCol}>
+                    <MaterialCommunityIcons
+                      name="calendar-end"
+                      size={16}
+                      color="#0f62fe"
+                    />
+                    <Text style={styles.datePickerLabel}>End Date</Text>
+                  </View>
+                  <DateTimePicker
+                    value={draftEnd}
+                    mode="date"
+                    display="compact"
+                    minimumDate={draftStart}
+                    maximumDate={new Date()}
+                    onChange={(_e, date) => date && setDraftEnd(date)}
+                    style={styles.datePickerIOS}
+                  />
+                </View>
+              </>
+            ) : (
+              // Android: tappable date buttons that open the native picker
+              <>
+                <TouchableOpacity
+                  style={styles.datePickerRow}
+                  onPress={() => setAndroidPicker('start')}>
+                  <View style={styles.datePickerLabelCol}>
+                    <MaterialCommunityIcons
+                      name="calendar-start"
+                      size={16}
+                      color="#0f62fe"
+                    />
+                    <Text style={styles.datePickerLabel}>Start Date</Text>
+                  </View>
+                  <View style={styles.androidDateChip}>
+                    <Text style={styles.androidDateChipText}>
+                      {formatDateLabel(draftStart)}
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="chevron-down"
+                      size={16}
+                      color="#0f62fe"
+                    />
+                  </View>
+                </TouchableOpacity>
+
+                <View style={styles.datePickerDivider} />
+
+                <TouchableOpacity
+                  style={styles.datePickerRow}
+                  onPress={() => setAndroidPicker('end')}>
+                  <View style={styles.datePickerLabelCol}>
+                    <MaterialCommunityIcons
+                      name="calendar-end"
+                      size={16}
+                      color="#0f62fe"
+                    />
+                    <Text style={styles.datePickerLabel}>End Date</Text>
+                  </View>
+                  <View style={styles.androidDateChip}>
+                    <Text style={styles.androidDateChipText}>
+                      {formatDateLabel(draftEnd)}
+                    </Text>
+                    <MaterialCommunityIcons
+                      name="chevron-down"
+                      size={16}
+                      color="#0f62fe"
+                    />
+                  </View>
+                </TouchableOpacity>
+
+                {/* Native Android picker rendered outside the modal UI */}
+                {androidPicker !== null && (
+                  <DateTimePicker
+                    value={androidPicker === 'start' ? draftStart : draftEnd}
+                    mode="date"
+                    display="default"
+                    maximumDate={
+                      androidPicker === 'start' ? draftEnd : new Date()
+                    }
+                    minimumDate={
+                      androidPicker === 'end' ? draftStart : undefined
+                    }
+                    onChange={handleAndroidDateChange}
+                  />
+                )}
+              </>
+            )}
+
+            {/* Validation hint */}
+            {!isValidRange && (
+              <Text style={styles.dateValidationError}>
+                Start date must be on or before end date.
+              </Text>
+            )}
+
+            {/* Preview chip */}
+            {isValidRange && (
+              <View style={styles.datePreviewChip}>
+                <MaterialCommunityIcons
+                  name="calendar-check"
+                  size={14}
+                  color="#0f62fe"
+                />
+                <Text style={styles.datePreviewText}>
+                  {formatDateLabel(draftStart)} → {formatDateLabel(draftEnd)}
+                </Text>
+              </View>
+            )}
+
+            {/* Actions */}
+            <View style={styles.customModalActions}>
+              <TouchableOpacity
+                style={styles.customModalCancelBtn}
+                onPress={() => setIsCustomModalVisible(false)}>
+                <Text style={styles.customModalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.customModalApplyBtn,
+                  !isValidRange && styles.customModalApplyBtnDisabled,
+                ]}
+                disabled={!isValidRange}
+                onPress={confirmCustomRange}>
+                <Text style={styles.customModalApplyText}>Apply Range</Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    );
+  };
+
+  // ── Main render ──
+
   return (
     <SafeAreaView
       style={styles.safeArea}
@@ -952,14 +1265,13 @@ const OrderStatsScreen = () => {
       <View style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Orders Dashboard</Text>
-
           <TouchableOpacity
             style={[styles.filterButton, styles.activeFilterButton]}>
             <RegionSelector />
           </TouchableOpacity>
         </View>
 
-        <View style={{...styles.addressHeader}}></View>
+        <View style={{...styles.addressHeader}} />
 
         <View style={styles.content}>
           <ScrollView
@@ -1034,18 +1346,18 @@ const OrderStatsScreen = () => {
           </ScrollView>
         </View>
       </View>
+
+      {/* Custom date range modal (outside ScrollView so it overlays correctly) */}
+      {renderCustomDateModal()}
     </SafeAreaView>
   );
 };
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
+
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  container: {
-    flex: 1,
-  },
+  safeArea: {flex: 1, backgroundColor: '#f5f5f5'},
+  container: {flex: 1},
   header: {
     paddingHorizontal: 16,
     marginTop: 14,
@@ -1059,14 +1371,8 @@ const styles = StyleSheet.create({
     color: '#0f172a',
     fontFamily: FONT_FAMILY.bricolageBold,
   },
-  addressHeader: {
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-  },
-  tabWrapper: {
-    paddingHorizontal: 16,
-    paddingBottom: 4,
-  },
+  addressHeader: {paddingHorizontal: 16, paddingBottom: 12},
+  tabWrapper: {paddingHorizontal: 16, paddingBottom: 4},
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: '#e2e8f0',
@@ -1080,26 +1386,15 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 999,
   },
-  activeTabButton: {
-    backgroundColor: '#0f62fe',
-  },
+  activeTabButton: {backgroundColor: '#0f62fe'},
   tabText: {
     color: '#334155',
     fontSize: 13,
     fontFamily: FONT_FAMILY.bricolageMedium,
   },
-  activeTabText: {
-    color: '#ffffff',
-    fontFamily: FONT_FAMILY.outfitBold,
-  },
-  content: {
-    flex: 1,
-  },
-  filterWrapper: {
-    width: '100%',
-    minHeight: 56,
-    paddingLeft: 14,
-  },
+  activeTabText: {color: '#ffffff', fontFamily: FONT_FAMILY.outfitBold},
+  content: {flex: 1},
+  filterWrapper: {width: '100%', minHeight: 56, paddingLeft: 14},
   filterContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1112,27 +1407,31 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: '#e2e8f0',
   },
-  activeFilterButton: {
-    backgroundColor: '#1d4ed8',
+  activeFilterButton: {backgroundColor: '#1d4ed8'},
+  // Custom button gets a distinct outlined style when inactive
+  customFilterButton: {
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#0f62fe',
   },
+  customFilterButtonActive: {
+    backgroundColor: '#1d4ed8',
+    borderColor: '#1d4ed8',
+  },
+  customFilterContent: {flexDirection: 'row', alignItems: 'center'},
   filterButtonText: {
     color: '#334155',
     fontSize: 13,
     fontFamily: FONT_FAMILY.bricolageMedium,
   },
-  activeFilterButtonText: {
-    color: 'white',
-    fontFamily: FONT_FAMILY.outfitBold,
-  },
+  activeFilterButtonText: {color: 'white', fontFamily: FONT_FAMILY.outfitBold},
   tilesGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginHorizontal: 6,
     marginTop: 4,
   },
-  tabContent: {
-    paddingBottom: 8,
-  },
+  tabContent: {paddingBottom: 8},
   motivationBanner: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1148,12 +1447,8 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 3},
     elevation: 2,
   },
-  trophyIcon: {
-    marginRight: 14,
-  },
-  motivationText: {
-    flex: 1,
-  },
+  trophyIcon: {marginRight: 14},
+  motivationText: {flex: 1},
   motivationTitle: {
     fontSize: 15,
     color: '#0f172a',
@@ -1241,6 +1536,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.outfitBold,
     fontSize: 14,
   },
+  // Finance styles (unchanged from original)
   financeHeroCard: {
     marginHorizontal: 14,
     marginTop: 8,
@@ -1256,10 +1552,7 @@ const styles = StyleSheet.create({
     shadowOffset: {width: 0, height: 6},
     elevation: 2,
   },
-  financeHeroCardPressed: {
-    transform: [{scale: 0.99}],
-    opacity: 0.98,
-  },
+  financeHeroCardPressed: {transform: [{scale: 0.99}], opacity: 0.98},
   financeHeroHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
@@ -1320,11 +1613,7 @@ const styles = StyleSheet.create({
     padding: 8,
     gap: 8,
   },
-  financeSectionHeader: {
-    marginHorizontal: 14,
-    marginTop: 6,
-    marginBottom: 8,
-  },
+  financeSectionHeader: {marginHorizontal: 14, marginTop: 6, marginBottom: 8},
   financeSectionTitle: {
     fontSize: 16,
     color: '#0f172a',
@@ -1381,9 +1670,7 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.bricolageMedium,
     paddingRight: 8,
   },
-  serviceMetricIcon: {
-    opacity: 0.9,
-  },
+  serviceMetricIcon: {opacity: 0.9},
   serviceMetricValue: {
     marginTop: 10,
     fontSize: 18,
@@ -1433,10 +1720,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e2e8f0',
   },
-  financeStatLabelWrap: {
-    flex: 1,
-    paddingRight: 12,
-  },
+  financeStatLabelWrap: {flex: 1, paddingRight: 12},
   financeStatLabel: {
     fontSize: 13,
     color: '#0f172a',
@@ -1523,10 +1807,7 @@ const styles = StyleSheet.create({
     color: '#155e75',
     fontFamily: FONT_FAMILY.outfitBold,
   },
-  financeBreakdownList: {
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
-  },
+  financeBreakdownList: {borderTopWidth: 1, borderTopColor: '#e2e8f0'},
   financeBreakdownInlineRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1605,6 +1886,130 @@ const styles = StyleSheet.create({
     color: '#64748b',
     textAlign: 'center',
     fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  // ── Custom date modal ──────────────────────────────────────────────────────
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.45)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  customModalCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 20,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    shadowOffset: {width: 0, height: 8},
+    elevation: 10,
+  },
+  customModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 20,
+  },
+  customModalTitle: {
+    flex: 1,
+    fontSize: 16,
+    color: '#0f172a',
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  datePickerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+  },
+  datePickerLabelCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  datePickerLabel: {
+    fontSize: 14,
+    color: '#334155',
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  datePickerIOS: {
+    // compact spinner; width is auto on iOS
+  },
+  datePickerDivider: {
+    height: 1,
+    backgroundColor: '#e2e8f0',
+    marginVertical: 2,
+  },
+  androidDateChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#bfdbfe',
+  },
+  androidDateChipText: {
+    fontSize: 13,
+    color: '#0f62fe',
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  dateValidationError: {
+    marginTop: 10,
+    fontSize: 12,
+    color: '#dc2626',
+    fontFamily: FONT_FAMILY.bricolageRegular,
+    textAlign: 'center',
+  },
+  datePreviewChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'center',
+    marginTop: 14,
+    backgroundColor: '#eff6ff',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  datePreviewText: {
+    fontSize: 13,
+    color: '#0f62fe',
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  customModalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 20,
+  },
+  customModalCancelBtn: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#f1f5f9',
+  },
+  customModalCancelText: {
+    fontSize: 14,
+    color: '#475569',
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  customModalApplyBtn: {
+    flex: 2,
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderRadius: 12,
+    backgroundColor: '#0f62fe',
+  },
+  customModalApplyBtnDisabled: {
+    backgroundColor: '#93c5fd',
+  },
+  customModalApplyText: {
+    fontSize: 14,
+    color: '#ffffff',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
 });
 

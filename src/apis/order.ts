@@ -4,25 +4,61 @@ const orderApi = api.injectEndpoints({
   endpoints: builder => ({
     // To fetch order stats for a specific region and time range
     getOrderStats: builder.query({
-      query: (params: {regionId: string; timeRange: string}) => ({
-        url: `/quickVerse/v2/order/stats?regionId=${params.regionId}&timeRange=${params.timeRange}`,
-        method: 'GET',
-      }),
+      query: (params: {
+        regionId: string;
+        timeRange: string;
+        fromDate?: string;
+        toDate?: string;
+      }) => {
+        const queryParams = new URLSearchParams({
+          regionId: params.regionId,
+          timeRange: params.timeRange,
+        });
+
+        // send only for CUSTOM
+        if (params.timeRange === 'CUSTOM') {
+          if (params.fromDate) {
+            queryParams.append('fromDate', params.fromDate);
+          }
+
+          if (params.toDate) {
+            queryParams.append('toDate', params.toDate);
+          }
+        }
+
+        return {
+          url: `/quickVerse/v2/order/stats?${queryParams.toString()}`,
+          method: 'GET',
+        };
+      },
     }),
-    // To fetch orders based on filters like region, time range, and status
-    getOrders: builder.query({
+    getAllOrders: builder.query({
       query: (params: {
         regionId: string;
         timeRange: string;
         orderStatus?: string;
-      }) => ({
-        url: `/quickVerse/v2/order/region-orders?regionId=${
+        vendorId?: string;
+        transporterId?: string;
+      }) => {
+        let url = `/quickVerse/v2/orders?regionId=${
           params.regionId
         }&timeRange=${params.timeRange}&orderStatus=${
           params.orderStatus || ''
-        }`,
-        method: 'GET',
-      }),
+        }&page=0&pageSize=999`;
+
+        if (params.vendorId) {
+          url += `&vendorId=${params.vendorId}`;
+        }
+
+        if (params.transporterId) {
+          url += `&transporterId=${params.transporterId}`;
+        }
+
+        return {
+          url,
+          method: 'GET',
+        };
+      },
       providesTags: ['Orders'],
     }),
     // To fetch order details by order ID
@@ -34,15 +70,50 @@ const orderApi = api.injectEndpoints({
     }),
     // To fetch financial details of orders based on filters like region, time range, and status
     getOrdersFinance: builder.query({
-      query: (params: {regionId: string; timeRange: string}) => ({
-        url: `/quickVerse/v2/order/finance?regionId=${params.regionId}&timeRange=${params.timeRange}`,
-        method: 'GET',
-      }),
+      query: (params: {
+        regionId: string;
+        timeRange: string;
+        fromDate?: string;
+        toDate?: string;
+      }) => {
+        const queryParams = new URLSearchParams({
+          regionId: params.regionId,
+          timeRange: params.timeRange,
+        });
+
+        // send only for CUSTOM
+        if (params.timeRange === 'CUSTOM') {
+          if (params.fromDate) {
+            queryParams.append('fromDate', params.fromDate);
+          }
+
+          if (params.toDate) {
+            queryParams.append('toDate', params.toDate);
+          }
+        }
+
+        return {
+          url: `/quickVerse/v2/order/finance?${queryParams.toString()}`,
+          method: 'GET',
+        };
+      },
     }),
     // To assign an order to a delivery partner
     assignOrder: builder.mutation({
       query: (params: {orderId: string; deliveryPartnerId: string}) => ({
         url: `/v1/order-master/assignOrder`,
+        method: 'POST',
+        body: {
+          orderId: params.orderId,
+          deliveryPartnerId: params.deliveryPartnerId,
+        },
+      }),
+      invalidatesTags: ['Orders'],
+    }),
+    // To unassign an order from a delivery partner
+    unassignOrder: builder.mutation({
+      query: (params: {orderId: string; deliveryPartnerId: string}) => ({
+        url: `/v1/order-master/unAssignOrder`,
         method: 'POST',
         body: {
           orderId: params.orderId,
@@ -73,9 +144,10 @@ const orderApi = api.injectEndpoints({
 
 export const {
   useGetOrderStatsQuery,
-  useGetOrdersQuery,
+  useGetAllOrdersQuery,
   useGetOrdersFinanceQuery,
   useGetOrderByIdQuery,
   useAssignOrderMutation,
+  useUnassignOrderMutation,
   useGetOrderHistoryQuery,
 } = orderApi;

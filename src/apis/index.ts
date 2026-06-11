@@ -24,12 +24,16 @@ const buildHeaders = (endpoint: string) => {
     'getRegions',
     'getOrderStats',
     'getOrders',
+    'getAllOrders',
     'getOrdersFinance',
     'getOrderById',
     'getPricingConfig',
     'getPages',
     'createPromotion',
     'getOrderHistory',
+    'getDeliveryPartnersWithOrders',
+    'assignOrder',
+    'unassignOrder',
   ];
 
   // 🔐 Conditional JWT
@@ -54,6 +58,10 @@ const buildHeaders = (endpoint: string) => {
  */
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: 'http://prd.quickverse.in',
+  // baseUrl: 'http://qvadmin-dev.quickverse.in',
+  // baseUrl: 'http://console-wharf-overplant.ngrok-free.dev',
+  // baseUrl: 'https://8d19-27-60-4-109.ngrok-free.app',
+  // baseUrl: 'https://superscientifically-revengeless-ronald.ngrok-free.dev',
   prepareHeaders: (headers, {endpoint}) => {
     const builtHeaders = buildHeaders(endpoint);
 

@@ -30,6 +30,7 @@ export interface Order {
 export interface Shop {
   shopId: string;
   shopName: string;
+  shopImage?: string;
   shopDetails: Vendor;
   orders: Order[];
 }

@@ -1,7 +1,7 @@
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import RootNavigation from './src/navigation/RootNavigation';
 import {FONT_FAMILY} from './src/assets/constants/fonts';
-import {Text, TextInput} from 'react-native';
+import {Text, TextInput,View} from 'react-native';
 import React from 'react';
 
 const textDefaults = {

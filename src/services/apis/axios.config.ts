@@ -48,6 +48,9 @@ const showToast = (message: string) => {
 export const API_CONFIG = {
   /** Base URL for the QuickVerse API server */
   baseURL: 'http://prd.quickverse.in',
+  // baseURL: 'http://console-wharf-overplant.ngrok-free.dev',
+  // baseURL: 'http://qvadmin-dev.quickverse.in',
+  // baseURL: 'https://8d19-27-60-4-109.ngrok-free.app',
   // baseURL: 'https://superscientifically-revengeless-ronald.ngrok-free.dev',
   // baseURL: 'http://10.0.2.2:8081',
 

@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  ScrollView,
   StyleSheet,
   View,
   Text,
@@ -21,10 +20,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {FONT_FAMILY} from '../../assets/constants/fonts';
 import {OrdersNavigationStackParamList} from '../../navigation/OrdersNavigation';
 import {useGetPricingConfigQuery} from '../../apis/pricingConfig';
-import {
-  useGetActiveDeliveryPartnersQuery,
-  useGetDeliveryPartnersWithOrdersQuery,
-} from '../../apis/deliveryPartner';
+import {useGetDeliveryPartnersWithOrdersQuery} from '../../apis/deliveryPartner';
 import {useAssignOrderMutation} from '../../apis/order';
 
 type AssignTransporterScreenProp = RouteProp<
@@ -36,14 +32,23 @@ const AssignTransporterScreen = () => {
   const route = useRoute<AssignTransporterScreenProp>();
   const navigation = useNavigation();
   const {order} = route.params;
-  const [assigningPartnerId, setAssigningPartnerId] = React.useState('');
+  const [assigningPartnerId, setAssigningPartnerId] = React.useState(null);
+  const [refreshing, setRefreshing] = React.useState(false);
 
-  const {data: pricingConfigData} = useGetPricingConfigQuery(
+  const {
+    data: pricingConfigData,
+    refetch: refetchPricingConfig,
+    isFetching: isPricingFetching,
+  } = useGetPricingConfigQuery(
     order?.shopDetails?.category.toString().toUpperCase(),
     {skip: !order?.shopDetails?.category},
   );
-  const {data: deliveryPartnersData, isLoading} =
-    useGetDeliveryPartnersWithOrdersQuery({});
+  const {
+    data: deliveryPartnersData,
+    isLoading,
+    isFetching: isPartnersFetching,
+    refetch: refetchDeliveryPartners,
+  } = useGetDeliveryPartnersWithOrdersQuery({});
   const [assignOrder] = useAssignOrderMutation();
 
   const pricingKeyMap: Record<string, string> = {
@@ -144,13 +149,13 @@ const AssignTransporterScreen = () => {
     return R * c;
   };
 
-  const shopCoords = {
-    latitude: order?.shopDetails?.coordinates?.latitude,
-    longitude: order?.shopDetails?.coordinates?.longitude,
-  };
+  const shopLatitude = Number(order?.shopDetails?.coordinates?.latitude);
+  const shopLongitude = Number(order?.shopDetails?.coordinates?.longitude);
+  const hasValidShopCoords =
+    Number.isFinite(shopLatitude) && Number.isFinite(shopLongitude);
 
   const partnersWithDistance = React.useMemo(() => {
-    if (!shopCoords || !deliveryPartnersData) return [];
+    if (!deliveryPartnersData) return [];
 
     const filtered = (
       Array.isArray(deliveryPartnersData) ? deliveryPartnersData : []
@@ -159,10 +164,10 @@ const AssignTransporterScreen = () => {
       .map((p: any) => {
         const partnerLat = Number(p?.deliveryPartner?.latitude) || 0;
         const partnerLng = Number(p?.deliveryPartner?.longitude) || 0;
-        const distance = shopCoords
+        const distance = hasValidShopCoords
           ? haversineDistance(
-              shopCoords.latitude,
-              shopCoords.longitude,
+              shopLatitude,
+              shopLongitude,
               partnerLat,
               partnerLng,
             )
@@ -188,7 +193,31 @@ const AssignTransporterScreen = () => {
       });
 
     return filtered;
-  }, [deliveryPartnersData, shopCoords]);
+  }, [deliveryPartnersData, hasValidShopCoords, shopLatitude, shopLongitude]);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        refetchDeliveryPartners(),
+        order?.shopDetails?.category
+          ? refetchPricingConfig()
+          : Promise.resolve(),
+      ]);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [
+    order?.shopDetails?.category,
+    refetchDeliveryPartners,
+    refetchPricingConfig,
+  ]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      refetchDeliveryPartners();
+    }, [refetchDeliveryPartners]),
+  );
 
   const handleAssignOrder = async (partnerId: string) => {
     if (!order?.orderId || !partnerId) {
@@ -196,7 +225,7 @@ const AssignTransporterScreen = () => {
       return;
     }
 
-    setAssigningPartnerId(partnerId);
+    setAssigningPartnerId(partnerId as any);
     try {
       await assignOrder({
         orderId: String(order.orderId),
@@ -205,12 +234,13 @@ const AssignTransporterScreen = () => {
 
       navigation.goBack();
     } catch (error) {
+      console.log('Assign order error', error);
       Alert.alert(
         'Assign order failed',
         error instanceof Error ? error.message : 'Please try again',
       );
     } finally {
-      setAssigningPartnerId('');
+      setAssigningPartnerId(null);
     }
   };
 
@@ -231,160 +261,200 @@ const AssignTransporterScreen = () => {
     );
   };
 
-  const renderPartnerCard = ({item}: any) => (
-    <View style={styles.partnerCard}>
-      <View style={styles.partnerHeader}>
-        {item.profilePicture ? (
-          <Image
-            source={{uri: item.profilePicture}}
-            style={styles.partnerAvatar}
-          />
-        ) : (
-          <View style={styles.partnerAvatarFallback}>
-            <Text style={styles.partnerInitials}>
-              {item.name
-                ?.split(' ')
-                .slice(0, 2)
-                .map((n: string) => n[0])
-                .join('')}
-            </Text>
-          </View>
-        )}
-        <View style={{flex: 1, marginLeft: 12}}>
-          <Text style={styles.partnerName} numberOfLines={1}>
-            {item.name}
-          </Text>
-          {item.name?.includes('Test') && (
-            <View style={styles.testWarningContainer}>
-              <MaterialCommunityIcons
-                name="alert-circle"
-                size={16}
-                color="#b91c1c"
-                style={{marginRight: 6}}
-              />
-              <Text style={styles.testWarningText} numberOfLines={1}>
-                Test Partner
+  const renderPartnerCard = React.useCallback(
+    ({item}: any) => (
+      <View style={styles.partnerCard}>
+        <View style={styles.partnerHeader}>
+          {item.profilePicture ? (
+            <Image
+              source={{uri: item.profilePicture}}
+              style={styles.partnerAvatar}
+            />
+          ) : (
+            <View style={styles.partnerAvatarFallback}>
+              <Text style={styles.partnerInitials}>
+                {item.name
+                  ?.split(' ')
+                  .slice(0, 2)
+                  .map((n: string) => n[0])
+                  .join('')}
               </Text>
             </View>
           )}
-          <Text style={styles.partnerPhone}>
-            {String(item.mobileNumber || '')}
-          </Text>
-          <Text style={styles.partnerAddress} numberOfLines={1}>
-            {item.address}
-          </Text>
-        </View>
-        <View style={styles.distanceBadge}>
-          <MaterialCommunityIcons
-            name="map-marker-distance"
-            size={14}
-            color="#0f62fe"
-          />
-          <Text style={styles.distanceText}>
-            {item.distance?.toFixed(1) || '0'} Km
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.partnerMetaRow}>
-        <Text style={styles.metaLabel}>
-          Orders:{' '}
-          <Text style={styles.metaValue}>{item?.currentOrdersCount ?? 0}</Text>
-        </Text>
-        <View style={styles.bottomActions}>
-          <TouchableOpacity
-            style={styles.callButtonRow}
-            onPress={() => handleCall(item.mobileNumber)}>
-            <MaterialCommunityIcons name="phone" size={16} color="#065f46" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.assignButton}
-            onPress={() => handleAssignOrder(item.id)}>
-            <MaterialCommunityIcons
-              name="check-circle"
-              size={16}
-              color="#fff"
-            />
-            <Text style={styles.assignButtonText}>
-              {assigningPartnerId === item.id ? 'Assigning...' : 'Assign Order'}
+          <View style={{flex: 1, marginLeft: 12}}>
+            <Text style={styles.partnerName} numberOfLines={1}>
+              {item.name}
             </Text>
-          </TouchableOpacity>
+            {item.name?.includes('Test') && (
+              <View style={styles.testWarningContainer}>
+                <MaterialCommunityIcons
+                  name="alert-circle"
+                  size={16}
+                  color="#b91c1c"
+                  style={{marginRight: 6}}
+                />
+                <Text style={styles.testWarningText} numberOfLines={1}>
+                  Test Partner
+                </Text>
+              </View>
+            )}
+            <Text style={styles.partnerPhone}>
+              {String(item.mobileNumber || '')}
+            </Text>
+            <Text style={styles.partnerAddress} numberOfLines={1}>
+              {item.address}
+            </Text>
+          </View>
+          <View style={styles.distanceBadge}>
+            <MaterialCommunityIcons
+              name="map-marker-distance"
+              size={14}
+              color="#0f62fe"
+            />
+            <Text style={styles.distanceText}>
+              {item.distance?.toFixed(1) || '0'} Km
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.partnerMetaRow}>
+          <Text style={styles.metaLabel}>
+            Orders:{' '}
+            <Text style={styles.metaValue}>
+              {item?.currentOrdersCount ?? 0}
+            </Text>
+          </Text>
+          <View style={styles.bottomActions}>
+            <TouchableOpacity
+              style={styles.callButtonRow}
+              onPress={() => handleCall(item.mobileNumber)}>
+              <MaterialCommunityIcons name="phone" size={16} color="#065f46" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.assignButton}
+              disabled={assigningPartnerId !== null}
+              onPress={() => handleAssignOrder(item.id)}>
+              <MaterialCommunityIcons
+                name="check-circle"
+                size={16}
+                color="#fff"
+              />
+              <Text style={styles.assignButtonText}>
+                {assigningPartnerId === item.id
+                  ? 'Assigning...'
+                  : 'Assign Order'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
-    </View>
+    ),
+    [assigningPartnerId],
+  );
+
+  const renderListHeader = React.useMemo(
+    () => (
+      <>
+        <View style={styles.orderCardCompact}>
+          <View style={styles.orderHeader}>
+            {order?.shopDetails?.logo ? (
+              <Image
+                source={{uri: order.shopDetails.logo}}
+                style={styles.shopLogo}
+              />
+            ) : null}
+            <View style={{flex: 1, marginLeft: 12}}>
+              <Text style={styles.orderIdHighlighted} numberOfLines={1}>
+                {order?.orderId}
+              </Text>
+              <Text style={styles.shopNameSmall} numberOfLines={1}>
+                {order?.shopDetails?.name || 'Shop'} ·{' '}
+                {order?.totalItemCount ?? order?.orderItem?.length ?? 0} items
+              </Text>
+            </View>
+            <View style={styles.stateChip}>
+              <Text style={styles.stateChipText}>
+                {order?.state || 'UNKNOWN'}
+              </Text>
+            </View>
+          </View>
+
+          <Text
+            style={{
+              fontFamily: FONT_FAMILY.bricolageBold,
+              color: '#475569',
+              marginTop: 8,
+            }}>
+            Customer Name : {order?.customerName}
+          </Text>
+          <View style={styles.compactRow}>
+            <Text style={styles.compactLeft}>
+              {compactAddress || order?.customerName}
+            </Text>
+            <Text style={styles.totalValueCompact}>
+              ₹{calculatedTotal?.toFixed?.(2) ?? order?.invoiceAmount}
+            </Text>
+          </View>
+
+          <View style={styles.compactMetaRow}>
+            <Text style={styles.metaText}>
+              {formatPlacedTime(order?.creationTime)}
+            </Text>
+          </View>
+        </View>
+
+        {!isLoading && partnersWithDistance.length > 0 && (
+          <Text style={styles.partnersHeading}>
+            Available Delivery Partners
+          </Text>
+        )}
+      </>
+    ),
+    [
+      calculatedTotal,
+      compactAddress,
+      isLoading,
+      order?.customerName,
+      order?.invoiceAmount,
+      order?.orderId,
+      order?.orderItem?.length,
+      order?.shopDetails?.logo,
+      order?.shopDetails?.name,
+      order?.state,
+      order?.totalItemCount,
+      order?.creationTime,
+      partnersWithDistance.length,
+    ],
   );
 
   return (
-    <ScrollView style={styles.page} contentContainerStyle={styles.container}>
-      <View style={styles.orderCardCompact}>
-        <View style={styles.orderHeader}>
-          {order?.shopDetails?.logo ? (
-            <Image
-              source={{uri: order.shopDetails.logo}}
-              style={styles.shopLogo}
-            />
-          ) : null}
-          <View style={{flex: 1, marginLeft: 12}}>
-            <Text style={styles.orderIdHighlighted} numberOfLines={1}>
-              {order?.orderId}
-            </Text>
-            <Text style={styles.shopNameSmall} numberOfLines={1}>
-              {order?.shopDetails?.name || 'Shop'} ·{' '}
-              {order?.totalItemCount ?? order?.orderItem?.length ?? 0} items
-            </Text>
+    <FlatList
+      style={styles.page}
+      contentContainerStyle={styles.container}
+      data={partnersWithDistance}
+      keyExtractor={(item: any) => item.id}
+      renderItem={renderPartnerCard}
+      ListHeaderComponent={renderListHeader}
+      ListEmptyComponent={
+        isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="small" color="#0f62fe" />
+            <Text style={styles.loadingText}>Loading delivery partners...</Text>
           </View>
-          <View style={styles.stateChip}>
-            <Text style={styles.stateChipText}>
-              {order?.state || 'UNKNOWN'}
-            </Text>
-          </View>
-        </View>
-
-        <Text
-          style={{
-            fontFamily: FONT_FAMILY.bricolageBold,
-            color: '#475569',
-            marginTop: 8,
-          }}>
-          Customer Name : {order?.customerName}
-        </Text>
-        <View style={styles.compactRow}>
-          <Text style={styles.compactLeft}>
-            {compactAddress || order?.customerName}
-          </Text>
-          <Text style={styles.totalValueCompact}>
-            ₹{calculatedTotal?.toFixed?.(2) ?? order?.invoiceAmount}
-          </Text>
-        </View>
-
-        <View style={styles.compactMetaRow}>
-          <Text style={styles.metaText}>
-            {formatPlacedTime(order?.creationTime)}
-          </Text>
-        </View>
-      </View>
-
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#0f62fe" />
-          <Text style={styles.loadingText}>Loading delivery partners...</Text>
-        </View>
-      ) : (
-        partnersWithDistance.length > 0 && (
-          <View>
-            <Text style={styles.partnersHeading}>
-              Available Delivery Partners
-            </Text>
-            <FlatList
-              data={partnersWithDistance}
-              keyExtractor={(item: any) => item.id}
-              renderItem={renderPartnerCard}
-              scrollEnabled={false}
-            />
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No delivery partners available</Text>
           </View>
         )
-      )}
-    </ScrollView>
+      }
+      refreshing={refreshing || isPartnersFetching || isPricingFetching}
+      onRefresh={onRefresh}
+      initialNumToRender={8}
+      maxToRenderPerBatch={8}
+      windowSize={7}
+      removeClippedSubviews
+      keyboardShouldPersistTaps="handled"
+    />
   );
 };
 
@@ -563,6 +633,21 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     marginTop: 8,
+    fontSize: 12,
+    color: '#64748b',
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  emptyContainer: {
+    marginTop: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e6edf6',
+  },
+  emptyText: {
     fontSize: 12,
     color: '#64748b',
     fontFamily: FONT_FAMILY.bricolageMedium,

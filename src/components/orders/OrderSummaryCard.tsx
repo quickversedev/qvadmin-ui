@@ -7,6 +7,8 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Image,
+  ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Order} from '../../store/orders/useOrdersStore';
@@ -23,6 +25,7 @@ import {FONT_FAMILY} from '../../assets/constants/fonts';
 
 import {ORDER_STATUS} from '../../assets/constants/constant';
 import {navigationRef} from '../../navigation/NavigationHelper';
+import {useUnassignOrderMutation} from '../../apis/order';
 
 const formatMobile = (
   customerMobile: string | number | null | undefined,
@@ -47,6 +50,18 @@ type OrderSummaryCardProps = Order & {
   partnerOrderCounts?: Record<string, number>;
   onAssignPartner?: (orderId: string, partnerId: string) => void;
   deliveryPartnerDetails: any;
+  showShopInfo?: boolean;
+  assignedPartnerDetails?: DeliveryPartnerAssignmentDetails | null;
+  paymentProofURLImageUrl?: string | null;
+};
+
+type DeliveryPartnerAssignmentDetails = DeliveryPartner & {
+  orderStatus?: string | null;
+  arrivedAtStoreAt?: string | null;
+  pickedUpAt?: string | null;
+  reachedLocationAt?: string | null;
+  deliveredAt?: string | null;
+  paymentProofUrl?: string | null;
 };
 
 const toCoordinate = (value: unknown): number | null => {
@@ -84,9 +99,26 @@ const distanceInKm = (
   return earthRadiusKm * c;
 };
 
+const TIMELINES = [
+  {label: 'At Store', icon: '🏪', statuses: ['ARRIVED_AT_STORE']},
+  {label: 'Picked Up', icon: '📦', statuses: ['ORDER_PICKED_UP', 'PICKED_UP']},
+  {
+    label: 'Reached',
+    icon: '🛵',
+    statuses: ['REACHED_LOCATION', 'REACH_DESTINATION'],
+  },
+  {label: 'Delivered', icon: '✅', statuses: ['DELIVERED']},
+];
+
+const getTransporterDisplayName = (partner: DeliveryPartnerAssignmentDetails) =>
+  getDeliveryPartnerName(partner) !== 'Unnamed Partner'
+    ? getDeliveryPartnerName(partner)
+    : partner.deliveryPartnerId || partner.id || 'Unnamed Partner';
+
 const OrderSummaryCard = (props: OrderSummaryCardProps) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
+  const [imageModalVisible, setImageModalVisible] = useState(false);
   const {
     orderId,
     customerMobile,
@@ -104,10 +136,27 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
     customerName,
     orderLink,
     deliveryPartnerDetails,
+    assignedPartnerDetails,
+    paymentProofURLImageUrl: paymentProofUrl,
   } = props;
 
+  const arrivedAtStoreAt = assignedPartnerDetails?.arrivedAtStoreAt ?? null;
+  const pickedUpAt = assignedPartnerDetails?.pickedUpAt ?? null;
+  const reachedLocationAt = assignedPartnerDetails?.reachedLocationAt ?? null;
+  const deliveredAt = assignedPartnerDetails?.deliveredAt ?? null;
+
+  console.log(paymentProofUrl);
+
+  const [unassignOrder, {isLoading: isUnassignedLoading}] =
+    useUnassignOrderMutation();
+
   const statusStyles = getStatusStyles(state);
-  const assignedPartner = deliveryPartnerDetails;
+  const assignedPartner = deliveryPartnerDetails || assignedPartnerDetails;
+  const deliveryLifecycleStatus =
+    assignedPartnerDetails?.orderStatus || assignedPartner?.orderStatus || '';
+  const activeTimelineIndex = TIMELINES.findIndex(timeline =>
+    timeline.statuses.includes(deliveryLifecycleStatus),
+  );
   const shopLatitude = toCoordinate(vendor?.shopDetails?.coordinates?.latitude);
   const shopLongitude = toCoordinate(
     vendor?.shopDetails?.coordinates?.longitude,
@@ -203,10 +252,54 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
   };
 
   const canAssignPartner =
-    state === ORDER_STATUS.ACCEPTED && orderId && !deliveryPartnerDetails;
+    (state === ORDER_STATUS.ACCEPTED || state === ORDER_STATUS.SHIPPED) &&
+    !!orderId &&
+    !deliveryPartnerDetails;
+
+  const partnerAssigned =
+    deliveryPartnerDetails &&
+    (state === ORDER_STATUS.ACCEPTED || state === ORDER_STATUS.SHIPPED);
+
+  const handleCallShop = () => {
+    const shopPhone = vendor?.shopDetails?.phone;
+    if (shopPhone) {
+      const phoneNumber = `tel:${formatMobile(shopPhone)}`;
+      Linking.openURL(phoneNumber);
+    }
+  };
 
   return (
     <View style={styles.card}>
+      {props.showShopInfo && vendor?.shopDetails && (
+        <View style={styles.shopInfoRow}>
+          <View style={styles.shopLogoContainer}>
+            <Image
+              source={
+                vendor.shopDetails.logo
+                  ? {uri: vendor.shopDetails.logo}
+                  : require('../../assets/images/default_logo.png')
+              }
+              style={styles.shopLogo}
+              resizeMode="contain"
+            />
+          </View>
+
+          <View style={styles.shopDetailsBlock}>
+            <Text style={styles.shopName} numberOfLines={1}>
+              {vendor.shopDetails.name}
+            </Text>
+            <Text style={styles.shopAddress} numberOfLines={1}>
+              {vendor.shopDetails.address?.address || 'Address not available'}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={styles.shopCallButton}
+            onPress={handleCallShop}>
+            <Icon name="phone" size={14} color="#FFFFFF" />
+          </TouchableOpacity>
+        </View>
+      )}
       <View style={styles.header}>
         <Text style={styles.orderId}>#{orderId}</Text>
         <View style={styles.headerTimeBlock}>
@@ -224,15 +317,21 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
           </Text>
         </View>
       </View>
-      <Text
-        style={{
-          fontSize: 17,
-          color: '#1E293B',
-          fontFamily: FONT_FAMILY.outfitExtraBold,
-          marginBottom: 8,
-        }}>
-        {customerName}'s Order
-      </Text>
+      <View style={styles.customerNameRow}>
+        <Text
+          style={{
+            fontSize: 17,
+            color: '#1E293B',
+            fontFamily: FONT_FAMILY.outfitExtraBold,
+          }}>
+          {customerName}'s Order
+        </Text>
+        <TouchableOpacity
+          style={styles.customerCallIcon}
+          onPress={handleCallCustomer}>
+          <Icon name="phone" size={18} color="#0EA5E9" />
+        </TouchableOpacity>
+      </View>
       <View style={styles.statusRow}>
         <View
           style={[
@@ -293,28 +392,122 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
         </View>
       </View>
 
-      {!!assignedPartner && (
+      {(!!assignedPartner || !!deliveryLifecycleStatus) && (
         <View style={styles.transporterCard}>
-          <View style={styles.transporterInfoBlock}>
-            <Text style={styles.transporterLabel}>Assigned Transporter</Text>
-            <Text style={styles.transporterName} numberOfLines={1}>
-              {getDeliveryPartnerName(assignedPartner)}
-            </Text>
-            <Text style={styles.transporterMeta} numberOfLines={1}>
-              {transporterMobile || 'Mobile not available'}
-            </Text>
-          </View>
+          {!!assignedPartner && (
+            <View style={styles.transporterHeader}>
+              <View style={styles.transporterInfoBlock}>
+                <Text style={styles.transporterLabel}>
+                  Assigned Transporter
+                </Text>
+                <Text style={styles.transporterName} numberOfLines={1}>
+                  {getTransporterDisplayName(assignedPartner)}
+                </Text>
+                <Text style={styles.transporterMeta} numberOfLines={1}>
+                  {transporterMobile || 'Mobile not available'}
+                </Text>
+              </View>
 
-          <TouchableOpacity
-            style={[
-              styles.callTransporterButton,
-              !transporterMobile && styles.callTransporterButtonDisabled,
-            ]}
-            disabled={!transporterMobile}
-            onPress={handleCallTransporter}>
-            <Icon name="phone" size={14} color="#ffffff" />
-            <Text style={styles.callTransporterButtonText}>Call</Text>
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.callTransporterButton,
+                  !transporterMobile && styles.callTransporterButtonDisabled,
+                ]}
+                disabled={!transporterMobile}
+                onPress={handleCallTransporter}>
+                <Icon name="phone" size={14} color="#ffffff" />
+                <Text style={styles.callTransporterButtonText}>Call</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {!!deliveryLifecycleStatus && (
+            <>
+              <View style={styles.timelineWrapper}>
+                {TIMELINES.map((timeline, index) => {
+                  const isCompleted =
+                    activeTimelineIndex >= 0 && index <= activeTimelineIndex;
+                  const isCurrent =
+                    activeTimelineIndex >= 0 && index === activeTimelineIndex;
+
+                  // Map each step to its timestamp
+                  const timestamps = [
+                    arrivedAtStoreAt,
+                    pickedUpAt,
+                    reachedLocationAt,
+                    deliveredAt,
+                  ];
+                  const ts = timestamps[index];
+
+                  return (
+                    <View key={timeline.label} style={styles.timelineItem}>
+                      {index > 0 && (
+                        <View
+                          style={[
+                            styles.timelineConnector,
+                            styles.timelineConnectorLeft,
+                            isCompleted && styles.timelineConnectorCompleted,
+                          ]}
+                        />
+                      )}
+                      {index < TIMELINES.length - 1 && (
+                        <View
+                          style={[
+                            styles.timelineConnector,
+                            styles.timelineConnectorRight,
+                            activeTimelineIndex > index &&
+                              styles.timelineConnectorCompleted,
+                          ]}
+                        />
+                      )}
+                      <View
+                        style={[
+                          styles.timelineIcon,
+                          isCompleted && styles.timelineIconCompleted,
+                          isCurrent && styles.timelineIconCurrent,
+                        ]}>
+                        <Text style={styles.timelineIconText}>
+                          {timeline.icon}
+                        </Text>
+                      </View>
+                      <Text
+                        style={[
+                          styles.timelineLabel,
+                          isCompleted && styles.timelineLabelCompleted,
+                        ]}
+                        numberOfLines={1}>
+                        {timeline.label}
+                      </Text>
+                      {!!ts && !isNaN(Number(ts)) && (
+                        <Text
+                          style={styles.timelineTimestamp}
+                          numberOfLines={1}>
+                          {new Date(Number(ts)).toLocaleTimeString('en-IN', {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                            hour12: true, // 12-hour format ensure karne ke liye
+                          })}
+                        </Text>
+                      )}
+                    </View>
+                  );
+                })}
+              </View>
+
+              {/* Payment proof row */}
+              {!!paymentProofUrl && (
+                <TouchableOpacity
+                  style={styles.paymentProofRow}
+                  onPress={() => setImageModalVisible(true)}
+                  activeOpacity={0.8}>
+                  <Text style={styles.paymentProofText}>
+                    View Payment Proof
+                  </Text>
+                  <Icon name="chevron-right" size={15} color="#0B6B4A" />
+                </TouchableOpacity>
+              )}
+            </>
+          )}
         </View>
       )}
 
@@ -326,33 +519,20 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.button, styles.contactButton]}
-          onPress={handleCallCustomer}>
-          <Text style={[styles.buttonText, styles.contactButtonText]}>
-            Contact Customer
+          style={[styles.button, styles.viewButton]}
+          onPress={() =>
+            navigationRef.current?.navigate('WebViewScreen', {url: orderLink})
+          }>
+          <Text
+            style={{
+              ...styles.buttonText,
+              fontFamily: FONT_FAMILY.bricolageBold,
+              fontSize: 13,
+            }}>
+            SmartBiz Order ➔
           </Text>
         </TouchableOpacity>
       </View>
-
-      <TouchableOpacity
-        style={[
-          styles.button,
-          styles.viewButton,
-          {marginTop: 10, backgroundColor: '#0f62fe'},
-        ]}
-        onPress={() =>
-          navigationRef.current?.navigate('WebViewScreen', {url: orderLink})
-        }>
-        <Text
-          style={{
-            ...styles.buttonText,
-            color: '#FFF',
-            fontFamily: FONT_FAMILY.bricolageBold,
-            fontSize: 13,
-          }}>
-          View SmartBiz Order ➔
-        </Text>
-      </TouchableOpacity>
 
       {canAssignPartner && (
         <TouchableOpacity
@@ -364,6 +544,38 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
           }}>
           <Icon name="account-switch" size={16} color="#fff" />
           <Text style={styles.assignButtonText}>Assign Delivery Partner</Text>
+        </TouchableOpacity>
+      )}
+
+      {partnerAssigned && (
+        <TouchableOpacity
+          disabled={isUnassignedLoading}
+          style={styles.assignButton}
+          onPress={async () => {
+            try {
+              if (props.orderId && deliveryPartnerDetails.id) {
+                console.log(
+                  'Unassigning order:',
+                  props.orderId,
+                  deliveryPartnerDetails.id,
+                );
+                await unassignOrder({
+                  orderId: props.orderId,
+                  deliveryPartnerId: deliveryPartnerDetails.id,
+                }).unwrap();
+              }
+            } catch (error) {
+              console.log('Unassign error:', error);
+            }
+          }}>
+          <Icon name="account-switch" size={16} color="#fff" />
+          {isUnassignedLoading ? (
+            <ActivityIndicator />
+          ) : (
+            <Text style={styles.assignButtonText}>
+              Unassign {deliveryPartnerDetails?.name || 'Delivery Partner'}
+            </Text>
+          )}
         </TouchableOpacity>
       )}
 
@@ -467,6 +679,33 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
             )}
           </View>
         </View>
+      </Modal>
+      {/* Payment Proof Image Modal */}
+      <Modal
+        visible={imageModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setImageModalVisible(false)}>
+        <TouchableOpacity
+          style={styles.imageModalOverlay}
+          activeOpacity={1}
+          onPress={() => setImageModalVisible(false)}>
+          <View style={styles.imageModalCard}>
+            <View style={styles.imageModalHeader}>
+              <Text style={styles.imageModalTitle}>Payment Proof</Text>
+              <TouchableOpacity onPress={() => setImageModalVisible(false)}>
+                <Icon name="close" size={20} color="#374151" />
+              </TouchableOpacity>
+            </View>
+            {paymentProofUrl ? (
+              <Image
+                source={{uri: paymentProofUrl}}
+                style={styles.imageModalImage}
+                resizeMode="contain"
+              />
+            ) : null}
+          </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -578,6 +817,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#EFF6FF',
     paddingHorizontal: 10,
     paddingVertical: 10,
+    gap: 12,
+  },
+  transporterHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -619,6 +861,68 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 12,
     fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  timelineWrapper: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingTop: 2,
+  },
+  timelineItem: {
+    flex: 1,
+    alignItems: 'center',
+    minWidth: 0,
+    position: 'relative',
+  },
+  timelineConnector: {
+    position: 'absolute',
+    top: 17,
+    height: 2,
+    backgroundColor: '#CBD5E1',
+    zIndex: 0,
+  },
+  timelineConnectorLeft: {
+    left: 0,
+    right: '50%',
+  },
+  timelineConnectorRight: {
+    left: '50%',
+    right: 0,
+  },
+  timelineConnectorCompleted: {
+    backgroundColor: '#16A34A',
+  },
+  timelineIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: '#CBD5E1',
+    backgroundColor: '#F8FAFC',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  timelineIconCompleted: {
+    borderColor: '#86EFAC',
+    backgroundColor: '#DCFCE7',
+  },
+  timelineIconCurrent: {
+    borderColor: '#16A34A',
+    borderWidth: 2,
+  },
+  timelineIconText: {
+    fontSize: 15,
+  },
+  timelineLabel: {
+    marginTop: 5,
+    color: '#64748B',
+    fontSize: 10,
+    textAlign: 'center',
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  timelineLabelCompleted: {
+    color: '#166534',
+    fontFamily: FONT_FAMILY.bricolageBold,
   },
   actions: {
     flexDirection: 'row',
@@ -757,5 +1061,116 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     fontSize: 13,
     fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  shopInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingBottom: 12,
+    marginBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEF2F7',
+    gap: 10,
+  },
+  shopLogoContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 10,
+    backgroundColor: '#F8FAFC',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  shopLogo: {
+    width: '100%',
+    height: '100%',
+  },
+  shopDetailsBlock: {
+    flex: 1,
+  },
+  shopName: {
+    fontSize: 14,
+    color: '#1E293B',
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  shopAddress: {
+    fontSize: 11,
+    color: '#64748B',
+    fontFamily: FONT_FAMILY.bricolageRegular,
+    marginTop: 2,
+  },
+  shopCallButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#0284C7',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  customerNameRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  customerCallIcon: {
+    padding: 6,
+  },
+  timelineTimestamp: {
+    marginTop: 3,
+    color: '#475569',
+    fontSize: 9,
+    textAlign: 'center',
+    fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  paymentProofRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#ECFDF5',
+    borderWidth: 1,
+    borderColor: '#A7F3D0',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    alignSelf: 'flex-start',
+  },
+  paymentProofText: {
+    flex: 1,
+    color: '#065F46',
+    fontSize: 12,
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  imageModalCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '100%',
+    maxHeight: '75%',
+    overflow: 'hidden',
+  },
+  imageModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+  },
+  imageModalTitle: {
+    color: '#0F172A',
+    fontSize: 15,
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  imageModalImage: {
+    width: '100%',
+    height: 340,
   },
 });

@@ -63,7 +63,7 @@ const OrderDetailsModal = ({
     paymentMethod,
   } = order;
 
-  const {data: pricingConfigData} = useGetPricingConfigQuery(
+  const {data: pricingConfigData, error} = useGetPricingConfigQuery(
     vendor?.shopDetails?.category.toString().toUpperCase(),
     {skip: !vendor?.shopDetails?.category},
   );
@@ -109,7 +109,7 @@ const OrderDetailsModal = ({
   const calculatedTotal =
     subTotal + deliveryFee + platformFee + packagingCharges + taxes;
 
-    const customerAddr = customerAddress && parseAddress(customerAddress);
+  const customerAddr = customerAddress && parseAddress(customerAddress);
 
   const vendorAddr = address && parseAddress(address.address);
 
