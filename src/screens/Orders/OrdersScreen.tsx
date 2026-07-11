@@ -84,8 +84,6 @@ const OrdersScreen = () => {
     {pollingInterval: 5000},
   );
 
-  console.log('All Orders : ', allOrdersData);
-
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
 
@@ -126,9 +124,19 @@ const OrdersScreen = () => {
       value: 'ACCEPTED',
       count: orderStatsData?.response?.acceptedOrders || 0,
     },
+    READY_FOR_PICKUP: {
+      label: 'Ready for Pickup',
+      value: 'READY_FOR_PICKUP',
+      count: orderStatsData?.response?.readyForPickupOrders || 0,
+    },
     SHIPPED: {
       label: 'Shipped',
       value: 'SHIPPED',
+      count: orderStatsData?.response?.shippedOrders || 0,
+    },
+    IN_TRANSIT: {
+      label: 'In Transit',
+      value: 'IN_TRANSIT',
       count: orderStatsData?.response?.inTransitOrders || 0,
     },
     COMPLETED: {

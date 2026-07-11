@@ -164,40 +164,79 @@ const ViewOrderScreen = () => {
     GST: 'gstRate',
   };
 
-  // Fee calculation matching client app logic
-  const vendorCategory = orderData?.response?.shop?.category;
-  const pricing = pricingConfigData?.reduce(
-    (
-      acc: Record<string, number>,
-      item: {configKey: string; actualValue: number; expectedValue: number},
-    ) => {
-      const key = pricingKeyMap[item.configKey as keyof typeof pricingKeyMap];
+  // `finance` is the new, authoritative source for order money math.
+  // When the backend sends it, use it directly. Otherwise fall back to the
+  // old pricing-config-derived calculation for backward compatibility.
+  const financeData = orderData?.response?.order?.finance;
 
-      if (key) {
-        acc[`${key}Actual`] = item.actualValue;
-        acc[`${key}Expected`] = item.expectedValue;
-      }
+  let subTotalAmount: number;
+  let deliveryFee: number;
+  let deliveryFeeOriginal: number | undefined;
+  let platformFee: number;
+  let platformFeeOriginal: number | undefined;
+  let packagingCharges: number;
+  let packagingChargesOriginal: number | undefined;
+  let taxes: number;
+  let totalAmount: number;
+  let couponDiscount = 0;
+  let couponCode: string | null = null;
+  let codCharges = 0;
 
-      return acc;
-    },
-    {},
-  );
+  if (financeData) {
+    subTotalAmount = Number(financeData.itemTotalAmount || 0);
+    deliveryFee = Number(financeData.deliveryFee || 0);
+    // Only show a strikethrough "original" delivery fee when it was actually
+    // discounted away (e.g. free delivery), otherwise there's nothing to
+    // cross out.
+    deliveryFeeOriginal =
+      financeData.isFreeDelivery &&
+      Number(financeData.actualDeliveryFee || 0) !== deliveryFee
+        ? Number(financeData.actualDeliveryFee || 0)
+        : undefined;
+    platformFee = Number(financeData.platformFee || 0);
+    platformFeeOriginal = undefined;
+    packagingCharges = Number(financeData.packagingCharges || 0);
+    packagingChargesOriginal = undefined;
+    taxes = Number(financeData.totalGst || 0);
+    totalAmount = Number(financeData.payableAmount || 0);
+    couponDiscount = Number(financeData.couponDiscount || 0);
+    couponCode = financeData.couponCode || null;
+    codCharges = Number(financeData.codCharges || 0);
+  } else {
+    // Legacy fee calculation matching client app logic
+    const pricing = pricingConfigData?.reduce(
+      (
+        acc: Record<string, number>,
+        item: {configKey: string; actualValue: number; expectedValue: number},
+      ) => {
+        const key = pricingKeyMap[item.configKey as keyof typeof pricingKeyMap];
 
-  const subTotalAmount = Number(
-    orderData?.response?.order.amountExcludingDeliveryFee || 0,
-  );
-  const deliveryFee = pricing?.deliveryFeeActual;
-  const deliveryFeeOriginal = pricing?.deliveryFeeExpected;
-  const platformFee = pricing?.platformFeeActual;
-  const platformFeeOriginal = pricing?.platformFeeExpected;
-  const packagingCharges = pricing?.packagingChargesActual;
-  const packagingChargesOriginal = pricing?.packagingChargesExpected;
-  const commissionRate = pricing?.commissionRateActual;
-  const commission = (commissionRate / 100) * subTotalAmount;
-  const taxableAmount = commission + deliveryFee + platformFee;
-  const taxes = Math.round((pricing?.gstRateActual / 100) * taxableAmount);
-  const totalAmount =
-    subTotalAmount + deliveryFee + platformFee + packagingCharges + taxes;
+        if (key) {
+          acc[`${key}Actual`] = item.actualValue;
+          acc[`${key}Expected`] = item.expectedValue;
+        }
+
+        return acc;
+      },
+      {},
+    );
+
+    subTotalAmount = Number(
+      orderData?.response?.order.amountExcludingDeliveryFee || 0,
+    );
+    deliveryFee = pricing?.deliveryFeeActual;
+    deliveryFeeOriginal = pricing?.deliveryFeeExpected;
+    platformFee = pricing?.platformFeeActual;
+    platformFeeOriginal = pricing?.platformFeeExpected;
+    packagingCharges = pricing?.packagingChargesActual;
+    packagingChargesOriginal = pricing?.packagingChargesExpected;
+    const commissionRate = pricing?.commissionRateActual;
+    const commission = (commissionRate / 100) * subTotalAmount;
+    const taxableAmount = commission + deliveryFee + platformFee;
+    taxes = Math.round((pricing?.gstRateActual / 100) * taxableAmount);
+    totalAmount =
+      subTotalAmount + deliveryFee + platformFee + packagingCharges + taxes;
+  }
 
   return (
     <ScrollView style={styles.page} contentContainerStyle={styles.container}>
@@ -369,12 +408,24 @@ const ViewOrderScreen = () => {
           <Text style={styles.billValue}>₹{subTotalAmount?.toFixed(2)}</Text>
         </View>
 
+        {!!couponDiscount && (
+          <View style={styles.billRow}>
+            <Text style={styles.billLabel}>
+              Coupon Discount{couponCode ? ` (${couponCode})` : ''}
+            </Text>
+            <Text style={styles.billValue}>-₹{couponDiscount?.toFixed(2)}</Text>
+          </View>
+        )}
+
         <View style={styles.billRow}>
           <Text style={styles.billLabel}>Delivery Fee</Text>
           <View style={styles.billAmountRow}>
-            <Text style={styles.strikethroughAmount}>
-              ₹{deliveryFeeOriginal?.toFixed(2)}
-            </Text>
+            {deliveryFeeOriginal !== undefined &&
+              deliveryFeeOriginal !== deliveryFee && (
+                <Text style={styles.strikethroughAmount}>
+                  ₹{deliveryFeeOriginal?.toFixed(2)}
+                </Text>
+              )}
             <Text style={styles.billValue}>₹{deliveryFee?.toFixed(2)}</Text>
           </View>
         </View>
@@ -382,9 +433,12 @@ const ViewOrderScreen = () => {
         <View style={styles.billRow}>
           <Text style={styles.billLabel}>Platform Fee</Text>
           <View style={styles.billAmountRow}>
-            <Text style={styles.strikethroughAmount}>
-              ₹{platformFeeOriginal?.toFixed(2)}
-            </Text>
+            {platformFeeOriginal !== undefined &&
+              platformFeeOriginal !== platformFee && (
+                <Text style={styles.strikethroughAmount}>
+                  ₹{platformFeeOriginal?.toFixed(2)}
+                </Text>
+              )}
             <Text style={styles.billValue}>₹{platformFee?.toFixed(2)}</Text>
           </View>
         </View>
@@ -392,14 +446,24 @@ const ViewOrderScreen = () => {
         <View style={styles.billRow}>
           <Text style={styles.billLabel}>Packaging Charges</Text>
           <View style={styles.billAmountRow}>
-            <Text style={styles.strikethroughAmount}>
-              ₹{packagingChargesOriginal}
-            </Text>
+            {packagingChargesOriginal !== undefined &&
+              packagingChargesOriginal !== packagingCharges && (
+                <Text style={styles.strikethroughAmount}>
+                  ₹{packagingChargesOriginal}
+                </Text>
+              )}
             <Text style={styles.billValue}>
               ₹{packagingCharges?.toFixed(2)}
             </Text>
           </View>
         </View>
+
+        {!!codCharges && (
+          <View style={styles.billRow}>
+            <Text style={styles.billLabel}>COD Charges</Text>
+            <Text style={styles.billValue}>₹{codCharges?.toFixed(2)}</Text>
+          </View>
+        )}
 
         <View style={styles.billRow}>
           <Text style={styles.billLabel}>Taxes (GST & Services)</Text>
@@ -414,7 +478,9 @@ const ViewOrderScreen = () => {
         <View style={[styles.billRow, styles.paymentRow]}>
           <Text style={styles.billLabel}>Payment Method</Text>
           <Text style={styles.paymentChip}>
-            {orderData?.response?.order.paymentMethod || 'N/A'}
+            {orderData?.response?.order?.finance?.paymentMethod ||
+              orderData?.response?.order.paymentMethod ||
+              'N/A'}
           </Text>
         </View>
       </View>

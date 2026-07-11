@@ -1,4 +1,4 @@
-import React, {useMemo, useState} from 'react';
+import React, {useMemo, useState, useEffect} from 'react';
 import {
   FlatList,
   Linking,
@@ -9,6 +9,7 @@ import {
   View,
   Image,
   ActivityIndicator,
+  AppState,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import {Order} from '../../store/orders/useOrdersStore';
@@ -53,6 +54,36 @@ type OrderSummaryCardProps = Order & {
   showShopInfo?: boolean;
   assignedPartnerDetails?: DeliveryPartnerAssignmentDetails | null;
   paymentProofURLImageUrl?: string | null;
+  finance?: OrderFinance | null;
+};
+
+type OrderFinance = {
+  itemTotalAmount?: number;
+  couponId?: string | null;
+  couponCode?: string | null;
+  couponDiscount?: number;
+  isFreeDelivery?: boolean;
+  amountAfterCoupon?: number;
+  packagingCharges?: number;
+  actualDeliveryFee?: number;
+  deliveryFee?: number;
+  platformFee?: number;
+  razorpayCharges?: number;
+  serviceGstRate?: number;
+  commissionGst?: number;
+  deliveryGst?: number;
+  packagingGst?: number;
+  codGst?: number;
+  platformGst?: number;
+  totalGst?: number;
+  taxableAmount?: number;
+  payableAmount?: number;
+  commissionRate?: number;
+  commission?: number;
+  paymentMethod?: string | null;
+  codCharges?: number;
+  createdAt?: string | number;
+  updatedAt?: string | number | null;
 };
 
 type DeliveryPartnerAssignmentDetails = DeliveryPartner & {
@@ -62,6 +93,7 @@ type DeliveryPartnerAssignmentDetails = DeliveryPartner & {
   reachedLocationAt?: string | null;
   deliveredAt?: string | null;
   paymentProofUrl?: string | null;
+  assignedAt: string | null;
 };
 
 const toCoordinate = (value: unknown): number | null => {
@@ -115,6 +147,34 @@ const getTransporterDisplayName = (partner: DeliveryPartnerAssignmentDetails) =>
     ? getDeliveryPartnerName(partner)
     : partner.deliveryPartnerId || partner.id || 'Unnamed Partner';
 
+const getAssignedTimeMs = (
+  assignedAt: string | number | null | undefined,
+): number | null => {
+  if (!assignedAt) {
+    return null;
+  }
+  const num = Number(assignedAt);
+  if (!isNaN(num) && num > 0) {
+    return num;
+  }
+  const dateNum = Date.parse(String(assignedAt));
+  if (!isNaN(dateNum) && dateNum > 0) {
+    return dateNum;
+  }
+  return null;
+};
+
+const formatTimer = (seconds: number): string => {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+const formatCurrency = (value: number | undefined | null): string => {
+  const num = Number(value || 0);
+  return num.toFixed(2);
+};
+
 const OrderSummaryCard = (props: OrderSummaryCardProps) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
@@ -139,19 +199,20 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
     assignedPartnerDetails,
     paymentProofURLImageUrl: paymentProofUrl,
   } = props;
+  const finance = props?.finance ?? null;
 
   const arrivedAtStoreAt = assignedPartnerDetails?.arrivedAtStoreAt ?? null;
   const pickedUpAt = assignedPartnerDetails?.pickedUpAt ?? null;
   const reachedLocationAt = assignedPartnerDetails?.reachedLocationAt ?? null;
   const deliveredAt = assignedPartnerDetails?.deliveredAt ?? null;
-
-  console.log(paymentProofUrl);
+  const assignedAt = assignedPartnerDetails?.assignedAt ?? null;
 
   const [unassignOrder, {isLoading: isUnassignedLoading}] =
     useUnassignOrderMutation();
 
   const statusStyles = getStatusStyles(state);
   const assignedPartner = deliveryPartnerDetails || assignedPartnerDetails;
+
   const deliveryLifecycleStatus =
     assignedPartnerDetails?.orderStatus || assignedPartner?.orderStatus || '';
   const activeTimelineIndex = TIMELINES.findIndex(timeline =>
@@ -260,6 +321,44 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
     deliveryPartnerDetails &&
     (state === ORDER_STATUS.ACCEPTED || state === ORDER_STATUS.SHIPPED);
 
+  const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!partnerAssigned || !assignedAt) {
+      setSecondsRemaining(null);
+      return;
+    }
+
+    const assignedTimeMs = getAssignedTimeMs(assignedAt);
+    if (!assignedTimeMs) {
+      setSecondsRemaining(0);
+      return;
+    }
+
+    const calculateTimeLeft = () => {
+      const deadline = assignedTimeMs + 150000; // 2m 30s = 150,000ms
+      const diff = deadline - Date.now();
+      const remaining = Math.max(0, Math.ceil(diff / 1000));
+      setSecondsRemaining(remaining);
+      return remaining;
+    };
+
+    calculateTimeLeft();
+
+    const intervalId = setInterval(calculateTimeLeft, 1000);
+
+    const subscription = AppState.addEventListener('change', nextAppState => {
+      if (nextAppState === 'active') {
+        calculateTimeLeft();
+      }
+    });
+
+    return () => {
+      clearInterval(intervalId);
+      subscription.remove();
+    };
+  }, [partnerAssigned, assignedAt]);
+
   const handleCallShop = () => {
     const shopPhone = vendor?.shopDetails?.phone;
     if (shopPhone) {
@@ -267,6 +366,12 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
       Linking.openURL(phoneNumber);
     }
   };
+
+  const showFinanceDeliveryStrikethrough =
+    !!finance &&
+    Number(finance.actualDeliveryFee || 0) !==
+      Number(finance.deliveryFee || 0) &&
+    !finance.isFreeDelivery;
 
   return (
     <View style={styles.card}>
@@ -349,6 +454,18 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
           </Text>
         </View>
 
+        {finance?.paymentMethod && (
+          <View
+            style={[
+              styles.statusBadge,
+              {backgroundColor: statusStyles.backgroundColor},
+            ]}>
+            <Text style={[styles.statusText, {color: statusStyles.color}]}>
+              {finance?.paymentMethod || 'N/A'}
+            </Text>
+          </View>
+        )}
+
         {!!assignedPartner && (
           <View style={styles.assignedBadge}>
             <Icon name="bike-fast" size={12} color="#065F46" />
@@ -396,6 +513,16 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
         <View style={styles.transporterCard}>
           {!!assignedPartner && (
             <View style={styles.transporterHeader}>
+              {assignedPartner?.profilePicture ? (
+                <Image
+                  source={{uri: assignedPartner.profilePicture}}
+                  style={styles.transporterAvatar}
+                />
+              ) : (
+                <View style={styles.transporterAvatarPlaceholder}>
+                  <Icon name="account" size={20} color="#64748B" />
+                </View>
+              )}
               <View style={styles.transporterInfoBlock}>
                 <Text style={styles.transporterLabel}>
                   Assigned Transporter
@@ -418,6 +545,35 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
                 <Icon name="phone" size={14} color="#ffffff" />
                 <Text style={styles.callTransporterButtonText}>Call</Text>
               </TouchableOpacity>
+            </View>
+          )}
+
+          {secondsRemaining !== null && (
+            <View
+              style={[
+                styles.timerRow,
+                secondsRemaining <= 0
+                  ? styles.timerRowExpired
+                  : styles.timerRowActive,
+              ]}>
+              <Icon
+                name="clock-outline"
+                size={15}
+                color={secondsRemaining <= 0 ? '#DC2626' : '#B45309'}
+              />
+              <Text
+                style={[
+                  styles.timerText,
+                  secondsRemaining <= 0
+                    ? styles.timerTextExpired
+                    : styles.timerTextActive,
+                ]}>
+                {secondsRemaining > 0
+                  ? `You can unassign partner until this window: ${formatTimer(
+                      secondsRemaining,
+                    )}`
+                  : 'Unassign window has expired'}
+              </Text>
             </View>
           )}
 
@@ -549,8 +705,16 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
 
       {partnerAssigned && (
         <TouchableOpacity
-          disabled={isUnassignedLoading}
-          style={styles.assignButton}
+          disabled={
+            isUnassignedLoading ||
+            (secondsRemaining !== null && secondsRemaining <= 0)
+          }
+          style={[
+            styles.assignButton,
+            secondsRemaining !== null &&
+              secondsRemaining <= 0 &&
+              styles.assignButtonDisabled,
+          ]}
           onPress={async () => {
             try {
               if (props.orderId && deliveryPartnerDetails.id) {
@@ -584,6 +748,7 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
         onClose={() => setModalVisible(false)}
         order={props}
         vendor={vendor}
+        finance={finance}
       />
 
       <Modal
@@ -808,6 +973,83 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6B7280',
     fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  financeCard: {
+    marginBottom: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#F8FAFC',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  financeHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  financeHeaderText: {
+    color: '#0F172A',
+    fontSize: 13,
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  financeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  financeLabel: {
+    fontSize: 12,
+    color: '#64748B',
+    fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  financeValue: {
+    fontSize: 12,
+    color: '#0F172A',
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  financeDiscountLabel: {
+    fontSize: 12,
+    color: '#0B6B4A',
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  financeDiscountValue: {
+    fontSize: 12,
+    color: '#0B6B4A',
+    fontFamily: FONT_FAMILY.bricolageBold,
+  },
+  financeAmountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  financeStrikethrough: {
+    fontSize: 11,
+    color: '#94A3B8',
+    textDecorationLine: 'line-through',
+    fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  financeFreeText: {
+    fontSize: 12,
+    color: '#0B6B4A',
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  financeDivider: {
+    height: 1,
+    backgroundColor: '#E2E8F0',
+    marginVertical: 6,
+  },
+  financeTotalLabel: {
+    fontSize: 13,
+    color: '#0F172A',
+    fontFamily: FONT_FAMILY.outfitBold,
+  },
+  financeTotalValue: {
+    fontSize: 13,
+    color: '#0F172A',
+    fontFamily: FONT_FAMILY.outfitBold,
   },
   transporterCard: {
     marginBottom: 12,
@@ -1172,5 +1414,52 @@ const styles = StyleSheet.create({
   imageModalImage: {
     width: '100%',
     height: 340,
+  },
+  transporterAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 4,
+  },
+  transporterAvatarPlaceholder: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 4,
+  },
+  timerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    marginTop: 4,
+  },
+  timerRowActive: {
+    backgroundColor: '#FEF3C7',
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  timerRowExpired: {
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  timerText: {
+    fontSize: 11,
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  timerTextActive: {
+    color: '#B45309',
+  },
+  timerTextExpired: {
+    color: '#DC2626',
+  },
+  assignButtonDisabled: {
+    backgroundColor: '#94A3B8',
   },
 });

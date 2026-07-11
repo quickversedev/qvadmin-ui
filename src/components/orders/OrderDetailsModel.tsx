@@ -1,4 +1,3 @@
-// src/components/OrderDetailsModal.tsx
 import React from 'react';
 import {
   View,
@@ -26,9 +25,9 @@ const formatMobile = (
 ): string => {
   if (!customerMobile) return '';
 
+  // Case: starts with 91 and length is 12
   const mobile = String(customerMobile).trim();
 
-  // Case: starts with 91 and length is 12
   if (mobile.length === 12 && mobile.startsWith('91')) {
     return mobile.slice(2);
   }
@@ -36,11 +35,41 @@ const formatMobile = (
   return mobile;
 };
 
+type OrderFinance = {
+  itemTotalAmount?: number;
+  couponId?: string | null;
+  couponCode?: string | null;
+  couponDiscount?: number;
+  isFreeDelivery?: boolean;
+  amountAfterCoupon?: number;
+  packagingCharges?: number;
+  actualDeliveryFee?: number;
+  deliveryFee?: number;
+  platformFee?: number;
+  razorpayCharges?: number;
+  serviceGstRate?: number;
+  commissionGst?: number;
+  deliveryGst?: number;
+  packagingGst?: number;
+  codGst?: number;
+  platformGst?: number;
+  totalGst?: number;
+  taxableAmount?: number;
+  payableAmount?: number;
+  commissionRate?: number;
+  commission?: number;
+  codCharges?: number;
+  createdAt?: string | number;
+  updatedAt?: string | number | null;
+  paymentMethod?: string | null;
+};
+
 type OrderDetailsModalProps = {
   visible: boolean;
   onClose: () => void;
   order: Order;
   vendor: Shop;
+  finance?: OrderFinance | null;
 };
 
 const OrderDetailsModal = ({
@@ -48,6 +77,7 @@ const OrderDetailsModal = ({
   onClose,
   order,
   vendor,
+  finance,
 }: OrderDetailsModalProps) => {
   const {
     orderId,
@@ -63,9 +93,11 @@ const OrderDetailsModal = ({
     paymentMethod,
   } = order;
 
+  const hasFinance = !!finance;
+
   const {data: pricingConfigData, error} = useGetPricingConfigQuery(
     vendor?.shopDetails?.category.toString().toUpperCase(),
-    {skip: !vendor?.shopDetails?.category},
+    {skip: !vendor?.shopDetails?.category || hasFinance},
   );
 
   const {address} = vendor?.shopDetails || {};
@@ -95,19 +127,52 @@ const OrderDetailsModal = ({
     {},
   );
 
-  const subTotal = Number(order.amountExcludingDeliveryFee || 0);
-  const deliveryFee = pricing?.deliveryFeeActual;
-  const deliveryFeeOriginal = pricing?.deliveryFeeExpected;
-  const platformFee = pricing?.platformFeeActual;
-  const platformFeeOriginal = pricing?.platformFeeExpected;
-  const packagingCharges = pricing?.packagingChargesActual;
-  const packagingChargesOriginal = pricing?.packagingChargesExpected;
-  const commissionRate = pricing?.commissionRateActual;
-  const commission = (commissionRate / 100) * subTotal;
-  const taxableAmount = commission + deliveryFee + platformFee;
-  const taxes = Math.round((pricing?.gstRateActual / 100) * taxableAmount);
-  const calculatedTotal =
-    subTotal + deliveryFee + platformFee + packagingCharges + taxes;
+  const legacySubTotal = Number(order.amountExcludingDeliveryFee || 0);
+  const legacyDeliveryFee = pricing?.deliveryFeeActual;
+  const legacyDeliveryFeeOriginal = pricing?.deliveryFeeExpected;
+  const legacyPlatformFee = pricing?.platformFeeActual;
+  const legacyPlatformFeeOriginal = pricing?.platformFeeExpected;
+  const legacyPackagingCharges = pricing?.packagingChargesActual;
+  const legacyPackagingChargesOriginal = pricing?.packagingChargesExpected;
+  const legacyCommissionRate = pricing?.commissionRateActual;
+  const legacyCommission = (legacyCommissionRate / 100) * legacySubTotal;
+  const legacyTaxableAmount =
+    legacyCommission + legacyDeliveryFee + legacyPlatformFee;
+  const legacyTaxes = Math.round(
+    (pricing?.gstRateActual / 100) * legacyTaxableAmount,
+  );
+  const legacyTotal =
+    legacySubTotal +
+    legacyDeliveryFee +
+    legacyPlatformFee +
+    legacyPackagingCharges +
+    legacyTaxes;
+
+  const subTotal = hasFinance
+    ? Number(finance.itemTotalAmount || 0)
+    : legacySubTotal;
+  const couponDiscount = hasFinance ? Number(finance.couponDiscount || 0) : 0;
+  const isFreeDelivery = hasFinance ? !!finance.isFreeDelivery : false;
+  const deliveryFee = hasFinance
+    ? Number(finance.deliveryFee || 0)
+    : legacyDeliveryFee;
+  const deliveryFeeOriginal = hasFinance
+    ? Number(finance.actualDeliveryFee || 0)
+    : legacyDeliveryFeeOriginal;
+  const platformFee = hasFinance
+    ? Number(finance.platformFee || 0)
+    : legacyPlatformFee;
+  const platformFeeOriginal = hasFinance ? null : legacyPlatformFeeOriginal;
+  const packagingCharges = hasFinance
+    ? Number(finance.packagingCharges || 0)
+    : legacyPackagingCharges;
+  const packagingChargesOriginal = hasFinance
+    ? null
+    : legacyPackagingChargesOriginal;
+  const taxes = hasFinance ? Number(finance.totalGst || 0) : legacyTaxes;
+  const calculatedTotal = hasFinance
+    ? Number(finance.payableAmount || 0)
+    : legacyTotal;
 
   const customerAddr = customerAddress && parseAddress(customerAddress);
 
@@ -243,14 +308,30 @@ const OrderDetailsModal = ({
                 <Text style={styles.billAmount}>₹{subTotal?.toFixed(2)}</Text>
               </View>
 
+              {couponDiscount > 0 && (
+                <View style={styles.billRow}>
+                  <Text style={styles.couponLabel}>
+                    Coupon
+                    {finance?.couponCode ? ` (${finance.couponCode})` : ''}
+                  </Text>
+                  <Text style={styles.couponAmount}>
+                    -₹{couponDiscount.toFixed(2)}
+                  </Text>
+                </View>
+              )}
+
               <View style={styles.billRow}>
                 <Text style={styles.billLabel}>Delivery Fee</Text>
                 <View style={styles.billAmountRow}>
-                  <Text style={styles.strikethroughAmount}>
-                    ₹{deliveryFeeOriginal?.toFixed(2)}
-                  </Text>
+                  {!!deliveryFeeOriginal &&
+                    deliveryFeeOriginal !== deliveryFee &&
+                    !isFreeDelivery && (
+                      <Text style={styles.strikethroughAmount}>
+                        ₹{deliveryFeeOriginal?.toFixed(2)}
+                      </Text>
+                    )}
                   <Text style={styles.billAmount}>
-                    ₹{deliveryFee?.toFixed(2)}
+                    {isFreeDelivery ? 'FREE' : `₹${deliveryFee?.toFixed(2)}`}
                   </Text>
                 </View>
               </View>
@@ -258,9 +339,12 @@ const OrderDetailsModal = ({
               <View style={styles.billRow}>
                 <Text style={styles.billLabel}>Platform Fee</Text>
                 <View style={styles.billAmountRow}>
-                  <Text style={styles.strikethroughAmount}>
-                    ₹{platformFeeOriginal}
-                  </Text>
+                  {!!platformFeeOriginal &&
+                    platformFeeOriginal !== platformFee && (
+                      <Text style={styles.strikethroughAmount}>
+                        ₹{platformFeeOriginal}
+                      </Text>
+                    )}
                   <Text style={styles.billAmount}>
                     ₹{platformFee?.toFixed(2)}
                   </Text>
@@ -270,9 +354,12 @@ const OrderDetailsModal = ({
               <View style={styles.billRow}>
                 <Text style={styles.billLabel}>Packaging Charges</Text>
                 <View style={styles.billAmountRow}>
-                  <Text style={styles.strikethroughAmount}>
-                    ₹{packagingChargesOriginal}
-                  </Text>
+                  {!!packagingChargesOriginal &&
+                    packagingChargesOriginal !== packagingCharges && (
+                      <Text style={styles.strikethroughAmount}>
+                        ₹{packagingChargesOriginal}
+                      </Text>
+                    )}
                   <Text style={styles.billAmount}>
                     ₹{packagingCharges?.toFixed(2)}
                   </Text>
@@ -295,7 +382,9 @@ const OrderDetailsModal = ({
 
               <View style={styles.billRow}>
                 <Text style={styles.billLabel}>Payment Method</Text>
-                <Text style={styles.billAmount}>{paymentMethod || 'N/A'}</Text>
+                <Text style={styles.billAmount}>
+                  {finance?.paymentMethod || paymentMethod || 'N/A'}
+                </Text>
               </View>
             </View>
             <View style={styles.divider} />
@@ -594,6 +683,16 @@ const styles = StyleSheet.create({
     color: '#999',
     textDecorationLine: 'line-through' as const,
     fontFamily: FONT_FAMILY.bricolageRegular,
+  },
+  couponLabel: {
+    fontSize: 14,
+    color: '#0B6B4A',
+    fontFamily: FONT_FAMILY.bricolageMedium,
+  },
+  couponAmount: {
+    fontSize: 14,
+    color: '#0B6B4A',
+    fontFamily: FONT_FAMILY.bricolageBold,
   },
   billTotalLabel: {
     fontSize: 16,
