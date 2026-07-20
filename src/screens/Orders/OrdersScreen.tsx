@@ -129,11 +129,6 @@ const OrdersScreen = () => {
       value: 'READY_FOR_PICKUP',
       count: orderStatsData?.response?.readyForPickupOrders || 0,
     },
-    SHIPPED: {
-      label: 'Shipped',
-      value: 'SHIPPED',
-      count: orderStatsData?.response?.shippedOrders || 0,
-    },
     IN_TRANSIT: {
       label: 'In Transit',
       value: 'IN_TRANSIT',

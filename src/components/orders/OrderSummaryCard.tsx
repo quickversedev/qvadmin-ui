@@ -313,13 +313,17 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
   };
 
   const canAssignPartner =
-    (state === ORDER_STATUS.ACCEPTED || state === ORDER_STATUS.SHIPPED) &&
+    (state === ORDER_STATUS.ACCEPTED ||
+      state === ORDER_STATUS.PENDING ||
+      state === ORDER_STATUS.READY_FOR_PICKUP) &&
     !!orderId &&
     !deliveryPartnerDetails;
 
   const partnerAssigned =
     deliveryPartnerDetails &&
-    (state === ORDER_STATUS.ACCEPTED || state === ORDER_STATUS.SHIPPED);
+    (state === ORDER_STATUS.ACCEPTED ||
+      state === ORDER_STATUS.PENDING ||
+      state === ORDER_STATUS.READY_FOR_PICKUP);
 
   const [secondsRemaining, setSecondsRemaining] = useState<number | null>(null);
 
@@ -336,7 +340,7 @@ const OrderSummaryCard = (props: OrderSummaryCardProps) => {
     }
 
     const calculateTimeLeft = () => {
-      const deadline = assignedTimeMs + 150000; // 2m 30s = 150,000ms
+      const deadline = assignedTimeMs + 300000; // 5 minutes = 300,000ms
       const diff = deadline - Date.now();
       const remaining = Math.max(0, Math.ceil(diff / 1000));
       setSecondsRemaining(remaining);
