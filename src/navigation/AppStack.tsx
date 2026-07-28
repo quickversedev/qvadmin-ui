@@ -4,7 +4,7 @@ import {
   requestNotificationPermission,
 } from '../hooks/notification/useNotification';
 import {useDeviceInfo} from '../services/useDeviceInfo';
-import {Text, TouchableOpacity} from 'react-native';
+import {Platform, Text, TouchableOpacity} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -17,6 +17,8 @@ const Tab = createBottomTabNavigator();
 
 const AppStack = () => {
   const insets = useSafeAreaInsets();
+  const bottomInset =
+    Platform.OS === 'android' ? Math.max(insets.bottom, 16) : insets.bottom;
   const {updateDeviceInfo} = useDeviceInfo();
 
   useEffect(() => {
@@ -45,9 +47,9 @@ const AppStack = () => {
         tabBarActiveTintColor: '#0F766E',
         tabBarInactiveTintColor: '#64748B',
         tabBarStyle: {
-          height: 66 + insets.bottom,
+          height: 66 + bottomInset,
           paddingTop: 2,
-          paddingBottom: 8 + insets.bottom,
+          paddingBottom: 8 + bottomInset,
           borderTopWidth: 0,
           backgroundColor: '#FFFFFF',
           shadowColor: '#0F172A',
