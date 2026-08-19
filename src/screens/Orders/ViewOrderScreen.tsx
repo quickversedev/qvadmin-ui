@@ -230,9 +230,7 @@ const ViewOrderScreen = () => {
     platformFeeOriginal = pricing?.platformFeeExpected;
     packagingCharges = pricing?.packagingChargesActual;
     packagingChargesOriginal = pricing?.packagingChargesExpected;
-    const commissionRate = pricing?.commissionRateActual;
-    const commission = (commissionRate / 100) * subTotalAmount;
-    const taxableAmount = commission + deliveryFee + platformFee;
+    const taxableAmount = deliveryFee + platformFee;
     taxes = Math.round((pricing?.gstRateActual / 100) * taxableAmount);
     totalAmount =
       subTotalAmount + deliveryFee + platformFee + packagingCharges + taxes;

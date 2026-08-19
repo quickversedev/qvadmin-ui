@@ -134,10 +134,8 @@ const OrderDetailsModal = ({
   const legacyPlatformFeeOriginal = pricing?.platformFeeExpected;
   const legacyPackagingCharges = pricing?.packagingChargesActual;
   const legacyPackagingChargesOriginal = pricing?.packagingChargesExpected;
-  const legacyCommissionRate = pricing?.commissionRateActual;
-  const legacyCommission = (legacyCommissionRate / 100) * legacySubTotal;
   const legacyTaxableAmount =
-    legacyCommission + legacyDeliveryFee + legacyPlatformFee;
+    legacyDeliveryFee + legacyPlatformFee;
   const legacyTaxes = Math.round(
     (pricing?.gstRateActual / 100) * legacyTaxableAmount,
   );
@@ -162,13 +160,11 @@ const OrderDetailsModal = ({
   const platformFee = hasFinance
     ? Number(finance.platformFee || 0)
     : legacyPlatformFee;
-  const platformFeeOriginal = hasFinance ? null : legacyPlatformFeeOriginal;
+  const platformFeeOriginal = legacyPlatformFeeOriginal;
   const packagingCharges = hasFinance
     ? Number(finance.packagingCharges || 0)
     : legacyPackagingCharges;
-  const packagingChargesOriginal = hasFinance
-    ? null
-    : legacyPackagingChargesOriginal;
+  const packagingChargesOriginal = legacyPackagingChargesOriginal;
   const taxes = hasFinance ? Number(finance.totalGst || 0) : legacyTaxes;
   const calculatedTotal = hasFinance
     ? Number(finance.payableAmount || 0)
@@ -351,20 +347,31 @@ const OrderDetailsModal = ({
                 </View>
               </View>
 
-              <View style={styles.billRow}>
-                <Text style={styles.billLabel}>Packaging Charges</Text>
-                <View style={styles.billAmountRow}>
-                  {!!packagingChargesOriginal &&
-                    packagingChargesOriginal !== packagingCharges && (
-                      <Text style={styles.strikethroughAmount}>
-                        ₹{packagingChargesOriginal}
-                      </Text>
-                    )}
+              {packagingCharges > 0 && (
+                <View style={styles.billRow}>
+                  <Text style={styles.billLabel}>Packaging Charges</Text>
+                  <View style={styles.billAmountRow}>
+                    {!!packagingChargesOriginal &&
+                      packagingChargesOriginal !== packagingCharges && (
+                        <Text style={styles.strikethroughAmount}>
+                          ₹{packagingChargesOriginal}
+                        </Text>
+                      )}
+                    <Text style={styles.billAmount}>
+                      ₹{packagingCharges?.toFixed(2)}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {(finance?.codCharges ?? 0) > 0 && (
+                <View style={styles.billRow}>
+                  <Text style={styles.billLabel}>Cash On Delivery Charges</Text>
                   <Text style={styles.billAmount}>
-                    ₹{packagingCharges?.toFixed(2)}
+                    ₹{finance!.codCharges?.toFixed(2)}
                   </Text>
                 </View>
-              </View>
+              )}
 
               <View style={styles.billRow}>
                 <Text style={styles.billLabel}>Taxes (GST & Services)</Text>

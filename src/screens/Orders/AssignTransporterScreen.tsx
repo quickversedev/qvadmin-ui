@@ -81,8 +81,7 @@ const AssignTransporterScreen = () => {
   const platformFee = pricing?.platformFeeActual;
   const packagingCharges = pricing?.packagingChargesActual;
   const commissionRate = pricing?.commissionRateActual;
-  const commission = (commissionRate / 100) * subTotal;
-  const taxableAmount = commission + deliveryFee + platformFee;
+  const taxableAmount = deliveryFee + platformFee;
   const taxes = Math.round((pricing?.gstRateActual / 100) * taxableAmount);
   const calculatedTotal =
     subTotal + deliveryFee + platformFee + packagingCharges + taxes;
